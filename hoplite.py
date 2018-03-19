@@ -22,27 +22,32 @@ def init_st7735():
 def init_hx711(config):
     dout = config['hx711_1']['dout']
     pd_sck = config['hx711_1']['pd_sck']
-    refunit = config['hx711_1']['refunit']
-    offset = config['hx711_1']['offset']
+    refunit_A = config['hx711_1']['refunit_A']
+    refunit_B = config['hx711_1']['refunit_B']
+    offset_A = config['hx711_1']['offset_A']
+    offset_B = config['hx711_1']['offset_B']
     hx = HX711(dout, pd_sck)
     hx.set_reading_format("LSB", "MSB")
-    hx.set_reference_unit(refunit)
+    hx.set_reference_unit_A(refunit_A)
+    hx.set_reference_unit_B(refunit_B)
     hx.reset()
-    if offset:
-        hx.set_offset(offset)
+    if offset_A:
+        hx.set_offset_A(offset_A)
     else:
-        hx.tare()
-        config['hx711_1']['offset'] = hx.OFFSET
+        hx.tare_A()
+        config['hx711_1']['offset_A'] = hx.OFFSET_A
+    if offset_B:
+        hx.set_offset_B(offset_B)
+    else:
+        hx.tare_B()
+        config['hx711_1']['offset_B'] = hx.OFFSET_B
     return hx
 
-def hx711_read_ch1(hx):
-    return int(hx.get_weight(5))
+def hx711_read_chA(hx):
+    return int(hx.get_weight_A(5))
 
-def hx711_read_ch2(hx):
-    hx.set_gain(32)
-    val = int(hx.get_weight(5))
-    hx.set_gain(128)
-    return val
+def hx711_read_chB(hx):
+    return int(hx.get_weight_B(5))
 
 def load_config():
     try: 
@@ -66,8 +71,10 @@ def build_config():
     print "building new config"
     config = dict()
     config['hx711_1'] = dict()
-    config['hx711_1']['offset'] = None
-    config['hx711_1']['refunit'] = 21.7
+    config['hx711_1']['offset_A'] = None
+    config['hx711_1']['offset_B'] = None
+    config['hx711_1']['refunit_A'] = 21.7
+    config['hx711_1']['refunit_B'] = 5.4
     config['hx711_1']['dout'] = 5
     config['hx711_1']['pd_sck'] = 6
     return config
@@ -99,8 +106,8 @@ hx = init_hx711(config)
 
 while True:
     try:
-        ch1 = hx711_read_ch1(hx)
-        ch2 = hx711_read_ch2(hx)
+        ch1 = hx711_read_chA(hx)
+        ch2 = hx711_read_chB(hx)
         print "ch1: %s g  ch2: %s g" % ( str(ch1), str(ch2) )
 
         with canvas(device) as draw:

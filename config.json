@@ -1,8 +1,10 @@
 {
   "hx711_1": {
-    "refunit": 21.7, 
     "dout": 5, 
+    "refunit_A": 21.7, 
     "pd_sck": 6, 
-    "offset": 8066336
+    "refunit_B": 5.4, 
+    "offset_A": 8061025.0, 
+    "offset_B": 8452209.0
   }
 }
