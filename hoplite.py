@@ -3,6 +3,7 @@ from luma.core.render import canvas
 from luma.lcd.device import st7735
 from luma.lcd.aux import backlight
 import RPi.GPIO as GPIO
+import sys
 import time
 import json
 from hx711 import HX711
@@ -153,5 +154,7 @@ while True:
         time.sleep(5)
     except (KeyboardInterrupt, SystemExit):
         save_config(config)
+        hx.power_down()
         GPIO.cleanup()
+        sys.exit()
 
