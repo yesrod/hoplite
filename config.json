@@ -1,14 +1,24 @@
 {
   "hx711_1": {
     "chA": {
-      "refunit": 21.7,
-      "offset": 8061025.0
-    },
-    "chb": {
-      "refunit": 5.4,
-      "offset": 8452209.0
-    },
+      "keg_size": [
+        58.6, 
+        13.6
+      ], 
+      "refunit": 21.7, 
+      "keg_name": "Yuengling", 
+      "offset": 8060646.0
+    }, 
+    "chB": {
+      "keg_size": [
+        19.5, 
+        7.5
+      ], 
+      "refunit": 5.4, 
+      "keg_name": "Angry Orchard", 
+      "offset": 8451800.0
+    }, 
     "dout": 5, 
-    "pd_sck": 6 
+    "pd_sck": 6
   }
 }
