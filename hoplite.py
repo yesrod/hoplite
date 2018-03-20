@@ -97,11 +97,12 @@ def text_header(device, draw, y, message, fill="white"):
 
 def text_align_center(device, draw, x, y, message, fill="white"):
     w, h = draw.textsize(message)
-    draw.text(((x-w)/2, y), message, fill=fill)
+    draw.text((x-(w/2), y), message, fill=fill)
 
 def fill_bar(device, draw, x, y, min_w, max_w, w, outline="white", fill="red"):
-    trim_w = max(min_w, min(w, max_w))
-    fill_percent = float(trim_w) / float(max_w)
+    net_w = max(w - min_w, 0)
+    max_net_w = max_w - min_w
+    fill_percent = float(net_w) / float(max_net_w)
     max_y = device.height - 21
     min_y = y+1
     max_bar = max_y - min_y
@@ -110,7 +111,7 @@ def fill_bar(device, draw, x, y, min_w, max_w, w, outline="white", fill="red"):
     draw.rectangle([x+1,fill_height, x+19,max_y], outline=fill, fill=fill)
 
 def as_kg(val):
-    return "%s kg" % str(val / 1000.0)
+    return "%s kg" % "{0:.2f}".format(val / 1000.0)
 
 print keg_data
 
@@ -136,19 +137,19 @@ while True:
 
         chA = hx711_read_chA(hx)
         chB = hx711_read_chB(hx)
-        print "%s: %s/%s  %s: %s/%s" % ( chA_name, as_kg(chA), as_kg(chA_max), chB_name, as_kg(chB), as_kg(chB_max) )
+        print "%s: %s/%s  %s: %s/%s" % ( chA_name, chA, chA_max, chB_name, chB, chB_max )
         print "min: %s %s" % ( chA_min, chB_min )
 
         with canvas(device) as draw:
             text_header(device, draw, 0, "HOPLITE", fill="red")
 
-            text_align_center(device, draw, 30, 10, chA_name)
+            text_align_center(device, draw, 40, 10, chA_name)
             fill_bar(device, draw, 30, 20, chA_min, chA_max, chA)
-            draw.text((30, device.height-10), as_kg(chA), fill="white")
+            text_align_center(device, draw, 40, device.height-10, as_kg(chA))
 
-            text_align_center(device, draw, 30, 10, chB_name)
+            text_align_center(device, draw, 120, 10, chB_name)
             fill_bar(device, draw, 110, 20, chB_min, chB_max, chB)
-            draw.text((100, device.height-10), as_kg(chB), fill="white")
+            text_align_center(device, draw, 120, device.height-10, as_kg(chB))
 
         hx.power_down()
         time.sleep(5)
