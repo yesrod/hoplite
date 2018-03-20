@@ -3,24 +3,19 @@ from luma.core.render import canvas
 from luma.lcd.device import st7735
 from luma.lcd.aux import backlight
 import RPi.GPIO as GPIO
-import time, sys, os, json
+import time
+import json
 from hx711 import HX711
 
 # keg data dictionary
 # value is list( volume in liters, empty weight in kg )
 keg_data = {
-'half_bbl': (58.6, 13.6),
-'tall_qtr_bbl': (29.3, 10),
-'short_qtr_bbl': (29.3, 10),
-'sixth_bbl': (19.5, 7.5),
-'corny': (18.9, 4),
+    'half_bbl': (58.6, 13.6),
+    'tall_qtr_bbl': (29.3, 10),
+    'short_qtr_bbl': (29.3, 10),
+    'sixth_bbl': (19.5, 7.5),
+    'corny': (18.9, 4),
 }
-
-def cleanAndExit():
-    print "Cleaning..."
-    GPIO.cleanup()
-    print "Bye!"
-    sys.exit()
 
 def init_st7735():
     light = backlight(gpio=GPIO, gpio_LIGHT=18, active_low=False)
@@ -158,6 +153,5 @@ while True:
         time.sleep(5)
     except (KeyboardInterrupt, SystemExit):
         save_config(config)
-        cleanAndExit()
-
+        GPIO.cleanup()
 
