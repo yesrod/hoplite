@@ -6,8 +6,6 @@ import RPi.GPIO as GPIO
 import sys
 import time
 import json
-
-sys.path.append('./hx711py/')
 from hx711 import HX711
 
 # keg data dictionary
