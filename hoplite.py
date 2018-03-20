@@ -22,10 +22,10 @@ def init_st7735():
 def init_hx711(config):
     dout = config['hx711_1']['dout']
     pd_sck = config['hx711_1']['pd_sck']
-    refunit_A = config['hx711_1']['refunit_A']
-    refunit_B = config['hx711_1']['refunit_B']
-    offset_A = config['hx711_1']['offset_A']
-    offset_B = config['hx711_1']['offset_B']
+    offset_A = config['hx711_1']['chA']['offset']
+    refunit_A = config['hx711_1']['chA']['refunit']
+    offset_B = config['hx711_1']['chB']['offset']
+    refunit_B = config['hx711_1']['chB']['refunit']
     hx = HX711(dout, pd_sck)
     hx.set_reading_format("LSB", "MSB")
     hx.set_reference_unit_A(refunit_A)
@@ -35,12 +35,12 @@ def init_hx711(config):
         hx.set_offset_A(offset_A)
     else:
         hx.tare_A()
-        config['hx711_1']['offset_A'] = hx.OFFSET_A
+        config['hx711_1']['chA']['offset'] = hx.OFFSET_A
     if offset_B:
         hx.set_offset_B(offset_B)
     else:
         hx.tare_B()
-        config['hx711_1']['offset_B'] = hx.OFFSET_B
+        config['hx711_1']['chB']['offset'] = hx.OFFSET_B
     return hx
 
 def hx711_read_chA(hx):
@@ -71,10 +71,12 @@ def build_config():
     print "building new config"
     config = dict()
     config['hx711_1'] = dict()
-    config['hx711_1']['offset_A'] = None
-    config['hx711_1']['offset_B'] = None
-    config['hx711_1']['refunit_A'] = 21.7
-    config['hx711_1']['refunit_B'] = 5.4
+    config['hx711_1']['chA'] = dict()
+    config['hx711_1']['chB'] = dict()
+    config['hx711_1']['chA']['offset'] = None
+    config['hx711_1']['chA']['refunit'] = 21.7
+    config['hx711_1']['chB']['offset'] = None
+    config['hx711_1']['chB']['refunit'] = 5.4
     config['hx711_1']['dout'] = 5
     config['hx711_1']['pd_sck'] = 6
     return config
@@ -95,8 +97,6 @@ def fill_bar(device, draw, x, y, min_w, max_w, w, outline="white", fill="red"):
     draw.rectangle([x+1,fill_height, x+19,max_y], outline=fill, fill=fill)
 
 
-os.nice(-20)
-
 config = load_config()
 
 print config
@@ -104,8 +104,12 @@ print config
 device = init_st7735()
 hx = init_hx711(config)
 
+hx.power_down()
+
 while True:
     try:
+        hx.power_up()
+
         ch1 = hx711_read_chA(hx)
         ch2 = hx711_read_chB(hx)
         print "ch1: %s g  ch2: %s g" % ( str(ch1), str(ch2) )
@@ -120,10 +124,8 @@ while True:
             fill_bar(device, draw, 110, 20, 0, 2000, ch2)
             draw.text((100, device.height-10), "%s g" % str(ch2), fill="white")
 
-
         hx.power_down()
-        hx.power_up()
-        time.sleep(0.5)
+        time.sleep(5)
     except (KeyboardInterrupt, SystemExit):
         save_config(config)
         cleanAndExit()
