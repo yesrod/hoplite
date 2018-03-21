@@ -167,19 +167,26 @@ class hoplite():
         kegA_max = kegA_min + ( self.config['kegs']['kegA']['size'][0] * 1000 )
         kegB_max = kegB_min + ( self.config['kegs']['kegB']['size'][0] * 1000 )
 
-        print "%s: %s/%s  %s: %s/%s" % ( kegA_name, self.kegA, kegA_max, 
-                                         kegB_name, self.kegB, kegB_max )
-        print "min: %s %s" % ( kegA_min, kegB_min )
+        with canvas(self.device) as self.draw:
+            print "%s: %s/%s  %s: %s/%s" % ( kegA_name, self.kegA, kegA_max, 
+                                             kegB_name, self.kegB, kegB_max )
+            print "min: %s %s" % ( kegA_min, kegB_min )
 
-        self.text_header(0, "HOPLITE", fill="red")
+            self.text_header(0, "HOPLITE", fill="red")
 
-        self.text_align_center(40, 10, kegA_name)
-        self.fill_bar(30, 20, kegA_min, kegA_max, self.kegA)
-        self.text_align_center(40, self.device.height-10, self.as_kg(self.kegA))
+            self.text_align_center(40, 10, kegA_name)
+            self.fill_bar(30, 20, kegA_min, kegA_max, self.kegA)
+            self.text_align_center(40, self.device.height-10, self.as_kg(self.kegA))
 
-        self.text_align_center(120, 10, kegB_name)
-        self.fill_bar(110, 20, kegB_min, kegB_max, self.kegB)
-        self.text_align_center(120, self.device.height-10, self.as_kg(self.kegB))
+            self.text_align_center(120, 10, kegB_name)
+            self.fill_bar(110, 20, kegB_min, kegB_max, self.kegB)
+            self.text_align_center(120, self.device.height-10, self.as_kg(self.kegB))
+
+
+    def cleanup(self):
+        self.save_config(self.config)
+        self.kegs.power_down()
+        GPIO.cleanup()
 
 
     def main(self):
@@ -187,15 +194,10 @@ class hoplite():
         while True:
             try:
                 self.read_weight()
-
-                with canvas(self.device) as self.draw:
-                    self.render_st7735()
-        
+                self.render_st7735()
                 time.sleep(5)
             except (KeyboardInterrupt, SystemExit):
-                self.save_config(self.config)
-                self.kegs.power_down()
-                GPIO.cleanup()
+                self.cleanup()
                 sys.exit()
 
 
