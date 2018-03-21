@@ -1,24 +1,24 @@
 {
   "kegs": {
-    "dout": 5, 
-    "pd_sck": 6, 
     "kegA": {
       "refunit": 21.7, 
+      "offset": 8061074.0, 
+      "name": "Yuengling", 
       "size": [
         58.6, 
         13.6
-      ], 
-      "name": "Yuengling", 
-      "offset": 8061074.0
+      ]
     }, 
+    "pd_sck": 6, 
+    "dout": 5, 
     "kegB": {
       "refunit": 5.4, 
+      "offset": 8451808.0, 
+      "name": "Angry Orchard", 
       "size": [
         19.5, 
         7.5
-      ], 
-      "name": "Angry Orchard", 
-      "offset": 8451808.0
+      ]
     }
   }
 }

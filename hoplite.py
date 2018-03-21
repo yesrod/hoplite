@@ -11,15 +11,7 @@ from hx711 import HX711
 
 class hoplite():
     # keg data dictionary
-    # value is list( volume in liters, empty weight in kg )
     global keg_data
-    keg_data = {
-        'half_bbl': (58.6, 13.6),
-        'tall_qtr_bbl': (29.3, 10),
-        'short_qtr_bbl': (29.3, 10),
-        'sixth_bbl': (19.5, 7.5),
-        'corny': (18.9, 4),
-    }
     
     # config
     global config
@@ -28,18 +20,30 @@ class hoplite():
     global device
     global draw
 
-    # hx711_1, for keg weighting
-    global hx
-    global chA
-    global chB
+    # hx711_1, for keg weighting, and its values
+    global kegs
+    global kegA
+    global kegB
 
     def __init__(self):
+        # keg data dictionary
+        # value is list( volume in liters, empty weight in kg )
+        self.keg_data = {
+            'half_bbl': (58.6, 13.6),
+            'tall_qtr_bbl': (29.3, 10),
+            'short_qtr_bbl': (29.3, 10),
+            'sixth_bbl': (19.5, 7.5),
+            'corny': (18.9, 4),
+        }
+
         self.config = self.load_config()
+
+        print self.config
 
         self.device = self.init_st7735()
 
-        self.hx = self.init_hx711()
-        self.hx.power_down()
+        self.kegs = self.init_hx711()
+        self.kegs.power_down()
 
 
     def init_st7735(self):
@@ -51,12 +55,12 @@ class hoplite():
 
     
     def init_hx711(self):
-        dout = self.config['hx711_1']['dout']
-        pd_sck = self.config['hx711_1']['pd_sck']
-        offset_A = self.config['hx711_1']['chA']['offset']
-        refunit_A = self.config['hx711_1']['chA']['refunit']
-        offset_B = self.config['hx711_1']['chB']['offset']
-        refunit_B = self.config['hx711_1']['chB']['refunit']
+        dout = self.config['kegs']['dout']
+        pd_sck = self.config['kegs']['pd_sck']
+        offset_A = self.config['kegs']['kegA']['offset']
+        refunit_A = self.config['kegs']['kegA']['refunit']
+        offset_B = self.config['kegs']['kegB']['offset']
+        refunit_B = self.config['kegs']['kegB']['refunit']
         hx = HX711(dout, pd_sck)
         hx.set_reading_format("LSB", "MSB")
         hx.set_reference_unit_A(refunit_A)
@@ -66,21 +70,21 @@ class hoplite():
             hx.set_offset_A(offset_A)
         else:
             hx.tare_A()
-            self.config['hx711_1']['chA']['offset'] = hx.OFFSET_A
+            self.config['kegs']['kegA']['offset'] = hx.OFFSET_A
         if offset_B:
             hx.set_offset_B(offset_B)
         else:
             hx.tare_B()
-            self.config['hx711_1']['chB']['offset'] = hx.OFFSET_B
+            self.config['kegs']['kegB']['offset'] = hx.OFFSET_B
         return hx
 
     
     def hx711_read_chA(self, hx):
-        return int(hx.get_weight_A(5))
+        return int(hx.get_weight_A(3))
 
     
     def hx711_read_chB(self, hx):
-        return int(hx.get_weight_B(5))
+        return int(hx.get_weight_B(3))
 
     
     def load_config(self):
@@ -104,20 +108,20 @@ class hoplite():
 
     
     def build_config(self):
-        self.config = dict()
-        self.config['hx711_1'] = dict()
-        self.config['hx711_1']['chA'] = dict()
-        self.config['hx711_1']['chB'] = dict()
-        self.config['hx711_1']['chA']['offset'] = None
-        self.config['hx711_1']['chA']['refunit'] = 21.7
-        self.config['hx711_1']['chA']['keg_name'] = "Yuengling"
-        self.config['hx711_1']['chA']['keg_size'] = keg_data['half_bbl']
-        self.config['hx711_1']['chB']['offset'] = None
-        self.config['hx711_1']['chB']['refunit'] = 5.4
-        self.config['hx711_1']['chB']['keg_name'] = "Angry Orchard"
-        self.config['hx711_1']['chB']['keg_size'] = keg_data['sixth_bbl']
-        self.config['hx711_1']['dout'] = 5
-        self.config['hx711_1']['pd_sck'] = 6
+        config = dict()
+        config['kegs'] = dict()
+        config['kegs']['kegA'] = dict()
+        config['kegs']['kegB'] = dict()
+        config['kegs']['kegA']['offset'] = None
+        config['kegs']['kegA']['refunit'] = 21.7
+        config['kegs']['kegA']['name'] = "Yuengling"
+        config['kegs']['kegA']['size'] = self.keg_data['half_bbl']
+        config['kegs']['kegB']['offset'] = None
+        config['kegs']['kegB']['refunit'] = 5.4
+        config['kegs']['kegB']['name'] = "Angry Orchard"
+        config['kegs']['kegB']['size'] = self.keg_data['sixth_bbl']
+        config['kegs']['dout'] = 5
+        config['kegs']['pd_sck'] = 6
         return config
 
     
@@ -149,33 +153,33 @@ class hoplite():
 
 
     def read_weight(self):
-        self.hx.power_up()
-        self.chA = self.hx711_read_chA(self.hx)
-        self.chB = self.hx711_read_chB(self.hx)
-        self.hx.power_down()
+        self.kegs.power_up()
+        self.kegA = self.hx711_read_chA(self.kegs)
+        self.kegB = self.hx711_read_chB(self.kegs)
+        self.kegs.power_down()
 
 
     def render_st7735(self):
-        chA_name = self.config['hx711_1']['chA']['keg_name']
-        chB_name = self.config['hx711_1']['chB']['keg_name']
-        chA_min = self.config['hx711_1']['chA']['keg_size'][1] * 1000
-        chB_min = self.config['hx711_1']['chB']['keg_size'][1] * 1000
-        chA_max = chA_min + ( self.config['hx711_1']['chA']['keg_size'][0] * 1000 )
-        chB_max = chB_min + ( self.config['hx711_1']['chB']['keg_size'][0] * 1000 )
+        kegA_name = self.config['kegs']['kegA']['name']
+        kegB_name = self.config['kegs']['kegB']['name']
+        kegA_min = self.config['kegs']['kegA']['size'][1] * 1000
+        kegB_min = self.config['kegs']['kegB']['size'][1] * 1000
+        kegA_max = kegA_min + ( self.config['kegs']['kegA']['size'][0] * 1000 )
+        kegB_max = kegB_min + ( self.config['kegs']['kegB']['size'][0] * 1000 )
 
-        print "%s: %s/%s  %s: %s/%s" % ( chA_name, self.chA, chA_max, 
-                                         chB_name, self.chB, chB_max )
-        print "min: %s %s" % ( chA_min, chB_min )
+        print "%s: %s/%s  %s: %s/%s" % ( kegA_name, self.kegA, kegA_max, 
+                                         kegB_name, self.kegB, kegB_max )
+        print "min: %s %s" % ( kegA_min, kegB_min )
 
         self.text_header(0, "HOPLITE", fill="red")
 
-        self.text_align_center(40, 10, chA_name)
-        self.fill_bar(30, 20, chA_min, chA_max, self.chA)
-        self.text_align_center(40, self.device.height-10, self.as_kg(self.chA))
+        self.text_align_center(40, 10, kegA_name)
+        self.fill_bar(30, 20, kegA_min, kegA_max, self.kegA)
+        self.text_align_center(40, self.device.height-10, self.as_kg(self.kegA))
 
-        self.text_align_center(120, 10, chB_name)
-        self.fill_bar(110, 20, chB_min, chB_max, self.chB)
-        self.text_align_center(120, self.device.height-10, self.as_kg(self.chB))
+        self.text_align_center(120, 10, kegB_name)
+        self.fill_bar(110, 20, kegB_min, kegB_max, self.kegB)
+        self.text_align_center(120, self.device.height-10, self.as_kg(self.kegB))
 
 
     def main(self):
@@ -190,7 +194,7 @@ class hoplite():
                 time.sleep(5)
             except (KeyboardInterrupt, SystemExit):
                 self.save_config(self.config)
-                self.hx.power_down()
+                self.kegs.power_down()
                 GPIO.cleanup()
                 sys.exit()
 
