@@ -1,24 +1,24 @@
 {
-  "hx711_1": {
-    "chA": {
-      "keg_size": [
+  "kegs": {
+    "dout": 5, 
+    "pd_sck": 6, 
+    "kegA": {
+      "refunit": 21.7, 
+      "size": [
         58.6, 
         13.6
       ], 
-      "refunit": 21.7, 
-      "keg_name": "Yuengling", 
-      "offset": 8060646.0
+      "name": "Yuengling", 
+      "offset": 8061074.0
     }, 
-    "chB": {
-      "keg_size": [
+    "kegB": {
+      "refunit": 5.4, 
+      "size": [
         19.5, 
         7.5
       ], 
-      "refunit": 5.4, 
-      "keg_name": "Angry Orchard", 
-      "offset": 8451800.0
-    }, 
-    "dout": 5, 
-    "pd_sck": 6
+      "name": "Angry Orchard", 
+      "offset": 8451808.0
+    }
   }
 }
