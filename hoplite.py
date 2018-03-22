@@ -11,7 +11,7 @@ import mmap
 from hx711 import HX711
 
 
-class hoplite():
+class Hoplite():
     # keg data dictionary
     global keg_data
     
@@ -53,21 +53,15 @@ class hoplite():
         self.ShLock = posix_ipc.Semaphore('/hoplite', flags=posix_ipc.O_CREAT)
         self.ShLock.release()
 
-        self.ShData = dict()
-        self.ShData['config'] = self.config
+        self.ShData = self.config
 
         self.shmem_write()
-
-        self.device = self.init_st7735()
-
-        self.kegs = self.init_hx711()
-        self.kegs.power_down()
 
 
     def shmem_write(self, timeout=None):
         self.ShLock.acquire(timeout)
         self.shmem_clear()
-        self.ShMem.write(json.dumps(self.ShData, indent=2) + '\0')
+        self.ShMem.write(json.dumps(self.ShData) + '\0')
         self.ShLock.release()
 
 
@@ -226,13 +220,17 @@ class hoplite():
 
 
     def main(self):
+        self.device = self.init_st7735()
+
+        self.kegs = self.init_hx711()
+        self.kegs.power_down()
         
         while True:
             try:
                 self.read_weight()
                 self.render_st7735()
-                self.ShData['kegA'] = self.kegA
-                self.ShData['kegB'] = self.kegB
+                self.ShData['kegs']['kegA']['w'] = self.kegA
+                self.ShData['kegs']['kegB']['w'] = self.kegB
                 self.shmem_write()
                 time.sleep(5)
             except (KeyboardInterrupt, SystemExit):
@@ -242,5 +240,5 @@ class hoplite():
 
 # this is here in case we get run as a standalone script
 if __name__ == '__main__':
-    h = hoplite()
+    h = Hoplite()
     h.main()
