@@ -6,6 +6,8 @@ import RPi.GPIO as GPIO
 import sys
 import time
 import json
+import posix_ipc
+import mmap
 from hx711 import HX711
 
 
@@ -25,6 +27,12 @@ class hoplite():
     global kegA
     global kegB
 
+    # shared memory segment for communicating with web interface,
+    # semaphore lock, and data to be shared
+    global ShMem
+    global ShLock
+    global ShData
+
     def __init__(self):
         # keg data dictionary
         # value is list( volume in liters, empty weight in kg )
@@ -38,12 +46,36 @@ class hoplite():
 
         self.config = self.load_config()
 
-        print self.config
+        mem = posix_ipc.SharedMemory('/hoplite', flags=posix_ipc.O_CREAT, size=1024)
+        self.ShMem = mmap.mmap(mem.fd, mem.size)
+        mem.close_fd()
+
+        self.ShLock = posix_ipc.Semaphore('/hoplite', flags=posix_ipc.O_CREAT)
+        self.ShLock.release()
+
+        self.ShData = dict()
+        self.ShData['config'] = self.config
+
+        self.shmem_write()
 
         self.device = self.init_st7735()
 
         self.kegs = self.init_hx711()
         self.kegs.power_down()
+
+
+    def shmem_write(self, timeout=None):
+        self.ShLock.acquire(timeout)
+        self.shmem_clear()
+        self.ShMem.write(json.dumps(self.ShData, indent=2) + '\0')
+        self.ShLock.release()
+
+
+    def shmem_clear(self):
+        zero_fill = '\0' * (self.ShMem.size())
+        self.ShMem.seek(0, 0)
+        self.ShMem.write(zero_fill)
+        self.ShMem.seek(0, 0)
 
 
     def init_st7735(self):
@@ -187,6 +219,10 @@ class hoplite():
         self.save_config(self.config)
         self.kegs.power_down()
         GPIO.cleanup()
+        self.ShMem.close()
+        posix_ipc.unlink_shared_memory('/hoplite')
+        self.ShLock.release()
+        self.ShLock.unlink()
 
 
     def main(self):
@@ -195,6 +231,9 @@ class hoplite():
             try:
                 self.read_weight()
                 self.render_st7735()
+                self.ShData['kegA'] = self.kegA
+                self.ShData['kegB'] = self.kegB
+                self.shmem_write()
                 time.sleep(5)
             except (KeyboardInterrupt, SystemExit):
                 self.cleanup()
