@@ -30,7 +30,7 @@ class hoplite_web(App):
 
 
     def shmem_read(self, timeout=None):
-        map_data = ""
+        map_data = ''
         self.ShLock.acquire(timeout)
         self.ShMem.seek(0, 0)
         while True:
@@ -57,22 +57,25 @@ class hoplite_web(App):
 
 
     def get_keg_fill_percent( self, keg ):
-        keg_data = self.ShData['kegs'][keg].get('size', None)
+        keg_data = self.ShData['config']['kegs'][keg].get('size', None)
         if keg_data:
-            keg_w = self.ShData['kegs'][keg].get('w', None)
-            max_net_w = keg_data[0] * 1000
-            keg_tare = keg_data[1] * 1000
-            net_w = max((keg_w - keg_tare), 0)
-            fill_percent = net_w / max_net_w
+            keg_w = self.ShData['data'].get(keg + '_w', None)
+            if keg_w:
+                max_net_w = keg_data[0] * 1000
+                keg_tare = keg_data[1] * 1000
+                net_w = max((keg_w - keg_tare), 0)
+                fill_percent = net_w / max_net_w
+            else:
+                fill_percent = 0
         else:
-            fill_percent = None
+            fill_percent = 0
         return fill_percent
 
 
     def idle( self ):
         self.shmem_read(5)
-        self.kegA_weight.set_text(self.h.as_kg(self.ShData['kegs']['kegA'].get('w', 'No data')))
-        self.kegB_weight.set_text(self.h.as_kg(self.ShData['kegs']['kegB'].get('w', 'No data')))
+        self.kegA_weight.set_text(self.h.as_kg(self.ShData['data'].get('kegA_w', 0)))
+        self.kegB_weight.set_text(self.h.as_kg(self.ShData['data'].get('kegB_w', 0)))
         self.kegA_bar_rect.set_size(280 * self.get_keg_fill_percent('kegA'), 30)
         self.kegB_bar_rect.set_size(280 * self.get_keg_fill_percent('kegB'), 30)
 
@@ -122,8 +125,8 @@ class hoplite_web(App):
         # keg A information
         self.kegA = gui.HBox( width = 480, height = 30)
 
-        self.kegA_label = gui.Label( self.ShData['kegs']['kegA'].get('name', 'No name'), 
-                                     width=100, height=30 )
+        self.kegA_label = gui.Label(self.ShData['config']['kegs']['kegA'].get('name', 'No name'),
+                                     width=100, height=30)
         self.kegA_label.style['margin'] = 'auto'
         self.kegA_label.style['float'] = 'left'
 
@@ -140,7 +143,7 @@ class hoplite_web(App):
         self.kegA_bar.append( self.kegA_bar_rect )
         self.kegA_bar.append( self.kegA_bar_outline )
 
-        self.kegA_weight=gui.Label(self.h.as_kg(self.ShData['kegs']['kegA'].get('w', 'No data')),
+        self.kegA_weight=gui.Label(self.h.as_kg(self.ShData['data'].get('kegA_w', 0)),
                                                 width=100, height=30 )
         self.kegA_weight.style['margin'] = 'auto'
         self.kegA_weight.style['float'] = 'right'
@@ -152,7 +155,7 @@ class hoplite_web(App):
         # keg B information
         self.kegB = gui.HBox( width = 480, height = 30)
 
-        self.kegB_label = gui.Label( self.ShData['kegs']['kegB'].get('name', 'No name'), 
+        self.kegB_label = gui.Label(self.ShData['config']['kegs']['kegB'].get('name', 'No name'),
                                      width=100, height=30 )
         self.kegB_label.style['margin'] = 'auto'
         self.kegB_label.style['float'] = 'left'
@@ -170,7 +173,7 @@ class hoplite_web(App):
         self.kegB_bar.append( self.kegB_bar_rect )
         self.kegB_bar.append( self.kegB_bar_outline )
 
-        self.kegB_weight=gui.Label(self.h.as_kg(self.ShData['kegs']['kegB'].get('w', 'No data')),
+        self.kegB_weight=gui.Label(self.h.as_kg(self.ShData['data'].get('kegB_w', 0)),
                                    width=100, height=30 )
         self.kegB_weight.style['margin'] = 'auto'
         self.kegB_weight.style['float'] = 'right'
