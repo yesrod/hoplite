@@ -6,6 +6,7 @@ import time
 import json
 import mmap
 import posix_ipc
+import pkg_resources
 
 from . import Hoplite
 
@@ -26,7 +27,11 @@ class Web(App):
 
         self.ShLock = posix_ipc.Semaphore('/hoplite', flags=posix_ipc.O_CREAT)
 
-        super( Web, self ).__init__( *args )
+        resource_package = __name__
+        resource_path = '/static'
+        static_path = pkg_resources.resource_filename(resource_package, resource_path)
+
+        super( Web, self ).__init__( *args, static_file_path = static_path )
 
 
     def shmem_read(self, timeout=None):
@@ -190,13 +195,13 @@ class Web(App):
         self.shmem_read(5)
 
         # root object
-        self.container = gui.Widget(width = 480, height = 90 )
+        self.container = gui.Widget(width = 480, height = 120 )
         self.container.style['margin'] = 'auto'
         self.container.style['text-align'] = 'center'
         self.container.style['padding'] = '2em'
 
         # settings button
-        self.settings_button = gui.Button("Settings")
+        self.settings_button = gui.Image('/res/settings_16.png')
         self.settings_button.style['float'] = 'right'
         self.settings_button.set_on_click_listener(self.show_settings_menu)
 
