@@ -78,7 +78,6 @@ class hoplite_web(App):
 
 
     def close( self ):
-        print "Cleaning up shared memory"
         self.ShMem.close()
         posix_ipc.unlink_shared_memory('/hoplite')
         self.ShLock.release()
@@ -87,29 +86,51 @@ class hoplite_web(App):
         super( hoplite_web, self ).close()
 
 
+    def show_settings_menu( self, widget ):
+        self.dialog = gui.GenericDialog(title='Settings', 
+                        message='Settings go here! Eventually!', 
+                        width='500px')
+        self.dialog.set_on_confirm_dialog_listener( self.apply_settings )
+        self.dialog.show(self)
+
+
+    def apply_settings( self, widget ):
+        print "apply settings"
+
+
     def main( self ):
         self.shmem_read(5)
 
+        # root object
         self.container = gui.Widget(width = 480, height = 90 )
         self.container.style['margin'] = 'auto'
         self.container.style['text-align'] = 'center'
         self.container.style['padding'] = '2em'
 
+        # settings button
+        self.settings_button = gui.Button("Settings")
+        self.settings_button.style['float'] = 'right'
+        self.settings_button.set_on_click_listener(self.show_settings_menu)
+
+        # title
         self.title = gui.Label( "HOPLITE", width=480, height=30 )
         self.title.style['font-size'] = '2em'
         self.title.style['margin'] = 'auto'
         self.title.style['text-align'] = 'center'
         self.title.style['padding-bottom'] = '1em'
 
+        # keg A information
         self.kegA = gui.HBox( width = 480, height = 30)
 
-        self.kegA_label = gui.Label( self.ShData['kegs']['kegA'].get('name', 'No name'), width=100, height=30 )
+        self.kegA_label = gui.Label( self.ShData['kegs']['kegA'].get('name', 'No name'), 
+                                     width=100, height=30 )
         self.kegA_label.style['margin'] = 'auto'
         self.kegA_label.style['float'] = 'left'
 
         self.kegA_bar = gui.Svg( 280, 30 )
 
-        self.kegA_bar_rect = gui.SvgRectangle( 0, 0, 280 * self.get_keg_fill_percent('kegA'), 30 )
+        self.kegA_bar_rect = gui.SvgRectangle( 0, 0, 
+                                               280 * self.get_keg_fill_percent('kegA'), 30 )
         self.kegA_bar_rect.style['fill'] = 'rgb(255,0,0)'
 
         self.kegA_bar_outline = gui.SvgRectangle( 0, 0, 280, 30 )
@@ -119,7 +140,8 @@ class hoplite_web(App):
         self.kegA_bar.append( self.kegA_bar_rect )
         self.kegA_bar.append( self.kegA_bar_outline )
 
-        self.kegA_weight = gui.Label( self.h.as_kg(self.ShData['kegs']['kegA'].get('w', 'No data')), width=100, height=30 )
+        self.kegA_weight=gui.Label(self.h.as_kg(self.ShData['kegs']['kegA'].get('w', 'No data')),
+                                                width=100, height=30 )
         self.kegA_weight.style['margin'] = 'auto'
         self.kegA_weight.style['float'] = 'right'
 
@@ -127,15 +149,18 @@ class hoplite_web(App):
         self.kegA.append( self.kegA_bar, 2 )
         self.kegA.append( self.kegA_weight, 3 )
 
+        # keg B information
         self.kegB = gui.HBox( width = 480, height = 30)
 
-        self.kegB_label = gui.Label( self.ShData['kegs']['kegB'].get('name', 'No name'), width=100, height=30 )
+        self.kegB_label = gui.Label( self.ShData['kegs']['kegB'].get('name', 'No name'), 
+                                     width=100, height=30 )
         self.kegB_label.style['margin'] = 'auto'
         self.kegB_label.style['float'] = 'left'
 
         self.kegB_bar = gui.Svg( 280, 30 )
 
-        self.kegB_bar_rect = gui.SvgRectangle( 0, 0, 280 * self.get_keg_fill_percent('kegB'), 30 )
+        self.kegB_bar_rect = gui.SvgRectangle( 0, 0, 
+                                               280 * self.get_keg_fill_percent('kegB'), 30 )
         self.kegB_bar_rect.style['fill'] = 'rgb(255,0,0)'
 
         self.kegB_bar_outline = gui.SvgRectangle( 0, 0, 280, 30 )
@@ -145,7 +170,8 @@ class hoplite_web(App):
         self.kegB_bar.append( self.kegB_bar_rect )
         self.kegB_bar.append( self.kegB_bar_outline )
 
-        self.kegB_weight = gui.Label( self.h.as_kg(self.ShData['kegs']['kegB'].get('w', 'No data')), width=100, height=30 )
+        self.kegB_weight=gui.Label(self.h.as_kg(self.ShData['kegs']['kegB'].get('w', 'No data')),
+                                   width=100, height=30 )
         self.kegB_weight.style['margin'] = 'auto'
         self.kegB_weight.style['float'] = 'right'
 
@@ -153,11 +179,13 @@ class hoplite_web(App):
         self.kegB.append( self.kegB_bar, 2 )
         self.kegB.append( self.kegB_weight, 3 )
 
+        # attach everything to container
+        self.container.append( self.settings_button )
         self.container.append( self.title )
         self.container.append( self.kegA )
         self.container.append( self.kegB )
 
-        #return of the root widget
+        # return of the root widget
         return self.container
 
 
