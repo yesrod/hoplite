@@ -7,9 +7,9 @@ import json
 import mmap
 import posix_ipc
 
-from hoplite import Hoplite
+from . import Hoplite
 
-class hoplite_web(App):
+class Web(App):
 
     global h
 
@@ -26,7 +26,7 @@ class hoplite_web(App):
 
         self.ShLock = posix_ipc.Semaphore('/hoplite', flags=posix_ipc.O_CREAT)
 
-        super( hoplite_web, self ).__init__( *args )
+        super( Web, self ).__init__( *args )
 
 
     def shmem_read(self, timeout=None):
@@ -90,7 +90,7 @@ class hoplite_web(App):
         self.ShLock.release()
         self.ShLock.unlink()
 
-        super( hoplite_web, self ).close()
+        super( Web, self ).close()
 
 
     def show_settings_menu( self, widget ):
@@ -278,6 +278,6 @@ class hoplite_web(App):
 
 
 if __name__ == '__main__':
-    start( hoplite_web, address="192.168.1.173", standalone=False )
+    start( Web, address="192.168.1.173", standalone=False )
 
 

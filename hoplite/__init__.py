@@ -122,9 +122,9 @@ class Hoplite():
         return int(hx.get_weight_B(3))
 
     
-    def load_config(self):
+    def load_config(self, config_file="config.json"):
         try: 
-            save = open("config.json", "r")
+            save = open(config_file, "r")
             self.config = json.load(save)
             save.close()
         except (IOError, ValueError):
@@ -133,9 +133,9 @@ class Hoplite():
         return self.config
 
     
-    def save_config(self, config):
+    def save_config(self, config, config_file="config.json"):
         try:
-            save = open("config.json", "w")
+            save = open(config_file, "w")
             json.dump(self.config, save, indent=2)
             save.close()
         except IOError:
