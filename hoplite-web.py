@@ -46,6 +46,7 @@ class hoplite_web(App):
         self.ShLock.acquire(timeout)
         self.shmem_clear()
         self.ShMem.write(json.dumps(self.ShData, indent=2) + '\0')
+        self.ShMem.flush()
         self.ShLock.release()
 
 
@@ -54,6 +55,7 @@ class hoplite_web(App):
         self.ShMem.seek(0, 0)
         self.ShMem.write(zero_fill)
         self.ShMem.seek(0, 0)
+        self.ShMem.flush()
 
 
     def get_keg_fill_percent( self, keg ):
@@ -74,6 +76,8 @@ class hoplite_web(App):
 
     def idle( self ):
         self.shmem_read(5)
+        self.kegA_label.set_text(self.ShData['config']['kegs']['kegA'].get('name', 'No name'))
+        self.kegB_label.set_text(self.ShData['config']['kegs']['kegB'].get('name', 'No name'))
         self.kegA_weight.set_text(self.h.as_kg(self.ShData['data'].get('kegA_w', 0)))
         self.kegB_weight.set_text(self.h.as_kg(self.ShData['data'].get('kegB_w', 0)))
         self.kegA_bar_rect.set_size(280 * self.get_keg_fill_percent('kegA'), 30)
@@ -93,12 +97,29 @@ class hoplite_web(App):
         self.dialog = gui.GenericDialog(title='Settings', 
                         message='Settings go here! Eventually!', 
                         width='500px')
+
+        kegA_name = gui.TextInput(single_line=True)
+        kegA_name.set_value(self.ShData['config']['kegs']['kegA']['name'])
+        self.dialog.add_field_with_label('kegA_name', 'Left Keg', kegA_name)
+
+        kegB_name = gui.TextInput(single_line=True)
+        kegB_name.set_value(self.ShData['config']['kegs']['kegB']['name'])
+        self.dialog.add_field_with_label('kegB_name', 'Right Keg', kegB_name)
+
         self.dialog.set_on_confirm_dialog_listener( self.apply_settings )
         self.dialog.show(self)
 
 
     def apply_settings( self, widget ):
         print "apply settings"
+        kegA_new_name = self.dialog.get_field('kegA_name').get_value()
+        self.ShData['config']['kegs']['kegA']['name'] = kegA_new_name
+
+        kegB_new_name = self.dialog.get_field('kegB_name').get_value()
+        self.ShData['config']['kegs']['kegB']['name'] = kegB_new_name
+
+        self.shmem_write(5)
+
 
 
     def main( self ):
