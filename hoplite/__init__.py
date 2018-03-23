@@ -33,6 +33,9 @@ class Hoplite():
     global ShLock
     global ShData
 
+    # config file location
+    global config_file
+
     def __init__(self):
         # keg data dictionary
         # value is list( volume in liters, empty weight in kg )
@@ -138,7 +141,7 @@ class Hoplite():
             save = open(config_file, "w")
             json.dump(self.config, save, indent=2)
             save.close()
-        except IOError:
+        except IOError as e:
             print "Could not save config: %s" % e.strerror
 
     
@@ -221,7 +224,7 @@ class Hoplite():
 
 
     def cleanup(self):
-        self.save_config(self.config)
+        self.save_config(self.config, self.config_file)
         self.kegs.power_down()
         GPIO.cleanup()
         self.ShMem.close()
@@ -230,8 +233,9 @@ class Hoplite():
         self.ShLock.unlink()
 
 
-    def main(self):
-        self.config = self.load_config()
+    def main(self, config_file=None):
+        self.config_file = config_file
+        self.config = self.load_config(self.config_file)
 
         self.ShData = dict()
         self.ShData['data'] = dict()
