@@ -151,10 +151,12 @@ class Hoplite():
         config['kegs']['kegA']['refunit'] = 21.7
         config['kegs']['kegA']['name'] = "Yuengling"
         config['kegs']['kegA']['size'] = self.keg_data['half_bbl']
+        config['kegs']['kegA']['size_name'] = 'half_bbl'
         config['kegs']['kegB']['offset'] = None
         config['kegs']['kegB']['refunit'] = 5.4
         config['kegs']['kegB']['name'] = "Angry Orchard"
         config['kegs']['kegB']['size'] = self.keg_data['sixth_bbl']
+        config['kegs']['kegB']['size_name'] = 'sixth_bbl'
         config['kegs']['dout'] = 5
         config['kegs']['pd_sck'] = 6
         return config
