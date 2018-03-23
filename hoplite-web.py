@@ -95,10 +95,9 @@ class hoplite_web(App):
 
     def show_settings_menu( self, widget ):
         self.dialog = gui.GenericDialog(title='Settings', 
-                        message='Settings go here! Eventually!', 
                         width='500px')
 
-        kegA_name = gui.TextInput(single_line=True)
+        kegA_name = gui.TextInput(single_line=True, height='1.5em')
         kegA_name.set_value(self.ShData['config']['kegs']['kegA']['name'])
         self.dialog.add_field_with_label('kegA_name', 'Left Keg', kegA_name)
 
@@ -109,16 +108,25 @@ class hoplite_web(App):
         kegA_size.select_by_value(self.ShData['config']['kegs']['kegA']['size_name'])        
         self.dialog.add_field_with_label('kegA_size', 'Keg Size', kegA_size)
 
-        kegA_custom_vol = gui.TextInput(single_line=True, width='50%')
+        kegA_custom = gui.HBox( width = 500, height = 30)
+
+        kegA_vol_lbl = gui.Label('Volume (l)')
+        kegA_custom.append( kegA_vol_lbl, 0 )
+
+        kegA_custom_vol = gui.TextInput(single_line=True, width='5em', height='1.5em')
         kegA_custom_vol.set_value(str(self.ShData['config']['kegs']['kegA']['size'][0]))
-        self.dialog.add_field_with_label('kegA_custom_vol', 'Volume (l)', kegA_custom_vol)
+        kegA_custom.append( kegA_custom_vol, 1 )
 
-        kegA_custom_tare = gui.TextInput(single_line=True, width='50%')
+        kegA_tare_lbl = gui.Label('Empty Weight (kg)')
+        kegA_custom.append( kegA_tare_lbl, 2 )
+
+        kegA_custom_tare = gui.TextInput(single_line=True, width='5em', height='1.5em')
         kegA_custom_tare.set_value(str(self.ShData['config']['kegs']['kegA']['size'][1]))
-        self.dialog.add_field_with_label('kegA_custom_tare', 'Empty Weight (kg)', 
-                                          kegA_custom_tare)
+        kegA_custom.append( kegA_custom_tare, 3 )
 
-        kegB_name = gui.TextInput(single_line=True)
+        self.dialog.add_field_with_label('kegA_custom', 'Custom Settings', kegA_custom)
+
+        kegB_name = gui.TextInput(single_line=True, height='1.5em')
         kegB_name.set_value(self.ShData['config']['kegs']['kegB']['name'])
         self.dialog.add_field_with_label('kegB_name', 'Right Keg', kegB_name)
 
@@ -126,21 +134,29 @@ class hoplite_web(App):
         kegB_size.select_by_value(self.ShData['config']['kegs']['kegB']['size_name'])
         self.dialog.add_field_with_label('kegB_size', 'Keg Size', kegB_size)
 
-        kegB_custom_vol = gui.TextInput(single_line=True, width='50%')
-        kegB_custom_vol.set_value(str(self.ShData['config']['kegs']['kegB']['size'][0]))
-        self.dialog.add_field_with_label('kegB_custom_vol', 'Volume (l)', kegB_custom_vol)
+        kegB_custom = gui.HBox( width = 500, height = 30)
 
-        kegB_custom_tare = gui.TextInput(single_line=True, width='50%')
+        kegB_vol_lbl = gui.Label('Volume (l)')
+        kegB_custom.append( kegB_vol_lbl, 0 )
+
+        kegB_custom_vol = gui.TextInput(single_line=True, width='5em', height='1.5em')
+        kegB_custom_vol.set_value(str(self.ShData['config']['kegs']['kegB']['size'][0]))
+        kegB_custom.append( kegB_custom_vol, 1 )
+
+        kegB_tare_lbl = gui.Label('Empty Weight (kg)')
+        kegB_custom.append( kegB_tare_lbl, 2 )
+
+        kegB_custom_tare = gui.TextInput(single_line=True, width='5em', height='1.5em')
         kegB_custom_tare.set_value(str(self.ShData['config']['kegs']['kegB']['size'][1]))
-        self.dialog.add_field_with_label('kegB_custom_tare', 'Empty Weight (kg)',
-                                          kegB_custom_tare)
+        kegB_custom.append( kegB_custom_tare, 3 )
+
+        self.dialog.add_field_with_label('kegB_custom', 'Custom Settings', kegB_custom)
 
         self.dialog.set_on_confirm_dialog_listener( self.apply_settings )
         self.dialog.show(self)
 
 
     def apply_settings( self, widget ):
-        print "apply settings"
         kegA_new_name = self.dialog.get_field('kegA_name').get_value()
         self.ShData['config']['kegs']['kegA']['name'] = kegA_new_name
 
