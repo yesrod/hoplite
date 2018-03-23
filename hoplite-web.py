@@ -102,17 +102,38 @@ class hoplite_web(App):
         kegA_name.set_value(self.ShData['config']['kegs']['kegA']['name'])
         self.dialog.add_field_with_label('kegA_name', 'Left Keg', kegA_name)
 
-        kegA_size = gui.DropDown.new_from_list(self.h.keg_data.keys())
+        keg_size_list = self.h.keg_data.keys()
+        keg_size_list.append('custom')
+
+        kegA_size = gui.DropDown.new_from_list(keg_size_list)
         kegA_size.select_by_value(self.ShData['config']['kegs']['kegA']['size_name'])        
         self.dialog.add_field_with_label('kegA_size', 'Keg Size', kegA_size)
+
+        kegA_custom_vol = gui.TextInput(single_line=True, width='50%')
+        kegA_custom_vol.set_value(str(self.ShData['config']['kegs']['kegA']['size'][0]))
+        self.dialog.add_field_with_label('kegA_custom_vol', 'Volume (l)', kegA_custom_vol)
+
+        kegA_custom_tare = gui.TextInput(single_line=True, width='50%')
+        kegA_custom_tare.set_value(str(self.ShData['config']['kegs']['kegA']['size'][1]))
+        self.dialog.add_field_with_label('kegA_custom_tare', 'Empty Weight (kg)', 
+                                          kegA_custom_tare)
 
         kegB_name = gui.TextInput(single_line=True)
         kegB_name.set_value(self.ShData['config']['kegs']['kegB']['name'])
         self.dialog.add_field_with_label('kegB_name', 'Right Keg', kegB_name)
 
-        kegB_size = gui.DropDown.new_from_list(self.h.keg_data.keys())
+        kegB_size = gui.DropDown.new_from_list(keg_size_list)
         kegB_size.select_by_value(self.ShData['config']['kegs']['kegB']['size_name'])
         self.dialog.add_field_with_label('kegB_size', 'Keg Size', kegB_size)
+
+        kegB_custom_vol = gui.TextInput(single_line=True, width='50%')
+        kegB_custom_vol.set_value(str(self.ShData['config']['kegs']['kegB']['size'][0]))
+        self.dialog.add_field_with_label('kegB_custom_vol', 'Volume (l)', kegB_custom_vol)
+
+        kegB_custom_tare = gui.TextInput(single_line=True, width='50%')
+        kegB_custom_tare.set_value(str(self.ShData['config']['kegs']['kegB']['size'][1]))
+        self.dialog.add_field_with_label('kegB_custom_tare', 'Empty Weight (kg)',
+                                          kegB_custom_tare)
 
         self.dialog.set_on_confirm_dialog_listener( self.apply_settings )
         self.dialog.show(self)
@@ -125,16 +146,25 @@ class hoplite_web(App):
 
         kegA_new_size = self.dialog.get_field('kegA_size').get_value()
         self.ShData['config']['kegs']['kegA']['size_name'] = kegA_new_size
-        self.ShData['config']['kegs']['kegA']['size'] = self.h.keg_data[kegA_new_size]
-        print self.h.keg_data[kegA_new_size]
+        if kegA_new_size == 'custom':
+            vol = float(self.dialog.get_field('kegA_custom_vol').get_value())
+            tare = float(self.dialog.get_field('kegA_custom_tare').get_value())
+            self.ShData['config']['kegs']['kegA']['size'] = [vol, tare]
+        else:
+            self.ShData['config']['kegs']['kegA']['size'] = self.h.keg_data[kegA_new_size]
 
         kegB_new_name = self.dialog.get_field('kegB_name').get_value()
         self.ShData['config']['kegs']['kegB']['name'] = kegB_new_name
 
         kegB_new_size = self.dialog.get_field('kegB_size').get_value()
         self.ShData['config']['kegs']['kegB']['size_name'] = kegB_new_size
-        self.ShData['config']['kegs']['kegB']['size'] = self.h.keg_data[kegB_new_size]
-        print self.h.keg_data[kegB_new_size]
+
+        if kegB_new_size == 'custom':
+            vol = float(self.dialog.get_field('kegB_custom_vol').get_value())
+            tare = float(self.dialog.get_field('kegB_custom_tare').get_value())
+            self.ShData['config']['kegs']['kegB']['size'] = [vol, tare]
+        else:
+            self.ShData['config']['kegs']['kegB']['size'] = self.h.keg_data[kegB_new_size]
 
         self.shmem_write(5)
 
