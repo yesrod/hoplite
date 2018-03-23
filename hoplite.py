@@ -53,7 +53,9 @@ class Hoplite():
         self.ShLock = posix_ipc.Semaphore('/hoplite', flags=posix_ipc.O_CREAT)
         self.ShLock.release()
 
-        self.ShData = self.config
+        self.ShData = dict()
+        self.ShData['data'] = dict()
+        self.ShData['config'] = self.config
 
         self.shmem_write()
 
@@ -61,7 +63,7 @@ class Hoplite():
     def shmem_write(self, timeout=None):
         self.ShLock.acquire(timeout)
         self.shmem_clear()
-        self.ShMem.write(json.dumps(self.ShData) + '\0')
+        self.ShMem.write(json.dumps(self.ShData, indent=2))
         self.ShLock.release()
 
 
@@ -229,8 +231,8 @@ class Hoplite():
             try:
                 self.read_weight()
                 self.render_st7735()
-                self.ShData['kegs']['kegA']['w'] = self.kegA
-                self.ShData['kegs']['kegB']['w'] = self.kegB
+                self.ShData['data']['kegA_w'] = self.kegA
+                self.ShData['data']['kegB_w'] = self.kegB
                 self.shmem_write()
                 time.sleep(5)
             except (KeyboardInterrupt, SystemExit):
