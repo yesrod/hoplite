@@ -44,8 +44,6 @@ class Hoplite():
             'corny': (18.9, 4),
         }
 
-        self.config = self.load_config()
-
         mem = posix_ipc.SharedMemory('/hoplite', flags=posix_ipc.O_CREAT, size=1024)
         self.ShMem = mmap.mmap(mem.fd, mem.size)
         mem.close_fd()
@@ -53,17 +51,25 @@ class Hoplite():
         self.ShLock = posix_ipc.Semaphore('/hoplite', flags=posix_ipc.O_CREAT)
         self.ShLock.release()
 
-        self.ShData = dict()
-        self.ShData['data'] = dict()
-        self.ShData['config'] = self.config
 
-        self.shmem_write()
+    def shmem_read(self, timeout=None):
+        map_data = ''
+        self.ShLock.acquire(timeout)
+        self.ShMem.seek(0, 0)
+        while True:
+                line = self.ShMem.readline()
+                if line == '': break
+                map_data += line.rstrip('\0')
+        self.ShMem.seek(0, 0)
+        self.ShLock.release()
+        self.ShData = json.loads(map_data)
 
 
     def shmem_write(self, timeout=None):
         self.ShLock.acquire(timeout)
         self.shmem_clear()
         self.ShMem.write(json.dumps(self.ShData, indent=2))
+        self.ShMem.flush()
         self.ShLock.release()
 
 
@@ -72,6 +78,7 @@ class Hoplite():
         self.ShMem.seek(0, 0)
         self.ShMem.write(zero_fill)
         self.ShMem.seek(0, 0)
+        self.ShMem.flush()
 
 
     def init_st7735(self):
@@ -222,6 +229,14 @@ class Hoplite():
 
 
     def main(self):
+        self.config = self.load_config()
+
+        self.ShData = dict()
+        self.ShData['data'] = dict()
+        self.ShData['config'] = self.config
+
+        self.shmem_write()
+
         self.device = self.init_st7735()
 
         self.kegs = self.init_hx711()
@@ -231,6 +246,9 @@ class Hoplite():
             try:
                 self.read_weight()
                 self.render_st7735()
+                self.shmem_read()
+                if self.ShData['config']:
+                    self.config = self.ShData['config']
                 self.ShData['data']['kegA_w'] = self.kegA
                 self.ShData['data']['kegB_w'] = self.kegB
                 self.shmem_write()
