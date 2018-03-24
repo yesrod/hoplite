@@ -87,6 +87,7 @@ class Web(App):
         self.kegB_weight.set_text(self.h.as_kg(self.ShData['data'].get('kegB_w', 0)))
         self.kegA_bar_rect.set_size(280 * self.get_keg_fill_percent('kegA'), 30)
         self.kegB_bar_rect.set_size(280 * self.get_keg_fill_percent('kegB'), 30)
+        self.temp.set_text(self.h.as_degF(self.ShData['data'].get('temp', 'No data')))
 
 
     def close( self ):
@@ -195,38 +196,44 @@ class Web(App):
         self.shmem_read(5)
 
         # root object
-        self.container = gui.Widget(width = 480, height = 120 )
+        self.container = gui.Widget(width = 480, height = 150 )
         self.container.style['margin'] = 'auto'
         self.container.style['text-align'] = 'center'
         self.container.style['padding'] = '2em'
 
+        # title bar
+        self.title_bar = gui.HBox(width = 480, height = 30)
+        self.title_bar.style['padding-bottom'] = '1em'
+
+        # temperature
+        self.temp = gui.Label(self.h.as_degF(self.ShData['data'].get('temp', 'No data')))
+
         # settings button
         self.settings_button = gui.Image('/res/settings_16.png')
-        self.settings_button.style['float'] = 'right'
         self.settings_button.set_on_click_listener(self.show_settings_menu)
 
         # title
-        self.title = gui.Label( "HOPLITE", width=480, height=30 )
+        self.title = gui.Label("HOPLITE")
         self.title.style['font-size'] = '2em'
-        self.title.style['margin'] = 'auto'
-        self.title.style['text-align'] = 'center'
-        self.title.style['padding-bottom'] = '1em'
+        #self.title.style['margin'] = 'auto'
+
+        self.title_bar.append(self.temp, 1)
+        self.title_bar.append(self.title, 2)
+        self.title_bar.append(self.settings_button, 3)
 
         # keg A information
-        self.kegA = gui.HBox( width = 480, height = 30)
+        self.kegA = gui.HBox(width = 480, height = 30)
 
         self.kegA_label = gui.Label(self.ShData['config']['kegs']['kegA'].get('name', 'No name'),
                                      width=100, height=30)
-        self.kegA_label.style['margin'] = 'auto'
-        self.kegA_label.style['float'] = 'left'
 
-        self.kegA_bar = gui.Svg( 280, 30 )
+        self.kegA_bar = gui.Svg( 240, 30 )
 
         self.kegA_bar_rect = gui.SvgRectangle( 0, 0, 
-                                               280 * self.get_keg_fill_percent('kegA'), 30 )
+                                               240 * self.get_keg_fill_percent('kegA'), 30 )
         self.kegA_bar_rect.style['fill'] = 'rgb(255,0,0)'
 
-        self.kegA_bar_outline = gui.SvgRectangle( 0, 0, 280, 30 )
+        self.kegA_bar_outline = gui.SvgRectangle( 0, 0, 240, 30 )
         self.kegA_bar_outline.style['fill'] = 'rgb(0,0,0)'
         self.kegA_bar_outline.style['fill-opacity'] = '0'
 
@@ -235,8 +242,6 @@ class Web(App):
 
         self.kegA_weight=gui.Label(self.h.as_kg(self.ShData['data'].get('kegA_w', 0)),
                                                 width=100, height=30 )
-        self.kegA_weight.style['margin'] = 'auto'
-        self.kegA_weight.style['float'] = 'right'
 
         self.kegA.append( self.kegA_label, 1 )
         self.kegA.append( self.kegA_bar, 2 )
@@ -247,16 +252,12 @@ class Web(App):
 
         self.kegB_label = gui.Label(self.ShData['config']['kegs']['kegB'].get('name', 'No name'),
                                      width=100, height=30 )
-        self.kegB_label.style['margin'] = 'auto'
-        self.kegB_label.style['float'] = 'left'
 
-        self.kegB_bar = gui.Svg( 280, 30 )
-
+        self.kegB_bar = gui.Svg( 240, 30 )
         self.kegB_bar_rect = gui.SvgRectangle( 0, 0, 
-                                               280 * self.get_keg_fill_percent('kegB'), 30 )
+                                               240 * self.get_keg_fill_percent('kegB'), 30 )
         self.kegB_bar_rect.style['fill'] = 'rgb(255,0,0)'
-
-        self.kegB_bar_outline = gui.SvgRectangle( 0, 0, 280, 30 )
+        self.kegB_bar_outline = gui.SvgRectangle( 0, 0, 240, 30 )
         self.kegB_bar_outline.style['fill'] = 'rgb(0,0,0)'
         self.kegB_bar_outline.style['fill-opacity'] = '0'
 
@@ -265,16 +266,13 @@ class Web(App):
 
         self.kegB_weight=gui.Label(self.h.as_kg(self.ShData['data'].get('kegB_w', 0)),
                                    width=100, height=30 )
-        self.kegB_weight.style['margin'] = 'auto'
-        self.kegB_weight.style['float'] = 'right'
 
         self.kegB.append( self.kegB_label, 1 )
         self.kegB.append( self.kegB_bar, 2 )
         self.kegB.append( self.kegB_weight, 3 )
 
         # attach everything to container
-        self.container.append( self.settings_button )
-        self.container.append( self.title )
+        self.container.append( self.title_bar )
         self.container.append( self.kegA )
         self.container.append( self.kegB )
 
