@@ -204,8 +204,8 @@ class Hoplite():
 
 
     def render_st7735(self):
-        kegA_name = self.config['kegs']['kegA']['name']
-        kegB_name = self.config['kegs']['kegB']['name']
+        kegA_name = self.config['kegs']['kegA']['name'][0:13]
+        kegB_name = self.config['kegs']['kegB']['name'][0:13]
         kegA_min = self.config['kegs']['kegA']['size'][1] * 1000
         kegB_min = self.config['kegs']['kegB']['size'][1] * 1000
         kegA_max = kegA_min + ( self.config['kegs']['kegA']['size'][0] * 1000 )
@@ -218,14 +218,15 @@ class Hoplite():
             print self.as_degF(self.temp)
 
             self.text_header(0, "HOPLITE", fill="red")
-            self.draw.text((0,0), self.as_degF(self.temp), fill="blue")
+            self.text_align_center(30, 0, self.as_degF(self.temp), fill="blue")
+            self.text_align_center(130, 0, "CO2:XX%", fill="blue")
 
-            self.text_align_center(40, 10, kegA_name)
-            self.fill_bar(30, 20, kegA_min, kegA_max, self.kegA)
+            self.text_align_center(40, 15, kegA_name)
+            self.fill_bar(30, 35, kegA_min, kegA_max, self.kegA)
             self.text_align_center(40, self.device.height-10, self.as_kg(self.kegA))
 
-            self.text_align_center(120, 10, kegB_name)
-            self.fill_bar(110, 20, kegB_min, kegB_max, self.kegB)
+            self.text_align_center(120, 15, kegB_name)
+            self.fill_bar(110, 35, kegB_min, kegB_max, self.kegB)
             self.text_align_center(120, self.device.height-10, self.as_kg(self.kegB))
 
 
