@@ -215,9 +215,10 @@ class Hoplite():
             print "%s: %s/%s  %s: %s/%s" % ( kegA_name, self.kegA, kegA_max, 
                                              kegB_name, self.kegB, kegB_max )
             print "min: %s %s" % ( kegA_min, kegB_min )
+            print self.as_degF(self.temp)
 
             self.text_header(0, "HOPLITE", fill="red")
-            self.draw.text((0,0), self.as_degC(self.temp), fill="blue")
+            self.draw.text((0,0), self.as_degF(self.temp), fill="blue")
 
             self.text_align_center(40, 10, kegA_name)
             self.fill_bar(30, 20, kegA_min, kegA_max, self.kegA)
@@ -229,7 +230,6 @@ class Hoplite():
 
 
     def read_temp(self):
-        #/sys/bus/w1/devices/28-0517a036c6ff/hwmon/hwmon0/temp1_input
         base_dir = '/sys/bus/w1/devices/'
         device_folder = glob.glob(base_dir + '28*')[0]
         device_file = device_folder + '/hwmon/hwmon0/temp1_input'
@@ -241,6 +241,12 @@ class Hoplite():
 
     def as_degC(self, temp):
         return u"%s\u00b0C" % "{0:.1f}".format(temp / 1000.0)
+
+
+    def as_degF(self, temp):
+        real_c = temp / 1000.0
+        deg_f = real_c * (9.0/5.0) + 32.0
+        return u"%s\u00b0F" % "{0:.1f}".format(deg_f)
 
 
     def cleanup(self):
@@ -278,6 +284,7 @@ class Hoplite():
                     self.config = self.ShData['config']
                 self.ShData['data']['kegA_w'] = self.kegA
                 self.ShData['data']['kegB_w'] = self.kegB
+                self.ShData['data']['temp'] = self.temp
                 self.shmem_write()
                 time.sleep(5)
             except (KeyboardInterrupt, SystemExit):
