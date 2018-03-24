@@ -9,6 +9,11 @@ parser.add_argument('--config', type=str, help='Config file location.  Default: 
 
 parsed_args = parser.parse_args()
 
+if parsed_args.config:
+    config = parsed_args.config
+else:
+    config = "config.json"
+
 h = Hoplite()
-h.main( config_file = parsed_args.config )
+h.main( config_file = config )
 

@@ -8,6 +8,7 @@ import time
 import json
 import posix_ipc
 import mmap
+import glob
 from hx711 import HX711
 
 
@@ -26,6 +27,9 @@ class Hoplite():
     global kegs
     global kegA
     global kegB
+
+    # temperature sensor output
+    global temp
 
     # shared memory segment for communicating with web interface,
     # semaphore lock, and data to be shared
@@ -213,6 +217,7 @@ class Hoplite():
             print "min: %s %s" % ( kegA_min, kegB_min )
 
             self.text_header(0, "HOPLITE", fill="red")
+            self.draw.text((0,0), self.as_degC(self.temp), fill="blue")
 
             self.text_align_center(40, 10, kegA_name)
             self.fill_bar(30, 20, kegA_min, kegA_max, self.kegA)
@@ -221,6 +226,21 @@ class Hoplite():
             self.text_align_center(120, 10, kegB_name)
             self.fill_bar(110, 20, kegB_min, kegB_max, self.kegB)
             self.text_align_center(120, self.device.height-10, self.as_kg(self.kegB))
+
+
+    def read_temp(self):
+        #/sys/bus/w1/devices/28-0517a036c6ff/hwmon/hwmon0/temp1_input
+        base_dir = '/sys/bus/w1/devices/'
+        device_folder = glob.glob(base_dir + '28*')[0]
+        device_file = device_folder + '/hwmon/hwmon0/temp1_input'
+        f = open(device_file, 'r')
+        temp = f.read()
+        f.close()
+        self.temp = int(temp)
+
+
+    def as_degC(self, temp):
+        return u"%s\u00b0C" % "{0:.1f}".format(temp / 1000.0)
 
 
     def cleanup(self):
@@ -233,7 +253,7 @@ class Hoplite():
         self.ShLock.unlink()
 
 
-    def main(self, config_file=None):
+    def main(self, config_file='config.json'):
         self.config_file = config_file
         self.config = self.load_config(self.config_file)
 
@@ -251,6 +271,7 @@ class Hoplite():
         while True:
             try:
                 self.read_weight()
+                self.read_temp()
                 self.render_st7735()
                 self.shmem_read()
                 if self.ShData['config']:
