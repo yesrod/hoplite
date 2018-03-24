@@ -196,36 +196,41 @@ class Web(App):
         self.shmem_read(5)
 
         # root object
-        self.container = gui.Widget(width = 480, height = 150 )
+        self.container = gui.HBox(width = 480, height = 150 )
         self.container.style['margin'] = 'auto'
         self.container.style['text-align'] = 'center'
         self.container.style['padding'] = '2em'
 
-        # title bar
-        self.title_bar = gui.HBox(width = 480, height = 30)
-        self.title_bar.style['padding-bottom'] = '1em'
+        # VBoxes for vertical alignment
+        left = gui.VBox(height = 150)
+        center = gui.VBox(height = 150)
+        right = gui.VBox(height = 150)
+
+        self.container.append(left, 1)
+        self.container.append(center, 2)
+        self.container.append(right, 3)
 
         # temperature
         self.temp = gui.Label(self.h.as_degF(self.ShData['data'].get('temp', 'No data')))
+        self.temp.style['padding-bottom'] = '1em'
+        left.append(self.temp, 1)
 
         # settings button
         self.settings_button = gui.Image('/res/settings_16.png')
         self.settings_button.set_on_click_listener(self.show_settings_menu)
+        self.settings_button.style['padding-bottom'] = '1.6em'
+        right.append(self.settings_button, 1)
 
         # title
         self.title = gui.Label("HOPLITE")
         self.title.style['font-size'] = '2em'
-        #self.title.style['margin'] = 'auto'
-
-        self.title_bar.append(self.temp, 1)
-        self.title_bar.append(self.title, 2)
-        self.title_bar.append(self.settings_button, 3)
+        self.title.style['padding-bottom'] = '0.5em'
+        center.append(self.title, 1)
 
         # keg A information
-        self.kegA = gui.HBox(width = 480, height = 30)
-
         self.kegA_label = gui.Label(self.ShData['config']['kegs']['kegA'].get('name', 'No name'),
                                      width=100, height=30)
+        left.append(self.kegA_label, 2)
 
         self.kegA_bar = gui.Svg( 240, 30 )
 
@@ -239,19 +244,18 @@ class Web(App):
 
         self.kegA_bar.append( self.kegA_bar_rect )
         self.kegA_bar.append( self.kegA_bar_outline )
+        center.append(self.kegA_bar, 2)
 
         self.kegA_weight=gui.Label(self.h.as_kg(self.ShData['data'].get('kegA_w', 0)),
                                                 width=100, height=30 )
 
-        self.kegA.append( self.kegA_label, 1 )
-        self.kegA.append( self.kegA_bar, 2 )
-        self.kegA.append( self.kegA_weight, 3 )
+        right.append( self.kegA_weight, 2 )
 
         # keg B information
-        self.kegB = gui.HBox( width = 480, height = 30)
 
         self.kegB_label = gui.Label(self.ShData['config']['kegs']['kegB'].get('name', 'No name'),
                                      width=100, height=30 )
+        left.append(self.kegB_label, 3)
 
         self.kegB_bar = gui.Svg( 240, 30 )
         self.kegB_bar_rect = gui.SvgRectangle( 0, 0, 
@@ -263,18 +267,11 @@ class Web(App):
 
         self.kegB_bar.append( self.kegB_bar_rect )
         self.kegB_bar.append( self.kegB_bar_outline )
+        center.append(self.kegB_bar, 3)
 
         self.kegB_weight=gui.Label(self.h.as_kg(self.ShData['data'].get('kegB_w', 0)),
                                    width=100, height=30 )
-
-        self.kegB.append( self.kegB_label, 1 )
-        self.kegB.append( self.kegB_bar, 2 )
-        self.kegB.append( self.kegB_weight, 3 )
-
-        # attach everything to container
-        self.container.append( self.title_bar )
-        self.container.append( self.kegA )
-        self.container.append( self.kegB )
+        right.append(self.kegB_weight, 3)
 
         # return of the root widget
         return self.container
