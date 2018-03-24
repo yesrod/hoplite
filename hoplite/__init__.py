@@ -234,9 +234,12 @@ class Hoplite():
         base_dir = '/sys/bus/w1/devices/'
         device_folder = glob.glob(base_dir + '28*')[0]
         device_file = device_folder + '/hwmon/hwmon0/temp1_input'
-        f = open(device_file, 'r')
-        temp = f.read()
-        f.close()
+        try:
+            f = open(device_file, 'r')
+            temp = f.read()
+            f.close()
+        except (IOError, ValueError):
+            temp = 0
         self.temp = int(temp)
 
 
@@ -287,7 +290,7 @@ class Hoplite():
                 self.ShData['data']['kegB_w'] = self.kegB
                 self.ShData['data']['temp'] = self.temp
                 self.shmem_write()
-                time.sleep(5)
+                time.sleep(1)
             except (KeyboardInterrupt, SystemExit):
                 self.cleanup()
                 sys.exit()
