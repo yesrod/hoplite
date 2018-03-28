@@ -13,6 +13,12 @@ Supports:
 INSTALLATION
 ------------
 
+For now you'll need to use my version of hx711py.  Install that first.
+
+```
+sudo pip install git+https://github.com/yesrod/hx711py.git
+```
+
 Clone this respository and run
 ```
 sudo python setup.py install
