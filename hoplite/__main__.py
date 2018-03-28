@@ -12,15 +12,15 @@ def calibrate(channel, weight, conf_file):
         print channel
         print weight
     elif channel == "kegA" or channel == "kegB":
-        print channel
-        print weight
-        hx = h.init_hx711()
+        hx = h.init_hx711(config['hx'][0])
         if channel == "kegA":
             cal = h.hx711_cal_chA(hx, weight)
+            ch = 'A'
         else:
             cal = h.hx711_cal_chB(hx, weight)
+            ch = 'B'
         print "Calibration unit %s, saving to config" % cal
-        config['kegs'][channel]['refunit'] = cal
+        config['hx'][0]['channels'][ch]['refunit'] = cal
         h.save_config(config, conf_file)
         GPIO.cleanup()
     else:

@@ -23,10 +23,11 @@ class Hoplite():
     global device
     global draw
 
-    # hx711_1, for keg weighting, and its values
-    global kegs
-    global kegA
-    global kegB
+    # list of all keg HX711's detected
+    global hx_handles
+
+    # one special HX711 for CO2
+    global co2
 
     # temperature sensor output
     global temp
@@ -96,28 +97,43 @@ class Hoplite():
         return device
 
     
-    def init_hx711(self):
-        dout = self.config['kegs']['dout']
-        pd_sck = self.config['kegs']['pd_sck']
-        offset_A = self.config['kegs']['kegA']['offset']
-        refunit_A = self.config['kegs']['kegA']['refunit']
-        offset_B = self.config['kegs']['kegB']['offset']
-        refunit_B = self.config['kegs']['kegB']['refunit']
+    def init_hx711(self, hx_conf):
+        dout = hx_conf['dout']
+        pd_sck = hx_conf['pd_sck']
+
+        try:
+            offset_A = hx_conf['channels']['A']['offset']
+            refunit_A = hx_conf['channels']['A']['refunit']
+        except ValueError:
+            offset_A = None
+            refunit_A = None
+        try:
+            offset_B = hx_conf['channels']['B']['offset']
+            refunit_B = hx_conf['channels']['B']['refunit']
+        except ValueError:
+            offset_B = None
+            refunit_B = None
+
         hx = HX711(dout, pd_sck)
         hx.set_reading_format("LSB", "MSB")
-        hx.set_reference_unit_A(refunit_A)
-        hx.set_reference_unit_B(refunit_B)
         hx.reset()
-        if offset_A:
-            hx.set_offset_A(offset_A)
-        else:
-            hx.tare_A()
-            self.config['kegs']['kegA']['offset'] = hx.OFFSET_A
-        if offset_B:
-            hx.set_offset_B(offset_B)
-        else:
-            hx.tare_B()
-            self.config['kegs']['kegB']['offset'] = hx.OFFSET_B
+
+        if refunit_A: 
+            hx.set_reference_unit_A(refunit_A)
+            if offset_A:
+                hx.set_offset_A(offset_A)
+            else:
+                hx.tare_A()
+                print "channel A offset: %s" % hx.OFFSET_A
+
+        if refunit_B: 
+            hx.set_reference_unit_B(refunit_B)
+            if offset_B:
+                hx.set_offset_B(offset_B)
+            else:
+                hx.tare_B()
+                print "channel B offset: %s" % hx.OFFSET_B
+
         return hx
 
     
@@ -167,21 +183,26 @@ class Hoplite():
     
     def build_config(self):
         config = dict()
-        config['kegs'] = dict()
-        config['kegs']['kegA'] = dict()
-        config['kegs']['kegB'] = dict()
-        config['kegs']['kegA']['offset'] = None
-        config['kegs']['kegA']['refunit'] = 21.7
-        config['kegs']['kegA']['name'] = "Yuengling"
-        config['kegs']['kegA']['size'] = self.keg_data['half_bbl']
-        config['kegs']['kegA']['size_name'] = 'half_bbl'
-        config['kegs']['kegB']['offset'] = None
-        config['kegs']['kegB']['refunit'] = 5.4
-        config['kegs']['kegB']['name'] = "Angry Orchard"
-        config['kegs']['kegB']['size'] = self.keg_data['sixth_bbl']
-        config['kegs']['kegB']['size_name'] = 'sixth_bbl'
-        config['kegs']['dout'] = 5
-        config['kegs']['pd_sck'] = 6
+        config['hx'] = list()
+        hx = dict()
+        hx['channels'] = dict()
+        hx['dout'] = 5
+        hx['pd_sck'] = 6
+        kegA = dict()
+        kegB = dict()
+        kegA['offset'] = None
+        kegA['refunit'] = 21.7
+        kegA['name'] = "Yuengling"
+        kegA['size'] = self.keg_data['half_bbl']
+        kegA['size_name'] = 'half_bbl'
+        kegB['offset'] = None
+        kegB['refunit'] = 5.4
+        kegB['name'] = "Angry Orchard"
+        kegB['size'] = self.keg_data['sixth_bbl']
+        kegB['size_name'] = 'sixth_bbl'
+        hx['channels']['A'] = kegA
+        hx['channels']['B'] = kegB
+        config['hx'].append(hx)
         return config
 
     
@@ -212,24 +233,27 @@ class Hoplite():
         return "%s kg" % "{0:.2f}".format(val / 1000.0)
 
 
-    def read_weight(self):
-        self.kegs.power_up()
-        self.kegA = self.hx711_read_chA(self.kegs)
-        self.kegB = self.hx711_read_chB(self.kegs)
-        self.kegs.power_down()
+    def read_weight(self, hx):
+        hx.power_up()
+        kegA = self.hx711_read_chA(hx)
+        kegB = self.hx711_read_chB(hx)
+        hx.power_down()
+        return ( kegA, kegB )
 
 
-    def render_st7735(self):
-        kegA_name = self.config['kegs']['kegA']['name'][0:13]
-        kegB_name = self.config['kegs']['kegB']['name'][0:13]
-        kegA_min = self.config['kegs']['kegA']['size'][1] * 1000
-        kegB_min = self.config['kegs']['kegB']['size'][1] * 1000
-        kegA_max = kegA_min + ( self.config['kegs']['kegA']['size'][0] * 1000 )
-        kegB_max = kegB_min + ( self.config['kegs']['kegB']['size'][0] * 1000 )
+    def render_st7735(self, weight, hx_conf):
+        kegA = weight[0]
+        kegB = weight[1]
+        kegA_name = hx_conf['channels']['A']['name'][0:13]
+        kegB_name = hx_conf['channels']['B']['name'][0:13]
+        kegA_min = hx_conf['channels']['A']['size'][1] * 1000
+        kegB_min = hx_conf['channels']['B']['size'][1] * 1000
+        kegA_max = kegA_min + ( hx_conf['channels']['A']['size'][0] * 1000 )
+        kegB_max = kegB_min + ( hx_conf['channels']['B']['size'][0] * 1000 )
 
         with canvas(self.device) as self.draw:
-            print "%s: %s/%s  %s: %s/%s" % ( kegA_name, self.kegA, kegA_max, 
-                                             kegB_name, self.kegB, kegB_max )
+            print "%s: %s/%s  %s: %s/%s" % ( kegA_name, kegA, kegA_max, 
+                                             kegB_name, kegB, kegB_max )
             print "min: %s %s" % ( kegA_min, kegB_min )
             print self.as_degF(self.temp)
 
@@ -238,12 +262,12 @@ class Hoplite():
             self.text_align_center(130, 0, "CO2:XX%", fill="blue")
 
             self.text_align_center(40, 15, kegA_name)
-            self.fill_bar(30, 35, kegA_min, kegA_max, self.kegA)
-            self.text_align_center(40, self.device.height-10, self.as_kg(self.kegA))
+            self.fill_bar(30, 35, kegA_min, kegA_max, kegA)
+            self.text_align_center(40, self.device.height-10, self.as_kg(kegA))
 
             self.text_align_center(120, 15, kegB_name)
-            self.fill_bar(110, 35, kegB_min, kegB_max, self.kegB)
-            self.text_align_center(120, self.device.height-10, self.as_kg(self.kegB))
+            self.fill_bar(110, 35, kegB_min, kegB_max, kegB)
+            self.text_align_center(120, self.device.height-10, self.as_kg(kegB))
 
 
     def read_temp(self):
@@ -256,7 +280,7 @@ class Hoplite():
             f.close()
         except (IOError, ValueError):
             temp = 0
-        self.temp = int(temp)
+        return int(temp)
 
 
     def as_degC(self, temp):
@@ -271,12 +295,22 @@ class Hoplite():
 
     def cleanup(self):
         self.save_config(self.config, self.config_file)
-        self.kegs.power_down()
+        for hx in self.hx_handles:
+            hx.power_down()
         GPIO.cleanup()
         self.ShMem.close()
         posix_ipc.unlink_shared_memory('/hoplite')
         self.ShLock.release()
         self.ShLock.unlink()
+
+
+    def setup_all_kegs(self):
+        self.hx_handles = list()
+
+        # grab each keg definition from the config
+        for index, hx_conf in enumerate(self.config['hx']):
+            hx = self.init_hx711(hx_conf)
+            self.hx_handles.insert(index, hx)
 
 
     def main(self, config_file='config.json'):
@@ -291,19 +325,21 @@ class Hoplite():
 
         self.device = self.init_st7735()
 
-        self.kegs = self.init_hx711()
-        self.kegs.power_down()
+        self.setup_all_kegs()
         
+        # HACK - figure out how to read/render multiple kegs later
+        hx = self.hx_handles[0]
+
         while True:
             try:
-                self.read_weight()
-                self.read_temp()
-                self.render_st7735()
+                weight = self.read_weight(hx)
+                self.temp = self.read_temp()
+                self.render_st7735(weight, self.config['hx'][0])
                 self.shmem_read()
                 if self.ShData['config']:
                     self.config = self.ShData['config']
-                self.ShData['data']['kegA_w'] = self.kegA
-                self.ShData['data']['kegB_w'] = self.kegB
+                self.ShData['data']['kegA_w'] = weight[0]
+                self.ShData['data']['kegB_w'] = weight[1]
                 self.ShData['data']['temp'] = self.temp
                 self.shmem_write()
                 time.sleep(1)
