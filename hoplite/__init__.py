@@ -128,6 +128,22 @@ class Hoplite():
     def hx711_read_chB(self, hx):
         return int(hx.get_weight_B(3))
 
+
+    def hx711_cal_chA(self, hx, real_w):
+        ref = hx.REFERENCE_UNIT_A
+        hx.set_reference_unit_A(1)
+        raw_w = hx.get_weight_A(3)
+        hx.set_reference_unit_A(ref)
+        return raw_w / float(real_w)
+
+
+    def hx711_cal_chB(self, hx, real_w):
+        ref = hx.REFERENCE_UNIT_B
+        hx.set_reference_unit_B(1)
+        raw_w = hx.get_weight_B(3)
+        hx.set_reference_unit_B(ref)
+        return raw_w / float(real_w)
+
     
     def load_config(self, config_file="config.json"):
         try: 
@@ -143,7 +159,7 @@ class Hoplite():
     def save_config(self, config, config_file="config.json"):
         try:
             save = open(config_file, "w")
-            json.dump(self.config, save, indent=2)
+            json.dump(config, save, indent=2)
             save.close()
         except IOError as e:
             print "Could not save config: %s" % e.strerror
