@@ -4,27 +4,65 @@ import argparse
 import sys
 import RPi.GPIO as GPIO
 
-def calibrate(channel, weight, conf_file):
+def calibrate(index, channel, weight, conf_file):
     h = Hoplite()
     config = h.load_config(conf_file)
-    if channel == "co2":
+    if index == "co2":
         print "CO2"
         print channel
         print weight
-    elif channel == "kegA" or channel == "kegB":
-        hx = h.init_hx711(config['hx'][0])
-        if channel == "kegA":
+    else:
+        try:
+            i = int(index) - 1
+            hx = h.init_hx711(config['hx'][i])
+        except KeyError:
+            print 'Sensor %s not found!' % index
+            GPIO.cleanup()
+            sys.exit()
+
+        if channel == 'A':
             cal = h.hx711_cal_chA(hx, weight)
             ch = 'A'
-        else:
+        elif channel == 'B':
             cal = h.hx711_cal_chB(hx, weight)
             ch = 'B'
-        print "Calibration unit %s, saving to config" % cal
-        config['hx'][0]['channels'][ch]['refunit'] = cal
+        else:
+            print 'Sensor %s channel %s not found!' % (index, channel)
+            GPIO.cleanup()
+            sys.exit()
+        try:
+            config['hx'][i]['channels'][ch]['refunit'] = cal
+            print "Calibration unit %s, saved to config" % cal
+        except KeyError:
+            print 'Sensor %s channel %s not found!' % (index, channel)
         h.save_config(config, conf_file)
         GPIO.cleanup()
-    else:
-        print "Channel %s not found" % channel
+        sys.exit()
+
+
+def tare(conf_file):
+    h = Hoplite()
+    config = h.load_config(conf_file)
+
+    for index, hx_conf in enumerate(config['hx']):
+        hx = h.init_hx711(hx_conf)
+        hx.tare_A()
+        try:
+            hx_conf['channels']['A']['offset'] = hx.OFFSET_A
+            print "Sensor %s channel A offset saved as %s" % (str(index + 1), hx.OFFSET_A)
+        except KeyError:
+            pass
+
+        hx.tare_B()
+        try:
+            hx_conf['channels']['B']['offset'] = hx.OFFSET_B
+            print "Sensor %s channel B offset saved as %s" % (str(index + 1), hx.OFFSET_B)
+        except KeyError:
+            pass
+
+    h.save_config(config, conf_file)
+    GPIO.cleanup()
+    sys.exit()
 
 
 def __main__():
@@ -34,9 +72,12 @@ def __main__():
                     help='Config file location.  Default: ./config.json')
     parser.add_argument('--cal', 
                     type=str, 
-                    nargs=2, 
-                    metavar=('CHAN', 'W'),
-                    help='Calibrate a weight sensor using a test weight in grams.  Usage: --cal <kegA|kegB|co2> <test_weight>')
+                    nargs=3, 
+                    metavar=('INDEX', 'CHAN', 'W'),
+                    help='Calibrate a weight sensor using a test weight in grams. Weight sensor index is integer as defined in the config file: first sensor is 1, second is 2, etc. Special channel \'co2\' is for the CO2 sensor. Channel is either \'A\' or \'B\'. Usage: --cal <N|co2> <channel> <test_weight>')
+    parser.add_argument('--tare',
+                    action='store_true',
+                    help='Tare all sensors.  Make sure the sensor platforms are empty and sitting level before you run this!')
 
     parsed_args = parser.parse_args()
 
@@ -45,8 +86,10 @@ def __main__():
     else:
         config = "config.json"
 
-    if parsed_args.cal:
-        calibrate(parsed_args.cal[0], parsed_args.cal[1], config)
+    if parsed_args.tare:
+        tare(config)
+    elif parsed_args.cal:
+        calibrate(parsed_args.cal[0], parsed_args.cal[1], parsed_args.cal[2], config)
     else:
         h = Hoplite()
         h.main( config_file = config )
