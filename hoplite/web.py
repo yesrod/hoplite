@@ -271,36 +271,40 @@ class Web(App):
         self.settings_up = False
 
         # root object
-        self.container = gui.HBox(width = 480, height = 150 )
+        self.container = gui.Table(width = 480)
         self.container.style['margin'] = 'auto'
         self.container.style['text-align'] = 'center'
         self.container.style['padding'] = '2em'
 
-        # VBoxes for vertical alignment
-        left = gui.VBox(height = 150)
-        center = gui.VBox(height = 150)
-        right = gui.VBox(height = 150)
-
-        self.container.append(left, 1)
-        self.container.append(center, 2)
-        self.container.append(right, 3)
+        # first row
+        first_row = gui.TableRow(height = 60)
 
         # temperature
         self.temp = gui.Label(self.h.as_degF(self.ShData['data'].get('temp', 'No data')))
         self.temp.style['padding-bottom'] = '1em'
-        left.append(self.temp, 1)
+        table_item = gui.TableItem()
+        table_item.append(self.temp)
+        first_row.append(table_item)
 
         # title
         self.title = gui.Label("HOPLITE")
         self.title.style['font-size'] = '2em'
         self.title.style['padding-bottom'] = '0.5em'
-        center.append(self.title, 1)
+        table_item = gui.TableItem()
+        table_item.append(self.title)
+        first_row.append(table_item)
+
 
         # settings button
         self.settings_button = gui.Image('/res/settings_16.png', width=16)
         self.settings_button.set_on_click_listener(self.show_settings_menu)
         self.settings_button.style['padding-bottom'] = '1.6em'
-        right.append(self.settings_button, 1)
+        table_item = gui.TableItem()
+        table_item.append(self.settings_button)
+        first_row.append(table_item)
+
+        self.container.append(first_row)
+
 
         # iterate through HX sensors
         for index, hx_conf in enumerate(self.ShData['config']['hx']):
@@ -334,14 +338,19 @@ class Web(App):
 
                 kegA_weight=gui.Label(self.h.as_kg(kegA_w), width=100, height=30)
 
-                left.append(kegA_label, (index + 1) * 2)
-                center.append(kegA_bar, (index + 1) * 2)
-                right.append(kegA_weight, (index + 1) * 2)
-
                 try:
                     self.KegLines[index].insert(0, [kegA_label, kegA_bar_rect, kegA_weight])
                 except KeyError:
                     self.KegLines.insert(index, [kegA_label, kegA_bar_rect, kegA_weight])
+
+                table_row = gui.TableRow(height=30)
+                for item in [kegA_label, kegA_bar, kegA_weight]:
+                    table_item = gui.TableItem()
+                    table_item.append(item)
+                    table_row.append(table_item)
+
+                self.container.append(table_row)
+
 
             # keg B information
             try:
@@ -367,14 +376,18 @@ class Web(App):
 
                 kegB_weight=gui.Label(self.h.as_kg(kegB_w), width=100, height=30)
 
-                left.append(kegB_label, ((index + 1) * 2) + 1)
-                center.append(kegB_bar, ((index + 1) * 2) + 1)
-                right.append(kegB_weight, ((index + 1) * 2) + 1)
-
                 try:
                     self.KegLines[index].insert(1, [kegB_label, kegB_bar_rect, kegB_weight])
                 except KeyError:
                     self.KegLines.insert(index, [kegB_label, kegB_bar_rect, kegB_weight])
+
+                table_row = gui.TableRow(height=30)
+                for item in [kegB_label, kegB_bar, kegB_weight]:
+                    table_item = gui.TableItem()
+                    table_item.append(item)
+                    table_row.append(table_item)
+
+                self.container.append(table_row)
 
         # return of the root widget
         return self.container
