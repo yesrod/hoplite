@@ -1,6 +1,10 @@
 HOPLITE
 -------
 
+[Wiki](https://github.com/yesrod/hoplite/wiki)
+
+[Screenshots](https://github.com/yesrod/hoplite/wiki/Screenshots)
+
 A Python module to monitor the status of my kegerator.  Runs on a Raspberry Pi
 that has several HX711 load cell amplifiers and an ST7735 LCD attached.
 
