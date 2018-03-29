@@ -28,6 +28,7 @@ class Hoplite():
 
     # one special HX711 for CO2
     global co2
+    global co2_w
 
     # temperature sensor output
     global temp
@@ -136,6 +137,19 @@ class Hoplite():
 
         return hx
 
+
+    def init_co2(self):
+        co2 = self.init_hx711(self.config['co2'])
+        try:
+            co2.set_reference_unit_A(self.config['co2']['refunit'])
+        except KeyError:
+            pass
+        try:
+            co2.set_offset_A(self.config['co2']['offset'])
+        except KeyError:
+            pass
+        return co2
+
     
     def hx711_read_chA(self, hx):
         return int(hx.get_weight_A(3))
@@ -183,6 +197,10 @@ class Hoplite():
     
     def build_config(self):
         config = dict()
+        config['co2'] = dict()
+        config['co2']['size'] = [2.27, 1.8]
+        config['co2']['dout'] = 12
+        config['co2']['pd_sck'] = 13
         config['hx'] = list()
         hx = dict()
         hx['channels'] = dict()
@@ -266,15 +284,17 @@ class Hoplite():
             kegB_min = 0
             kegB_max = 0
 
+
         with canvas(self.device) as self.draw:
             print "%s: %s/%s  %s: %s/%s" % ( kegA_name, kegA, kegA_max, 
                                              kegB_name, kegB, kegB_max )
             print "min: %s %s" % ( kegA_min, kegB_min )
             print self.as_degF(self.temp)
+            print "CO2: "+str(self.get_co2_pct())+"%"
 
             self.text_header(0, "HOPLITE", fill="red")
             self.text_align_center(30, 0, self.as_degF(self.temp), fill="blue")
-            self.text_align_center(130, 0, "CO2:XX%", fill="blue")
+            self.text_align_center(130, 0, "CO2:"+str(self.get_co2_pct())+"%", fill="blue")
 
             if kegA_name:
                 self.text_align_center(40, 15, kegA_name)
@@ -298,6 +318,13 @@ class Hoplite():
         except (IOError, ValueError):
             temp = 0
         return int(temp)
+
+
+    def get_co2_pct(self):
+        co2_max = self.config['co2']['size'][0] * 1000
+        co2_tare = self.config['co2']['size'][1] * 1000
+        co2_net_wt = max((self.co2_w - co2_tare), 0)
+        return int(co2_net_wt / float(co2_max)) * 100
 
 
     def as_degC(self, temp):
@@ -343,17 +370,18 @@ class Hoplite():
 
         self.device = self.init_st7735()
 
+        self.co2 = self.init_co2()
+
         self.setup_all_kegs()
         
         index = 0
 
         while True:
             try:
-                # HACK - figure out how to read/render multiple kegs later
-                #hx = self.hx_handles[0]
                 hx = self.hx_handles[index]
 
                 weight = self.read_weight(hx)
+                self.co2_w = self.hx711_read_chA(self.co2)
                 self.temp = self.read_temp()
 
                 self.render_st7735(weight, self.config['hx'][index])
@@ -366,6 +394,7 @@ class Hoplite():
                 except IndexError:
                     self.ShData['data']['weight'].insert(index, weight)
                 self.ShData['data']['temp'] = self.temp
+                self.ShData['data']['co2'] = self.get_co2_pct()
                 self.shmem_write()
 
                 index += 1
