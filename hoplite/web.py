@@ -18,6 +18,10 @@ class Web(App):
     global ShLock
     global ShData
 
+    global KegLines
+
+    global settings_up
+
     def __init__( self, *args ):
         self.h = Hoplite()
 
@@ -63,30 +67,47 @@ class Web(App):
         self.ShMem.flush()
 
 
-    def get_keg_fill_percent( self, keg ):
-        keg_data = self.ShData['config']['kegs'][keg].get('size', None)
-        if keg_data:
-            keg_w = self.ShData['data'].get(keg + '_w', None)
-            if keg_w:
-                max_net_w = keg_data[0] * 1000
-                keg_tare = keg_data[1] * 1000
-                net_w = max((keg_w - keg_tare), 0)
-                fill_percent = net_w / max_net_w
-            else:
-                fill_percent = 0
-        else:
-            fill_percent = 0
+    def get_keg_fill_percent( self, w, net_w, tare ):
+        max_net_w = net_w * 1000
+        keg_tare = tare * 1000
+        net_w = max((w - keg_tare), 0)
+        fill_percent = net_w / max_net_w
         return fill_percent
 
 
     def idle( self ):
         self.shmem_read(5)
-        self.kegA_label.set_text(self.ShData['config']['kegs']['kegA'].get('name', 'No name'))
-        self.kegB_label.set_text(self.ShData['config']['kegs']['kegB'].get('name', 'No name'))
-        self.kegA_weight.set_text(self.h.as_kg(self.ShData['data'].get('kegA_w', 0)))
-        self.kegB_weight.set_text(self.h.as_kg(self.ShData['data'].get('kegB_w', 0)))
-        self.kegA_bar_rect.set_size(280 * self.get_keg_fill_percent('kegA'), 30)
-        self.kegB_bar_rect.set_size(280 * self.get_keg_fill_percent('kegB'), 30)
+
+        for line in self.KegLines:
+            for index, hx_conf in enumerate(self.ShData['config']['hx']):
+                # channel A update
+                try:
+                    w = self.ShData['data']['weight'][index][0]
+                    net_w = hx_conf['channels']['A']['size'][0]
+                    tare = hx_conf['channels']['A']['size'][1]
+                    name = hx_conf['channels']['A']['name']
+                    fill_pct = self.get_keg_fill_percent(w, net_w, tare)
+
+                    self.KegLines[index][0][0].set_text(name)
+                    self.KegLines[index][0][1].set_size(280 * fill_pct, 30)
+                    self.KegLines[index][0][2].set_text(self.h.as_kg(w))
+                except (KeyError, IndexError):
+                    pass
+
+                # channel B update
+                try:
+                    w = self.ShData['data']['weight'][index][1]
+                    net_w = hx_conf['channels']['B']['size'][0]
+                    tare = hx_conf['channels']['B']['size'][1]
+                    name = hx_conf['channels']['B']['name']
+                    fill_pct = self.get_keg_fill_percent(w, net_w, tare)
+
+                    self.KegLines[index][1][0].set_text(name)
+                    self.KegLines[index][1][1].set_size(280 * fill_pct, 30)
+                    self.KegLines[index][1][2].set_text(self.h.as_kg(w))
+                except (KeyError, IndexError):
+                    pass
+
         self.temp.set_text(self.h.as_degF(self.ShData['data'].get('temp', 'No data')))
 
 
@@ -100,100 +121,154 @@ class Web(App):
 
 
     def show_settings_menu( self, widget ):
+        if self.settings_up == True:
+            return
+        else:
+            self.settings_up = True
+
         self.dialog = gui.GenericDialog(title='Settings', 
                         width='500px')
 
-        kegA_name = gui.TextInput(single_line=True, height='1.5em')
-        kegA_name.set_value(self.ShData['config']['kegs']['kegA']['name'])
-        self.dialog.add_field_with_label('kegA_name', 'Left Keg', kegA_name)
+        for line in self.KegLines:
+            for index, hx_conf in enumerate(self.ShData['config']['hx']):
 
-        keg_size_list = self.h.keg_data.keys()
-        keg_size_list.append('custom')
+                keg_size_list = self.h.keg_data.keys()
+                keg_size_list.append('custom')
 
-        kegA_size = gui.DropDown.new_from_list(keg_size_list)
-        kegA_size.select_by_value(self.ShData['config']['kegs']['kegA']['size_name'])        
-        self.dialog.add_field_with_label('kegA_size', 'Keg Size', kegA_size)
+                # channel A settings
+                try:
+                    net_w = hx_conf['channels']['A']['size'][0]
+                    tare = hx_conf['channels']['A']['size'][1]
+                    name = hx_conf['channels']['A']['name']
+                    size_name = hx_conf['channels']['A']['size_name']
+                    size = hx_conf['channels']['A']['size']
 
-        kegA_custom = gui.HBox( width = 500, height = 30)
+                    keg_name = gui.TextInput(single_line=True, height='1.5em')
+                    keg_name.set_value(name)
+                    self.dialog.add_field_with_label(str(index) + 'A_name', 
+                                                     'Keg Name', keg_name)
 
-        kegA_vol_lbl = gui.Label('Volume (l)')
-        kegA_custom.append( kegA_vol_lbl, 0 )
+                    keg_size = gui.DropDown.new_from_list(keg_size_list)
+                    keg_size.select_by_value(size_name)
+                    self.dialog.add_field_with_label(str(index) + 'A_size', 
+                                                     'Keg Size', keg_size)
 
-        kegA_custom_vol = gui.TextInput(single_line=True, width='5em', height='1.5em')
-        kegA_custom_vol.set_value(str(self.ShData['config']['kegs']['kegA']['size'][0]))
-        kegA_custom.append( kegA_custom_vol, 1 )
+                    custom = gui.HBox( width = 500, height = 30)
+                    vol_lbl = gui.Label('Volume (l)')
+                    custom.append(vol_lbl, 0)
+                    custom_vol = gui.TextInput(single_line=True, 
+                                                    width='5em', height='1.5em')
+                    custom_vol.set_value(str(size[0]))
+                    custom.append( custom_vol, 1 )
+                    tare_lbl = gui.Label('Empty Weight (kg)')
+                    custom.append( tare_lbl, 2 )
+                    custom_tare = gui.TextInput(single_line=True, 
+                                                     width='5em', height='1.5em')
+                    custom_tare.set_value(str(size[1]))
+                    custom.append( custom_tare, 3 )
 
-        kegA_tare_lbl = gui.Label('Empty Weight (kg)')
-        kegA_custom.append( kegA_tare_lbl, 2 )
+                    self.dialog.add_field_with_label(str(index) + 'A_custom', 
+                                                     'Custom Settings', custom)
+                except (KeyError, IndexError):
+                    pass
 
-        kegA_custom_tare = gui.TextInput(single_line=True, width='5em', height='1.5em')
-        kegA_custom_tare.set_value(str(self.ShData['config']['kegs']['kegA']['size'][1]))
-        kegA_custom.append( kegA_custom_tare, 3 )
+                # channel B settings
+                try:
+                    net_w = hx_conf['channels']['B']['size'][0]
+                    tare = hx_conf['channels']['B']['size'][1]
+                    name = hx_conf['channels']['B']['name']
+                    size_name = hx_conf['channels']['B']['size_name']
+                    size = hx_conf['channels']['B']['size']
 
-        self.dialog.add_field_with_label('kegA_custom', 'Custom Settings', kegA_custom)
+                    keg_name = gui.TextInput(single_line=True, height='1.5em')
+                    keg_name.set_value(name)
+                    self.dialog.add_field_with_label(str(index) + 'B_name',
+                                                     'Keg Name', keg_name)
 
-        kegB_name = gui.TextInput(single_line=True, height='1.5em')
-        kegB_name.set_value(self.ShData['config']['kegs']['kegB']['name'])
-        self.dialog.add_field_with_label('kegB_name', 'Right Keg', kegB_name)
+                    keg_size = gui.DropDown.new_from_list(keg_size_list)
+                    keg_size.select_by_value(size_name)
+                    self.dialog.add_field_with_label(str(index) + 'B_size',
+                                                     'Keg Size', keg_size)
 
-        kegB_size = gui.DropDown.new_from_list(keg_size_list)
-        kegB_size.select_by_value(self.ShData['config']['kegs']['kegB']['size_name'])
-        self.dialog.add_field_with_label('kegB_size', 'Keg Size', kegB_size)
+                    custom = gui.HBox( width = 500, height = 30)
+                    vol_lbl = gui.Label('Volume (l)')
+                    custom.append(vol_lbl, 0)
+                    custom_vol = gui.TextInput(single_line=True,
+                                                    width='5em', height='1.5em')
+                    custom_vol.set_value(str(size[0]))
+                    custom.append( custom_vol, 1 )
+                    tare_lbl = gui.Label('Empty Weight (kg)')
+                    custom.append( tare_lbl, 2 )
+                    custom_tare = gui.TextInput(single_line=True,
+                                                     width='5em', height='1.5em')
+                    custom_tare.set_value(str(size[1]))
+                    custom.append( custom_tare, 3 )
 
-        kegB_custom = gui.HBox( width = 500, height = 30)
+                    self.dialog.add_field_with_label(str(index) + 'B_custom',
+                                                     'Custom Settings', custom)
 
-        kegB_vol_lbl = gui.Label('Volume (l)')
-        kegB_custom.append( kegB_vol_lbl, 0 )
+                except (KeyError, IndexError):
+                    pass
 
-        kegB_custom_vol = gui.TextInput(single_line=True, width='5em', height='1.5em')
-        kegB_custom_vol.set_value(str(self.ShData['config']['kegs']['kegB']['size'][0]))
-        kegB_custom.append( kegB_custom_vol, 1 )
-
-        kegB_tare_lbl = gui.Label('Empty Weight (kg)')
-        kegB_custom.append( kegB_tare_lbl, 2 )
-
-        kegB_custom_tare = gui.TextInput(single_line=True, width='5em', height='1.5em')
-        kegB_custom_tare.set_value(str(self.ShData['config']['kegs']['kegB']['size'][1]))
-        kegB_custom.append( kegB_custom_tare, 3 )
-
-        self.dialog.add_field_with_label('kegB_custom', 'Custom Settings', kegB_custom)
-
+        self.dialog.set_on_cancel_dialog_listener( self.cancel_settings )
         self.dialog.set_on_confirm_dialog_listener( self.apply_settings )
         self.dialog.show(self)
 
 
-    def apply_settings( self, widget ):
-        kegA_new_name = self.dialog.get_field('kegA_name').get_value()
-        self.ShData['config']['kegs']['kegA']['name'] = kegA_new_name
+    def cancel_settings(self, widget):
+        self.settings_up = False
 
-        kegA_new_size = self.dialog.get_field('kegA_size').get_value()
-        self.ShData['config']['kegs']['kegA']['size_name'] = kegA_new_size
-        if kegA_new_size == 'custom':
-            vol = float(self.dialog.get_field('kegA_custom_vol').get_value())
-            tare = float(self.dialog.get_field('kegA_custom_tare').get_value())
-            self.ShData['config']['kegs']['kegA']['size'] = [vol, tare]
-        else:
-            self.ShData['config']['kegs']['kegA']['size'] = self.h.keg_data[kegA_new_size]
 
-        kegB_new_name = self.dialog.get_field('kegB_name').get_value()
-        self.ShData['config']['kegs']['kegB']['name'] = kegB_new_name
+    def apply_settings(self, widget):
+        self.settings_up = False
 
-        kegB_new_size = self.dialog.get_field('kegB_size').get_value()
-        self.ShData['config']['kegs']['kegB']['size_name'] = kegB_new_size
+        for index, hx_conf in enumerate(self.ShData['config']['hx']):
 
-        if kegB_new_size == 'custom':
-            vol = float(self.dialog.get_field('kegB_custom_vol').get_value())
-            tare = float(self.dialog.get_field('kegB_custom_tare').get_value())
-            self.ShData['config']['kegs']['kegB']['size'] = [vol, tare]
-        else:
-            self.ShData['config']['kegs']['kegB']['size'] = self.h.keg_data[kegB_new_size]
+            # channel A settings
+            try:
+                new_name = self.dialog.get_field(str(index) + 'A_name').get_value()
+                new_size = self.dialog.get_field(str(index) + 'A_size').get_value()
+                if new_size == 'custom':
+                    vol = float(self.dialog.get_field(str(index) + 'A_custom_vol').get_value())
+                    tare = float(self.dialog.get_field(str(index) + 'A_custom_tare').get_value())
+                else:
+                    vol = self.h.keg_data[new_size][0]
+                    tare = self.h.keg_data[new_size][1]
+                #print "%s %s %s %s" % (new_name, new_size, vol, tare)
+                hx_conf['channels']['A']['name'] = new_name
+                hx_conf['channels']['A']['size_name'] = new_size
+                hx_conf['channels']['A']['size'] = [vol, tare]
+
+
+            except (KeyError, IndexError):
+                pass
+
+            # channel B settings
+            try:
+                new_name = self.dialog.get_field(str(index) + 'B_name').get_value()
+                new_size = self.dialog.get_field(str(index) + 'B_size').get_value()
+                if new_size == 'custom':
+                    vol = float(self.dialog.get_field(str(index) + 'B_custom_vol').get_value())
+                    tare = float(self.dialog.get_field(str(index) + 'B_custom_tare').get_value())
+                else:
+                    vol = self.h.keg_data[new_size][0]
+                    tare = self.h.keg_data[new_size][1]
+                #print "%s %s %s %s" % (new_name, new_size, vol, tare)
+                hx_conf['channels']['B']['name'] = new_name
+                hx_conf['channels']['B']['size_name'] = new_size
+                hx_conf['channels']['B']['size'] = [vol, tare]
+
+            except (KeyError, IndexError):
+                pass
 
         self.shmem_write(5)
 
 
-
     def main( self ):
         self.shmem_read(5)
+
+        self.KegLines = list()
+        self.settings_up = False
 
         # root object
         self.container = gui.HBox(width = 480, height = 150 )
@@ -215,69 +290,97 @@ class Web(App):
         self.temp.style['padding-bottom'] = '1em'
         left.append(self.temp, 1)
 
-        # settings button
-        self.settings_button = gui.Image('/res/settings_16.png')
-        self.settings_button.set_on_click_listener(self.show_settings_menu)
-        self.settings_button.style['padding-bottom'] = '1.6em'
-        right.append(self.settings_button, 1)
-
         # title
         self.title = gui.Label("HOPLITE")
         self.title.style['font-size'] = '2em'
         self.title.style['padding-bottom'] = '0.5em'
         center.append(self.title, 1)
 
-        # keg A information
-        self.kegA_label = gui.Label(self.ShData['config']['kegs']['kegA'].get('name', 'No name'),
-                                     width=100, height=30)
-        left.append(self.kegA_label, 2)
+        # settings button
+        self.settings_button = gui.Image('/res/settings_16.png', width=16)
+        self.settings_button.set_on_click_listener(self.show_settings_menu)
+        self.settings_button.style['padding-bottom'] = '1.6em'
+        right.append(self.settings_button, 1)
 
-        self.kegA_bar = gui.Svg( 240, 30 )
+        # iterate through HX sensors
+        for index, hx_conf in enumerate(self.ShData['config']['hx']):
 
-        self.kegA_bar_rect = gui.SvgRectangle( 0, 0, 
-                                               240 * self.get_keg_fill_percent('kegA'), 30 )
-        self.kegA_bar_rect.style['fill'] = 'rgb(255,0,0)'
+            hx_weight = self.ShData['data']['weight'][index]
+            self.KegLines.insert(index, list())
+            self.KegLines[index].insert(0, None)
+            self.KegLines[index].insert(1, None)
 
-        self.kegA_bar_outline = gui.SvgRectangle( 0, 0, 240, 30 )
-        self.kegA_bar_outline.style['fill'] = 'rgb(0,0,0)'
-        self.kegA_bar_outline.style['fill-opacity'] = '0'
+            # keg A information
+            try:
+                kegA_name = hx_conf['channels']['A'].get('name', None)
+            except KeyError:
+                kegA_name = None
 
-        self.kegA_bar.append( self.kegA_bar_rect )
-        self.kegA_bar.append( self.kegA_bar_outline )
-        center.append(self.kegA_bar, 2)
+            if kegA_name != None:
+                kegA_label = gui.Label(kegA_name, width=100, height=30)
 
-        self.kegA_weight=gui.Label(self.h.as_kg(self.ShData['data'].get('kegA_w', 0)),
-                                                width=100, height=30 )
+                kegA_bar = gui.Svg(240, 30)
+                kegA_w = hx_weight[0]
+                kegA_net_w = hx_conf['channels']['A']['size'][0]
+                kegA_tare = hx_conf['channels']['A']['size'][1]
+                kegA_fill_pct = self.get_keg_fill_percent(kegA_w, kegA_net_w, kegA_tare)
+                kegA_bar_rect = gui.SvgRectangle(0,0, 240 * kegA_fill_pct,30)
+                kegA_bar_rect.style['fill'] = 'rgb(255,0,0)'
+                kegA_bar_outline = gui.SvgRectangle(0,0, 240,30)
+                kegA_bar_outline.style['fill'] = 'rgb(0,0,0)'
+                kegA_bar_outline.style['fill-opacity'] = '0'
+                kegA_bar.append(kegA_bar_rect)
+                kegA_bar.append(kegA_bar_outline)
 
-        right.append( self.kegA_weight, 2 )
+                kegA_weight=gui.Label(self.h.as_kg(kegA_w), width=100, height=30)
 
-        # keg B information
+                left.append(kegA_label, (index + 1) * 2)
+                center.append(kegA_bar, (index + 1) * 2)
+                right.append(kegA_weight, (index + 1) * 2)
 
-        self.kegB_label = gui.Label(self.ShData['config']['kegs']['kegB'].get('name', 'No name'),
-                                     width=100, height=30 )
-        left.append(self.kegB_label, 3)
+                try:
+                    self.KegLines[index].insert(0, [kegA_label, kegA_bar_rect, kegA_weight])
+                except KeyError:
+                    self.KegLines.insert(index, [kegA_label, kegA_bar_rect, kegA_weight])
 
-        self.kegB_bar = gui.Svg( 240, 30 )
-        self.kegB_bar_rect = gui.SvgRectangle( 0, 0, 
-                                               240 * self.get_keg_fill_percent('kegB'), 30 )
-        self.kegB_bar_rect.style['fill'] = 'rgb(255,0,0)'
-        self.kegB_bar_outline = gui.SvgRectangle( 0, 0, 240, 30 )
-        self.kegB_bar_outline.style['fill'] = 'rgb(0,0,0)'
-        self.kegB_bar_outline.style['fill-opacity'] = '0'
+            # keg B information
+            try:
+                kegB_name = hx_conf['channels']['B'].get('name', None)
+            except:
+                kegB_name = None
 
-        self.kegB_bar.append( self.kegB_bar_rect )
-        self.kegB_bar.append( self.kegB_bar_outline )
-        center.append(self.kegB_bar, 3)
+            if kegB_name != None:
+                kegB_label = gui.Label(kegB_name, width=100, height=30)
 
-        self.kegB_weight=gui.Label(self.h.as_kg(self.ShData['data'].get('kegB_w', 0)),
-                                   width=100, height=30 )
-        right.append(self.kegB_weight, 3)
+                kegB_bar = gui.Svg(240, 30)
+                kegB_w = hx_weight[1]
+                kegB_net_w = hx_conf['channels']['B']['size'][0]
+                kegB_tare = hx_conf['channels']['B']['size'][1]
+                kegB_fill_pct = self.get_keg_fill_percent(kegB_w, kegB_net_w, kegB_tare)
+                kegB_bar_rect = gui.SvgRectangle(0,0, 240 * kegB_fill_pct,30)
+                kegB_bar_rect.style['fill'] = 'rgb(255,0,0)'
+                kegB_bar_outline = gui.SvgRectangle(0,0, 240,30)
+                kegB_bar_outline.style['fill'] = 'rgb(0,0,0)'
+                kegB_bar_outline.style['fill-opacity'] = '0'
+                kegB_bar.append(kegB_bar_rect)
+                kegB_bar.append(kegB_bar_outline)
+
+                kegB_weight=gui.Label(self.h.as_kg(kegB_w), width=100, height=30)
+
+                left.append(kegB_label, ((index + 1) * 2) + 1)
+                center.append(kegB_bar, ((index + 1) * 2) + 1)
+                right.append(kegB_weight, ((index + 1) * 2) + 1)
+
+                try:
+                    self.KegLines[index].insert(1, [kegB_label, kegB_bar_rect, kegB_weight])
+                except KeyError:
+                    self.KegLines.insert(index, [kegB_label, kegB_bar_rect, kegB_weight])
 
         # return of the root widget
         return self.container
 
 
 if __name__ == '__main__':
-    start( Web, address="192.168.1.173", standalone=False )
+    start( Web, address="192.168.1.173", standalone=False, update_interval=0.5 )
 
 
