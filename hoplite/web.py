@@ -107,8 +107,9 @@ class Web(App):
                     self.KegLines[index][1][2].set_text(self.h.as_kg(w))
                 except (KeyError, IndexError):
                     pass
-
-        self.temp.set_text(self.h.as_degF(self.ShData['data'].get('temp', 'No data')))
+        t = self.h.as_degF(self.ShData['data'].get('temp', '0'))
+        co2 = self.ShData['data'].get('co2', '???')
+        self.temp.set_text("%s<br />CO2:%s%%" % (t, co2))
 
 
     def close( self ):
@@ -280,7 +281,9 @@ class Web(App):
         first_row = gui.TableRow(height = 60)
 
         # temperature
-        self.temp = gui.Label(self.h.as_degF(self.ShData['data'].get('temp', 'No data')))
+        t = self.h.as_degF(self.ShData['data'].get('temp', '0'))
+        co2 = self.ShData['data'].get('co2', '???')
+        self.temp = gui.Label("%s<br />CO2:%s%%" % (t, co2))
         self.temp.style['padding-bottom'] = '1em'
         table_item = gui.TableItem()
         table_item.append(self.temp)
