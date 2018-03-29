@@ -1,24 +1,88 @@
 {
-  "kegs": {
-    "dout": 5, 
-    "pd_sck": 6, 
-    "kegA": {
-      "refunit": 21.7, 
-      "size": [
-        58.6, 
-        13.6
-      ], 
-      "name": "Left Keg", 
-      "offset": 8061074.0
+  "hx": [
+    {
+      "channels": {
+        "A": {
+          "refunit": 21.7, 
+          "offset": 8067875.0, 
+          "size_name": "half_bbl", 
+          "name": "Yuengling", 
+          "size": [
+            58.6, 
+            13.6
+          ]
+        }, 
+        "B": {
+          "refunit": 5.4, 
+          "offset": 8442810.0, 
+          "size_name": "sixth_bbl", 
+          "name": "Angry Orchard", 
+          "size": [
+            19.5, 
+            7.5
+          ]
+        }
+      }, 
+      "pd_sck": 6, 
+      "dout": 5
     }, 
-    "kegB": {
-      "refunit": 5.4, 
-      "size": [
-        19.5, 
-        7.5
-      ], 
-      "name": "Right Keg", 
-      "offset": 8451808.0
+    {
+      "channels": {
+        "A": {
+          "refunit": 21.7, 
+          "offset": 8067875.0, 
+          "size_name": "half_bbl", 
+          "name": "Ghost", 
+          "size": [
+            58.6, 
+            13.6
+          ]
+        }, 
+        "B": {
+          "refunit": 5.4, 
+          "offset": 8442810.0, 
+          "size_name": "sixth_bbl", 
+          "name": "Spirit", 
+          "size": [
+            19.5, 
+            7.5
+          ]
+        }
+      }, 
+      "pd_sck": 12, 
+      "dout": 13
+    }, 
+    {
+      "channels": {
+        "A": {
+          "refunit": 21.7, 
+          "offset": 8067875.0, 
+          "size_name": "half_bbl", 
+          "name": "Lonely Ghost", 
+          "size": [
+            58.6, 
+            13.6
+          ]
+        }
+      }, 
+      "pd_sck": 12, 
+      "dout": 13
+    },
+    {
+      "channels": {
+        "B": {
+          "refunit": 21.7,
+          "offset": 8067875.0,
+          "size_name": "half_bbl",
+          "name": "Solo Spirit",
+          "size": [
+            58.6,
+            13.6
+          ]
+        }
+      },
+      "pd_sck": 12,
+      "dout": 13
     }
-  }
+  ]
 }

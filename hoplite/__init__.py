@@ -52,7 +52,7 @@ class Hoplite():
             'corny': (18.9, 4),
         }
 
-        mem = posix_ipc.SharedMemory('/hoplite', flags=posix_ipc.O_CREAT, size=1024)
+        mem = posix_ipc.SharedMemory('/hoplite', flags=posix_ipc.O_CREAT, size=65536)
         self.ShMem = mmap.mmap(mem.fd, mem.size)
         mem.close_fd()
 
@@ -104,13 +104,13 @@ class Hoplite():
         try:
             offset_A = hx_conf['channels']['A']['offset']
             refunit_A = hx_conf['channels']['A']['refunit']
-        except ValueError:
+        except (ValueError, KeyError):
             offset_A = None
             refunit_A = None
         try:
             offset_B = hx_conf['channels']['B']['offset']
             refunit_B = hx_conf['channels']['B']['refunit']
-        except ValueError:
+        except (ValueError, KeyError):
             offset_B = None
             refunit_B = None
 
@@ -242,14 +242,29 @@ class Hoplite():
 
 
     def render_st7735(self, weight, hx_conf):
-        kegA = weight[0]
-        kegB = weight[1]
-        kegA_name = hx_conf['channels']['A']['name'][0:13]
-        kegB_name = hx_conf['channels']['B']['name'][0:13]
-        kegA_min = hx_conf['channels']['A']['size'][1] * 1000
-        kegB_min = hx_conf['channels']['B']['size'][1] * 1000
-        kegA_max = kegA_min + ( hx_conf['channels']['A']['size'][0] * 1000 )
-        kegB_max = kegB_min + ( hx_conf['channels']['B']['size'][0] * 1000 )
+        try:
+            kegA = weight[0]
+            kegA_name = hx_conf['channels']['A']['name'][0:13]
+            kegA_min = hx_conf['channels']['A']['size'][1] * 1000
+            kegA_max = kegA_min + ( hx_conf['channels']['A']['size'][0] * 1000 )
+        except (ValueError, KeyError):
+            # no channel A data
+            kegA = 0
+            kegA_name = None
+            kegA_min = 0
+            kegA_max = 0
+
+        try:
+            kegB = weight[1]
+            kegB_name = hx_conf['channels']['B']['name'][0:13]
+            kegB_min = hx_conf['channels']['B']['size'][1] * 1000
+            kegB_max = kegB_min + ( hx_conf['channels']['B']['size'][0] * 1000 )
+        except (ValueError, KeyError):
+            # no channel B data
+            kegB = 0
+            kegB_name = None
+            kegB_min = 0
+            kegB_max = 0
 
         with canvas(self.device) as self.draw:
             print "%s: %s/%s  %s: %s/%s" % ( kegA_name, kegA, kegA_max, 
@@ -261,13 +276,15 @@ class Hoplite():
             self.text_align_center(30, 0, self.as_degF(self.temp), fill="blue")
             self.text_align_center(130, 0, "CO2:XX%", fill="blue")
 
-            self.text_align_center(40, 15, kegA_name)
-            self.fill_bar(30, 35, kegA_min, kegA_max, kegA)
-            self.text_align_center(40, self.device.height-10, self.as_kg(kegA))
+            if kegA_name:
+                self.text_align_center(40, 15, kegA_name)
+                self.fill_bar(30, 35, kegA_min, kegA_max, kegA)
+                self.text_align_center(40, self.device.height-10, self.as_kg(kegA))
 
-            self.text_align_center(120, 15, kegB_name)
-            self.fill_bar(110, 35, kegB_min, kegB_max, kegB)
-            self.text_align_center(120, self.device.height-10, self.as_kg(kegB))
+            if kegB_name:
+                self.text_align_center(120, 15, kegB_name)
+                self.fill_bar(110, 35, kegB_min, kegB_max, kegB)
+                self.text_align_center(120, self.device.height-10, self.as_kg(kegB))
 
 
     def read_temp(self):
@@ -319,6 +336,7 @@ class Hoplite():
 
         self.ShData = dict()
         self.ShData['data'] = dict()
+        self.ShData['data']['weight'] = list()
         self.ShData['config'] = self.config
 
         self.shmem_write()
@@ -327,22 +345,34 @@ class Hoplite():
 
         self.setup_all_kegs()
         
-        # HACK - figure out how to read/render multiple kegs later
-        hx = self.hx_handles[0]
+        index = 0
 
         while True:
             try:
+                # HACK - figure out how to read/render multiple kegs later
+                #hx = self.hx_handles[0]
+                hx = self.hx_handles[index]
+
                 weight = self.read_weight(hx)
                 self.temp = self.read_temp()
-                self.render_st7735(weight, self.config['hx'][0])
+
+                self.render_st7735(weight, self.config['hx'][index])
+
                 self.shmem_read()
                 if self.ShData['config']:
                     self.config = self.ShData['config']
-                self.ShData['data']['kegA_w'] = weight[0]
-                self.ShData['data']['kegB_w'] = weight[1]
+                try:
+                    self.ShData['data']['weight'][index] = weight
+                except IndexError:
+                    self.ShData['data']['weight'].insert(index, weight)
                 self.ShData['data']['temp'] = self.temp
                 self.shmem_write()
-                time.sleep(1)
+
+                index += 1
+                if index >= len(self.hx_handles):
+                    index = 0
+
+                time.sleep(3)
             except (KeyboardInterrupt, SystemExit):
                 self.cleanup()
                 sys.exit()
