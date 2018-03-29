@@ -8,14 +8,20 @@ def calibrate(index, channel, weight, conf_file):
     h = Hoplite()
     config = h.load_config(conf_file)
     if index == "co2":
-        print "CO2"
-        print channel
-        print weight
+        co2 = h.init_co2()
+        cal = h.hx711_cal_chA(co2, weight)
+
+        config['co2']['refunit'] = cal
+        print "Calibration unit %s, saved to config" % cal
+        h.save_config(config, conf_file)
+
+        GPIO.cleanup()
+        sys.exit()
     else:
         try:
             i = int(index) - 1
             hx = h.init_hx711(config['hx'][i])
-        except KeyError:
+        except (KeyError, ValueError):
             print 'Sensor %s not found!' % index
             GPIO.cleanup()
             sys.exit()
@@ -59,6 +65,14 @@ def tare(conf_file):
             print "Sensor %s channel B offset saved as %s" % (str(index + 1), hx.OFFSET_B)
         except KeyError:
             pass
+
+    co2 = h.init_co2()
+    co2.tare_A()
+    try:
+        config['co2']['offset'] = co2.OFFSET_A
+        print "CO2 channel A offset saved as %s" % co2.OFFSET_A
+    except KeyError:
+        pass
 
     h.save_config(config, conf_file)
     GPIO.cleanup()
