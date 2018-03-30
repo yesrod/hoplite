@@ -178,12 +178,15 @@ class Hoplite():
     def load_config(self, config_file="config.json"):
         try: 
             save = open(config_file, "r")
-            self.config = json.load(save)
+            config = json.load(save)
             save.close()
-        except (IOError, ValueError):
-            print "no config found, using defaults"
-            self.config = self.build_config()
-        return self.config
+        except IOError:
+            print "No config found at %s, using defaults" % config_file
+            config = self.build_config()
+	except ValueError:
+            print "Config at %s has syntax issues, cannot load" % config_file
+            config = None
+        return config
 
     
     def save_config(self, config, config_file="config.json"):
@@ -360,6 +363,10 @@ class Hoplite():
     def main(self, config_file='config.json'):
         self.config_file = config_file
         self.config = self.load_config(self.config_file)
+	if self.config == None:
+            print "No valid config, bailing out"
+            self.cleanup()
+            sys.exit()
 
         self.ShData = dict()
         self.ShData['data'] = dict()
