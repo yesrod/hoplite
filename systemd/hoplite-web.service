@@ -1,0 +1,10 @@
+[Unit]
+Description=HOPLITE-WEB: Web interface to a kegerator monitoring script for RasPi
+Requires=hoplite.service
+After=hoplite.service
+
+[Service]
+ExecStart=/usr/bin/python2 -m hoplite.web
+
+[Install]
+WantedBy=multi-user.target hoplite.service

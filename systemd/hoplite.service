@@ -1,0 +1,10 @@
+[Unit]
+Description=HOPLITE: A kegerator monitoring script for RasPi
+
+[Service]
+ExecStart=/usr/bin/python2 -m hoplite --config /etc/hoplite/config.json
+TimeoutStopSec=10
+KillSignal=SIGINT
+
+[Install]
+WantedBy=multi-user.target
