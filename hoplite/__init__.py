@@ -43,6 +43,9 @@ class Hoplite():
     # config file location
     global config_file
 
+    # debug flag
+    global debug
+
     def __init__(self):
         # keg data dictionary
         # value is list( volume in liters, empty weight in kg )
@@ -54,12 +57,19 @@ class Hoplite():
             'corny': (18.9, 4),
         }
 
+        self.debug = False
+
         mem = posix_ipc.SharedMemory('/hoplite', flags=posix_ipc.O_CREAT, size=65536)
         self.ShMem = mmap.mmap(mem.fd, mem.size)
         mem.close_fd()
 
         self.ShLock = posix_ipc.Semaphore('/hoplite', flags=posix_ipc.O_CREAT)
         self.ShLock.release()
+
+
+    def debug_msg(self, message):
+        if self.debug:
+            print message
 
 
     def shmem_read(self, timeout=None):
@@ -126,7 +136,7 @@ class Hoplite():
                 hx.set_offset_A(offset_A)
             else:
                 hx.tare_A()
-                print "channel A offset: %s" % hx.OFFSET_A
+                self.debug_msg("channel A offset: %s" % hx.OFFSET_A)
 
         if refunit_B: 
             hx.set_reference_unit_B(refunit_B)
@@ -134,7 +144,7 @@ class Hoplite():
                 hx.set_offset_B(offset_B)
             else:
                 hx.tare_B()
-                print "channel B offset: %s" % hx.OFFSET_B
+                self.debug_msg("channel B offset: %s" % hx.OFFSET_B)
 
         return hx
 
@@ -290,11 +300,11 @@ class Hoplite():
 
 
         with canvas(self.device) as self.draw:
-            print "%s: %s/%s  %s: %s/%s" % ( kegA_name, kegA, kegA_max, 
-                                             kegB_name, kegB, kegB_max )
-            print "min: %s %s" % ( kegA_min, kegB_min )
-            print self.as_degF(self.temp)
-            print "CO2: "+str(self.get_co2_pct())+"%"
+            self.debug_msg("%s: %s/%s  %s: %s/%s" % ( kegA_name, kegA, kegA_max, 
+                                             kegB_name, kegB, kegB_max ))
+            self.debug_msg("min: %s %s" % ( kegA_min, kegB_min ))
+            self.debug_msg(self.as_degF(self.temp))
+            self.debug_msg("CO2: "+str(self.get_co2_pct())+"%")
 
             self.text_header(0, "HOPLITE", fill="red")
             self.text_align_center(30, 0, self.as_degF(self.temp), fill="blue")

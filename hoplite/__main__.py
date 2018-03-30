@@ -92,6 +92,9 @@ def __main__():
     parser.add_argument('--tare',
                     action='store_true',
                     help='Tare all sensors.  Make sure the sensor platforms are empty and sitting level before you run this!')
+    parser.add_argument('--debug',
+                    action='store_true',
+                    help='Enable debugging messages')
 
     parsed_args = parser.parse_args()
 
@@ -106,6 +109,8 @@ def __main__():
         calibrate(parsed_args.cal[0], parsed_args.cal[1], parsed_args.cal[2], config)
     else:
         h = Hoplite()
+        if parsed_args.debug:
+            h.debug = True
         h.main( config_file = config )
 
 if __name__ == "__main__":
