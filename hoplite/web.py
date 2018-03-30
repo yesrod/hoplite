@@ -397,6 +397,6 @@ class Web(App):
 
 
 if __name__ == '__main__':
-    start( Web, address="192.168.1.173", standalone=False, update_interval=0.5 )
+    start( Web, address="0.0.0.0", port=80, standalone=False, update_interval=0.5 )
 
 
