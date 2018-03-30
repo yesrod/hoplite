@@ -365,20 +365,16 @@ class Hoplite():
         self.config = self.load_config(self.config_file)
 	if self.config == None:
             print "No valid config, bailing out"
-            self.cleanup()
             sys.exit()
 
         self.ShData = dict()
         self.ShData['data'] = dict()
         self.ShData['data']['weight'] = list()
         self.ShData['config'] = self.config
-
         self.shmem_write()
 
         self.device = self.init_st7735()
-
         self.co2 = self.init_co2()
-
         self.setup_all_kegs()
         
         index = 0
