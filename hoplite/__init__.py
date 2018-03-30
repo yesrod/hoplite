@@ -331,13 +331,13 @@ class Hoplite():
 
 
     def as_degC(self, temp):
-        return u"%s\u00b0C" % "{0:.1f}".format(temp / 1000.0)
+        return u"%s\u00b0C".encode('utf-8') % "{0:.1f}".format(temp / 1000.0)
 
 
     def as_degF(self, temp):
         real_c = temp / 1000.0
         deg_f = real_c * (9.0/5.0) + 32.0
-        return u"%s\u00b0F" % "{0:.1f}".format(deg_f)
+        return u"%s\u00b0F".encode('utf-8') % "{0:.1f}".format(deg_f)
 
 
     def cleanup(self):
