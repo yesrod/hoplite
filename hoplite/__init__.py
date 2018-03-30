@@ -9,7 +9,6 @@ import json
 import posix_ipc
 import mmap
 import glob
-import signal
 from hx711 import HX711
 
 
@@ -380,10 +379,6 @@ class Hoplite():
 
 
     def main(self, config_file='config.json'):
-        # make sure we cleanup if we're exiting
-        signal.signal(signal.SIGINT, self.cleanup)
-        signal.signal(signal.SIGTERM, self.cleanup)
-
         self.config_file = config_file
         self.config = self.load_config(self.config_file)
 	if self.config == None:
