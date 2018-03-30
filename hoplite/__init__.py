@@ -9,6 +9,7 @@ import json
 import posix_ipc
 import mmap
 import glob
+import signal
 from hx711 import HX711
 
 
@@ -340,15 +341,23 @@ class Hoplite():
         return u"%s\u00b0F".encode('utf-8') % "{0:.1f}".format(deg_f)
 
 
-    def cleanup(self):
+    def cleanup(self, signum=None, frame=None):
         self.save_config(self.config, self.config_file)
         for hx in self.hx_handles:
-            hx.power_down()
+            try:
+                hx.power_down()
+            except RuntimeError:
+                # GPIO already cleaned up
+                pass
         GPIO.cleanup()
-        self.ShMem.close()
-        posix_ipc.unlink_shared_memory('/hoplite')
-        self.ShLock.release()
-        self.ShLock.unlink()
+        try:
+            self.ShMem.close()
+            posix_ipc.unlink_shared_memory('/hoplite')
+            self.ShLock.release()
+            self.ShLock.unlink()
+        except posix_ipc.ExistentialError:
+            # shmem already cleaned up
+            pass
 
 
     def setup_all_kegs(self):
@@ -361,6 +370,10 @@ class Hoplite():
 
 
     def main(self, config_file='config.json'):
+        # make sure we cleanup if we're exiting
+        signal.signal(signal.SIGINT, self.cleanup)
+        signal.signal(signal.SIGTERM, self.cleanup)
+
         self.config_file = config_file
         self.config = self.load_config(self.config_file)
 	if self.config == None:
@@ -405,7 +418,7 @@ class Hoplite():
                     index = 0
 
                 time.sleep(3)
-            except (KeyboardInterrupt, SystemExit):
+            except (KeyboardInterrupt, SystemExit, RuntimeError):
                 self.cleanup()
                 sys.exit()
 
