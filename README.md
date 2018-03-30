@@ -78,8 +78,20 @@ For the web interface
 ```
 python -m hoplite.web
 ```
+#### systemd
+Systemd service files are in the ```systemd/``` folder in the repo.
+```
+cp systemd/hoplite*.system /etc/systemd/system/
+systemctl daemon-reload
+systemctl start hoplite
+systemctl start hoplite-web
+```
 
-Systemd service definitions will be added eventually.
+To start on boot, install the files as above, then 
+```
+systemctl enable hoplite
+systemctl enable hoplite-web
+```
 
 TODO:
 -----
@@ -89,4 +101,3 @@ TODO:
    * Percentage/weight/pints left estimate display configurability
    * Preferred display units (will always use metric internally though)
  * Temperature and beer level history graphing
- * Systemd service definitions
