@@ -315,7 +315,7 @@ class Hoplite():
             f = open(device_file, 'r')
             temp = f.read()
             f.close()
-        except (IOError, ValueError):
+        except (IOError, ValueError, IndexError):
             temp = 0
         return int(temp)
 
