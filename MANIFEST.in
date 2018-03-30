@@ -1,2 +1,2 @@
 # include static files
-recursive-include hoplite/static/*
+recursive-include hoplite/static/ *
