@@ -138,14 +138,14 @@ class Hoplite():
         return hx
 
 
-    def init_co2(self):
-        co2 = self.init_hx711(self.config['co2'])
+    def init_co2(self, co2_conf):
+        co2 = self.init_hx711(co2_conf)
         try:
-            co2.set_reference_unit_A(self.config['co2']['refunit'])
+            co2.set_reference_unit_A(co2_conf['refunit'])
         except KeyError:
             pass
         try:
-            co2.set_offset_A(self.config['co2']['offset'])
+            co2.set_offset_A(co2_conf['offset'])
         except KeyError:
             pass
         return co2
@@ -374,7 +374,7 @@ class Hoplite():
         self.shmem_write()
 
         self.device = self.init_st7735()
-        self.co2 = self.init_co2()
+        self.co2 = self.init_co2(self.config['co2'])
         self.setup_all_kegs()
         
         index = 0

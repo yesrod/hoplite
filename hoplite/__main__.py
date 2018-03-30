@@ -8,7 +8,7 @@ def calibrate(index, channel, weight, conf_file):
     h = Hoplite()
     config = h.load_config(conf_file)
     if index == "co2":
-        co2 = h.init_co2()
+        co2 = h.init_co2(config['co2'])
         cal = h.hx711_cal_chA(co2, weight)
 
         config['co2']['refunit'] = cal
@@ -66,7 +66,7 @@ def tare(conf_file):
         except KeyError:
             pass
 
-    co2 = h.init_co2()
+    co2 = h.init_co2(config['co2'])
     co2.tare_A()
     try:
         config['co2']['offset'] = co2.OFFSET_A
