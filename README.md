@@ -3,6 +3,8 @@ HOPLITE
 
 [Wiki](https://github.com/yesrod/hoplite/wiki)
 
+[Configuration](https://github.com/yesrod/hoplite/wiki/Configuration)
+
 [Screenshots](https://github.com/yesrod/hoplite/wiki/Screenshots)
 
 A Python module to monitor the status of my kegerator.  Runs on a Raspberry Pi
