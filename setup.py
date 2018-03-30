@@ -9,7 +9,7 @@ setup(
     install_requires=['Rpi.GPIO', 'numpy', 'luma.lcd', 'hx711', 'posix_ipc'],
     package_dir={'hoplite': 'hoplite/'},
     package_data={  # Optional
-        'hoplite': ['static/example-config.json'],
+        'hoplite': ['static/example-config.json', 'static/settings_16.png'],
     },
 )
 
