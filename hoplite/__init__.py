@@ -337,17 +337,18 @@ class Hoplite():
         co2_max = self.config['co2']['size'][0] * 1000
         co2_tare = self.config['co2']['size'][1] * 1000
         co2_net_wt = max((self.co2_w - co2_tare), 0)
-        return int(co2_net_wt / float(co2_max)) * 100
+        co2_pct = co2_net_wt / float(co2_max)
+        return int(co2_pct * 100)
 
 
     def as_degC(self, temp):
-        return u"%s\u00b0C".encode('utf-8') % "{0:.1f}".format(temp / 1000.0)
+        return u'%s\u00b0C' % '{0:.1f}'.format(temp / 1000.0)
 
 
     def as_degF(self, temp):
         real_c = temp / 1000.0
         deg_f = real_c * (9.0/5.0) + 32.0
-        return u"%s\u00b0F".encode('utf-8') % "{0:.1f}".format(deg_f)
+        return u'%s\u00b0F' % '{0:.1f}'.format(deg_f)
 
 
     def cleanup(self, signum=None, frame=None):
