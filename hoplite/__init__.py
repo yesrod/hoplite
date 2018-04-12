@@ -322,9 +322,9 @@ class Hoplite():
 
     def read_temp(self):
         base_dir = '/sys/bus/w1/devices/'
-        device_folder = glob.glob(base_dir + '28*')[0]
-        device_file = device_folder + '/hwmon/hwmon0/temp1_input'
         try:
+            device_folder = glob.glob(base_dir + '28*')[0]
+            device_file = device_folder + '/hwmon/hwmon0/temp1_input'
             f = open(device_file, 'r')
             temp = f.read()
             f.close()
