@@ -3,6 +3,8 @@ HOPLITE
 
 [Screenshots](https://github.com/yesrod/hoplite/wiki/Screenshots)
 
+[Hardware](https://github.com/yesrod/hoplite/wiki/Hardware)
+
 [Configuration](https://github.com/yesrod/hoplite/wiki/Configuration)
 
 [Wiki](https://github.com/yesrod/hoplite/wiki)
@@ -41,20 +43,7 @@ sudo pip install git+https://github.com/yesrod/hoplite.git
 
 HARDWARE
 --------
-The ST7735 LCD is connected as described in the 
-[luma.lcd](http://luma-lcd.readthedocs.io/en/latest/install.html#st7735) docs.
-
-The HX711s can be connected to any two free GPIO pins.  The ```pd_sck``` and 
-```dout``` values in the config should then be updated to reference the GPIO
-pin numbers (Broadcom-style logical numbers, not physical pin numbers) you 
-chose.
-
-The HX711s MUST be powered from the 3.3v bus of the RasPi, or another 3.3v 
-source.  5v power will cause jittery unreliable readings in the short term, 
-and damage to the Pi over time (the Pi GPIO is only rated for 3.3v).
-
-The DS18B20 is a 1-wire bus sensor.  Some info on connecting that can be found
-[here](https://thepihut.com/blogs/raspberry-pi-tutorials/18095732-sensors-temperature-with-the-1-wire-interface-and-the-ds18b20).
+See [Hardware](https://github.com/yesrod/hoplite/wiki/Hardware)
 
 CONFIGURATION
 -------------
