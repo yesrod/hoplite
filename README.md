@@ -108,9 +108,4 @@ systemctl enable hoplite-web
 
 TODO:
 -----
- * Better setup docs
- * Hardware schematics and notes
- * More configurables via the web interface
-   * Percentage/weight/pints left estimate display configurability
-   * Preferred display units (will always use metric internally though)
- * Temperature and beer level history graphing
+See [To-do list](https://github.com/yesrod/hoplite/wiki/Todo)
