@@ -248,7 +248,7 @@ class Hoplite():
         self.draw.text((x-(w/2), y), message, fill=fill)
 
     
-    def fill_bar(self, x, y, min_w, max_w, w, outline="white", fill="red"):
+    def fill_bar(self, x, y, min_w, max_w, w, outline="white", fill=None):
         net_w = max(w - min_w, 0)
         max_net_w = max_w - min_w
         fill_percent = float(net_w) / float(max_net_w)
@@ -256,8 +256,23 @@ class Hoplite():
         min_y = y+1
         max_bar = max_y - min_y
         fill_height = min_y + (max_bar - (max_bar * fill_percent))
+
+        if fill == None:
+            fill = self.fill_bar_color(fill_percent)
+
         self.draw.rectangle([x,y, x+20,self.device.height-20], outline=outline, fill="black")
         self.draw.rectangle([x+1,fill_height, x+19,max_y], outline=fill, fill=fill)
+
+
+    def fill_bar_color(self, percent):
+        if percent > 0.5:
+            return "green"
+        if 0.5 > percent > 0.2:
+            return "yellow"
+        if 0.2 > percent:
+            return "red"
+        # default in case something breaks
+        return "gray"
 
     
     def as_kg(self, val):

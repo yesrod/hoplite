@@ -90,6 +90,7 @@ class Web(App):
 
                     self.KegLines[index][0][0].set_text(name)
                     self.KegLines[index][0][1].set_size(280 * fill_pct, 30)
+                    self.KegLines[index][0][1].style['fill'] = self.h.fill_bar_color(fill_pct)
                     self.KegLines[index][0][2].set_text(self.h.as_kg(w))
                 except (KeyError, IndexError):
                     pass
@@ -104,6 +105,7 @@ class Web(App):
 
                     self.KegLines[index][1][0].set_text(name)
                     self.KegLines[index][1][1].set_size(280 * fill_pct, 30)
+                    self.KegLines[index][0][1].style['fill'] = self.h.fill_bar_color(fill_pct)
                     self.KegLines[index][1][2].set_text(self.h.as_kg(w))
                 except (KeyError, IndexError):
                     pass
@@ -332,7 +334,7 @@ class Web(App):
                 kegA_tare = hx_conf['channels']['A']['size'][1]
                 kegA_fill_pct = self.get_keg_fill_percent(kegA_w, kegA_net_w, kegA_tare)
                 kegA_bar_rect = gui.SvgRectangle(0,0, 240 * kegA_fill_pct,30)
-                kegA_bar_rect.style['fill'] = 'rgb(255,0,0)'
+                kegA_bar_rect.style['fill'] = self.h.fill_bar_color(kegA_fill_pct)
                 kegA_bar_outline = gui.SvgRectangle(0,0, 240,30)
                 kegA_bar_outline.style['fill'] = 'rgb(0,0,0)'
                 kegA_bar_outline.style['fill-opacity'] = '0'
@@ -370,7 +372,7 @@ class Web(App):
                 kegB_tare = hx_conf['channels']['B']['size'][1]
                 kegB_fill_pct = self.get_keg_fill_percent(kegB_w, kegB_net_w, kegB_tare)
                 kegB_bar_rect = gui.SvgRectangle(0,0, 240 * kegB_fill_pct,30)
-                kegB_bar_rect.style['fill'] = 'rgb(255,0,0)'
+                kegB_bar_rect.style['fill'] = self.h.fill_bar_color(kegB_fill_pct)
                 kegB_bar_outline = gui.SvgRectangle(0,0, 240,30)
                 kegB_bar_outline.style['fill'] = 'rgb(0,0,0)'
                 kegB_bar_outline.style['fill-opacity'] = '0'
