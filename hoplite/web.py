@@ -89,7 +89,7 @@ class Web(App):
                     fill_pct = self.get_keg_fill_percent(w, net_w, tare)
 
                     self.KegLines[index][0][0].set_text(name)
-                    self.KegLines[index][0][1].set_size(280 * fill_pct, 30)
+                    self.KegLines[index][0][1].set_size(240 * fill_pct, 30)
                     self.KegLines[index][0][1].style['fill'] = self.h.fill_bar_color(fill_pct)
                     self.KegLines[index][0][2].set_text(self.h.as_kg(w))
                 except (KeyError, IndexError):
@@ -104,8 +104,8 @@ class Web(App):
                     fill_pct = self.get_keg_fill_percent(w, net_w, tare)
 
                     self.KegLines[index][1][0].set_text(name)
-                    self.KegLines[index][1][1].set_size(280 * fill_pct, 30)
-                    self.KegLines[index][0][1].style['fill'] = self.h.fill_bar_color(fill_pct)
+                    self.KegLines[index][1][1].set_size(240 * fill_pct, 30)
+                    self.KegLines[index][1][1].style['fill'] = self.h.fill_bar_color(fill_pct)
                     self.KegLines[index][1][2].set_text(self.h.as_kg(w))
                 except (KeyError, IndexError):
                     pass
@@ -231,17 +231,17 @@ class Web(App):
             try:
                 new_name = self.dialog.get_field(str(index) + 'A_name').get_value()
                 new_size = self.dialog.get_field(str(index) + 'A_size').get_value()
+
                 if new_size == 'custom':
-                    vol = float(self.dialog.get_field(str(index) + 'A_custom_vol').get_value())
-                    tare = float(self.dialog.get_field(str(index) + 'A_custom_tare').get_value())
+                    custom = self.dialog.get_field(str(index) + 'A_custom')
+                    vol = float(custom.children['1'].get_value())
+                    tare = float(custom.children['3'].get_value())
                 else:
                     vol = self.h.keg_data[new_size][0]
                     tare = self.h.keg_data[new_size][1]
-                #print "%s %s %s %s" % (new_name, new_size, vol, tare)
                 hx_conf['channels']['A']['name'] = new_name
                 hx_conf['channels']['A']['size_name'] = new_size
                 hx_conf['channels']['A']['size'] = [vol, tare]
-
 
             except (KeyError, IndexError):
                 pass
@@ -251,12 +251,12 @@ class Web(App):
                 new_name = self.dialog.get_field(str(index) + 'B_name').get_value()
                 new_size = self.dialog.get_field(str(index) + 'B_size').get_value()
                 if new_size == 'custom':
-                    vol = float(self.dialog.get_field(str(index) + 'B_custom_vol').get_value())
-                    tare = float(self.dialog.get_field(str(index) + 'B_custom_tare').get_value())
+                    custom = self.dialog.get_field(str(index) + 'B_custom')
+                    vol = float(custom.children['1'].get_value())
+                    tare = float(custom.children['3'].get_value())
                 else:
                     vol = self.h.keg_data[new_size][0]
                     tare = self.h.keg_data[new_size][1]
-                #print "%s %s %s %s" % (new_name, new_size, vol, tare)
                 hx_conf['channels']['B']['name'] = new_name
                 hx_conf['channels']['B']['size_name'] = new_size
                 hx_conf['channels']['B']['size'] = [vol, tare]

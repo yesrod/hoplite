@@ -262,6 +262,7 @@ class Hoplite():
 
         self.draw.rectangle([x,y, x+20,self.device.height-20], outline=outline, fill="black")
         self.draw.rectangle([x+1,fill_height, x+19,max_y], outline=fill, fill=fill)
+        self.debug_msg("%s: %s" % (fill_percent, fill)) 
 
 
     def fill_bar_color(self, percent):
