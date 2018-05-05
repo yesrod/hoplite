@@ -172,7 +172,7 @@ class Hoplite():
     def hx711_cal_chA(self, hx, real_w):
         ref = hx.REFERENCE_UNIT_A
         hx.set_reference_unit_A(1)
-        raw_w = hx.get_weight_A(3)
+        raw_w = hx.get_weight_A(7)
         hx.set_reference_unit_A(ref)
         return raw_w / float(real_w)
 
@@ -180,7 +180,7 @@ class Hoplite():
     def hx711_cal_chB(self, hx, real_w):
         ref = hx.REFERENCE_UNIT_B
         hx.set_reference_unit_B(1)
-        raw_w = hx.get_weight_B(3)
+        raw_w = hx.get_weight_B(7)
         hx.set_reference_unit_B(ref)
         return raw_w / float(real_w)
 
