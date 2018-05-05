@@ -281,10 +281,9 @@ class Hoplite():
 
 
     def read_weight(self, hx):
-        hx.power_up()
+        hx.reset()
         kegA = self.hx711_read_chA(hx)
         kegB = self.hx711_read_chB(hx)
-        hx.power_down()
         return ( kegA, kegB )
 
 
