@@ -255,7 +255,7 @@ class Hoplite():
         max_y = self.device.height - 21
         min_y = y+1
         max_bar = max_y - min_y
-        fill_height = min_y + (max_bar - (max_bar * fill_percent))
+        fill_height = max(min_y, min_y + (max_bar - (max_bar * fill_percent)))
 
         if fill == None:
             fill = self.fill_bar_color(fill_percent)
