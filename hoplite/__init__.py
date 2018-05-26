@@ -280,6 +280,9 @@ class Hoplite():
         return "%s kg" % "{0:.2f}".format(val / 1000.0)
 
 
+    def as_pint(self, val):
+        return '%s pt.' % (val / 473)
+
     def read_weight(self, hx):
         hx.reset()
         kegA = self.hx711_read_chA(hx)
@@ -327,12 +330,12 @@ class Hoplite():
             if kegA_name:
                 self.text_align_center(40, 15, kegA_name)
                 self.fill_bar(30, 35, kegA_min, kegA_max, kegA)
-                self.text_align_center(40, self.device.height-10, self.as_kg(kegA))
+                self.text_align_center(40, self.device.height-10, self.as_pint(kegA))
 
             if kegB_name:
                 self.text_align_center(120, 15, kegB_name)
                 self.fill_bar(110, 35, kegB_min, kegB_max, kegB)
-                self.text_align_center(120, self.device.height-10, self.as_kg(kegB))
+                self.text_align_center(120, self.device.height-10, self.as_pint(kegB))
 
 
     def read_temp(self):
