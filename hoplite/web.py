@@ -127,6 +127,54 @@ class Web(App):
         super( Web, self ).close()
 
 
+    def build_keg_settings( self, hx_conf, index, channel ):
+        net_w = hx_conf['channels'][channel]['size'][0]
+        tare = hx_conf['channels'][channel]['size'][1]
+        name = hx_conf['channels'][channel]['name']
+        size_name = hx_conf['channels'][channel]['size_name']
+        size = hx_conf['channels'][channel]['size']
+
+        keg_size_list = self.h.keg_data.keys()
+        keg_size_list.append('custom')
+
+        keg_box = gui.Widget()
+
+        box_name = gui.Label('Sensor ' + str(index) + ' Channel ' + channel)
+        keg_box.append(box_name)
+
+        keg_name = gui.HBox()
+        keg_name_lbl = gui.Label('Keg Name', width='20%')
+        keg_name.append(keg_name_lbl, 'lbl')
+        keg_name_val = gui.TextInput(single_line=True, height='1.5em')
+        keg_name_val.set_value(name)
+        keg_name.append(keg_name_val, 'val')
+        keg_box.append(keg_name, 'name')
+
+        keg_size = gui.HBox()
+        keg_size_lbl = gui.Label('Keg Size', width='20%')
+        keg_size.append(keg_size_lbl, 'lbl')
+        keg_size_val = gui.DropDown.new_from_list(keg_size_list)
+        keg_size_val.select_by_value(size_name)
+        keg_size.append(keg_size_val, 'val')
+        keg_box.append(keg_size, 'size')
+
+        custom = gui.HBox()
+        vol_lbl = gui.Label('Volume (l)', width='20%')
+        custom.append(vol_lbl, 0)
+        custom_vol = gui.TextInput(single_line=True, height='1.5em', width='30%')
+        custom_vol.set_value(str(size[0]))
+        custom.append( custom_vol, 1 )
+        tare_lbl = gui.Label('Empty Weight (kg)', width='30%')
+        custom.append( tare_lbl, 2 )
+        custom_tare = gui.TextInput(single_line=True, height='1.5em', width='20%')
+        custom_tare.set_value(str(size[1]))
+        custom.append( custom_tare, 3 )
+
+        keg_box.append(custom, 'custom')
+
+        return keg_box
+
+
     def show_settings_menu( self, widget ):
         if self.settings_up == True:
             return
@@ -145,80 +193,18 @@ class Web(App):
         for line in self.KegLines:
             for index, hx_conf in enumerate(self.ShData['config']['hx']):
 
-                keg_size_list = self.h.keg_data.keys()
-                keg_size_list.append('custom')
-
                 # channel A settings
                 try:
-                    net_w = hx_conf['channels']['A']['size'][0]
-                    tare = hx_conf['channels']['A']['size'][1]
-                    name = hx_conf['channels']['A']['name']
-                    size_name = hx_conf['channels']['A']['size_name']
-                    size = hx_conf['channels']['A']['size']
+                    keg_box = self.build_keg_settings(hx_conf, index, 'A') 
+                    self.dialog.add_field(str(index) + 'A_box', keg_box)
 
-                    keg_name = gui.TextInput(single_line=True, height='1.5em')
-                    keg_name.set_value(name)
-                    self.dialog.add_field_with_label(str(index) + 'A_name', 
-                                                     'Keg Name', keg_name)
-
-                    keg_size = gui.DropDown.new_from_list(keg_size_list)
-                    keg_size.select_by_value(size_name)
-                    self.dialog.add_field_with_label(str(index) + 'A_size', 
-                                                     'Keg Size', keg_size)
-
-                    custom = gui.HBox( width = 500, height = 30)
-                    vol_lbl = gui.Label('Volume (l)')
-                    custom.append(vol_lbl, 0)
-                    custom_vol = gui.TextInput(single_line=True, 
-                                                    width='5em', height='1.5em')
-                    custom_vol.set_value(str(size[0]))
-                    custom.append( custom_vol, 1 )
-                    tare_lbl = gui.Label('Empty Weight (kg)')
-                    custom.append( tare_lbl, 2 )
-                    custom_tare = gui.TextInput(single_line=True, 
-                                                     width='5em', height='1.5em')
-                    custom_tare.set_value(str(size[1]))
-                    custom.append( custom_tare, 3 )
-
-                    self.dialog.add_field_with_label(str(index) + 'A_custom', 
-                                                     'Custom Settings', custom)
                 except (KeyError, IndexError):
                     pass
 
                 # channel B settings
                 try:
-                    net_w = hx_conf['channels']['B']['size'][0]
-                    tare = hx_conf['channels']['B']['size'][1]
-                    name = hx_conf['channels']['B']['name']
-                    size_name = hx_conf['channels']['B']['size_name']
-                    size = hx_conf['channels']['B']['size']
-
-                    keg_name = gui.TextInput(single_line=True, height='1.5em')
-                    keg_name.set_value(name)
-                    self.dialog.add_field_with_label(str(index) + 'B_name',
-                                                     'Keg Name', keg_name)
-
-                    keg_size = gui.DropDown.new_from_list(keg_size_list)
-                    keg_size.select_by_value(size_name)
-                    self.dialog.add_field_with_label(str(index) + 'B_size',
-                                                     'Keg Size', keg_size)
-
-                    custom = gui.HBox( width = 500, height = 30)
-                    vol_lbl = gui.Label('Volume (l)')
-                    custom.append(vol_lbl, 0)
-                    custom_vol = gui.TextInput(single_line=True,
-                                                    width='5em', height='1.5em')
-                    custom_vol.set_value(str(size[0]))
-                    custom.append( custom_vol, 1 )
-                    tare_lbl = gui.Label('Empty Weight (kg)')
-                    custom.append( tare_lbl, 2 )
-                    custom_tare = gui.TextInput(single_line=True,
-                                                     width='5em', height='1.5em')
-                    custom_tare.set_value(str(size[1]))
-                    custom.append( custom_tare, 3 )
-
-                    self.dialog.add_field_with_label(str(index) + 'B_custom',
-                                                     'Custom Settings', custom)
+                    keg_box = self.build_keg_settings(hx_conf, index, 'B')
+                    self.dialog.add_field(str(index) + 'B_box', keg_box)
 
                 except (KeyError, IndexError):
                     pass
@@ -232,6 +218,24 @@ class Web(App):
         self.settings_up = False
 
 
+    def get_keg_settings(self, hx_conf, index, channel):
+        keg_box = self.dialog.get_field(str(index) + channel + '_box')
+
+        new_name = keg_box.children['name'].children['val'].get_value()
+        new_size = keg_box.children['size'].children['val'].get_value()
+
+        if new_size == 'custom':
+            custom = keg_box.children['custom']
+            vol = float(custom.children['1'].get_value())
+            tare = float(custom.children['3'].get_value())
+        else:
+            vol = self.h.keg_data[new_size][0]
+            tare = self.h.keg_data[new_size][1]
+        hx_conf['channels'][channel]['name'] = new_name
+        hx_conf['channels'][channel]['size_name'] = new_size
+        hx_conf['channels'][channel]['size'] = [vol, tare]
+
+
     def apply_settings(self, widget):
         self.settings_up = False
 
@@ -242,37 +246,14 @@ class Web(App):
 
             # channel A settings
             try:
-                new_name = self.dialog.get_field(str(index) + 'A_name').get_value()
-                new_size = self.dialog.get_field(str(index) + 'A_size').get_value()
-
-                if new_size == 'custom':
-                    custom = self.dialog.get_field(str(index) + 'A_custom')
-                    vol = float(custom.children['1'].get_value())
-                    tare = float(custom.children['3'].get_value())
-                else:
-                    vol = self.h.keg_data[new_size][0]
-                    tare = self.h.keg_data[new_size][1]
-                hx_conf['channels']['A']['name'] = new_name
-                hx_conf['channels']['A']['size_name'] = new_size
-                hx_conf['channels']['A']['size'] = [vol, tare]
+                self.get_keg_settings(hx_conf, index, 'A')
 
             except (KeyError, IndexError):
                 pass
 
             # channel B settings
             try:
-                new_name = self.dialog.get_field(str(index) + 'B_name').get_value()
-                new_size = self.dialog.get_field(str(index) + 'B_size').get_value()
-                if new_size == 'custom':
-                    custom = self.dialog.get_field(str(index) + 'B_custom')
-                    vol = float(custom.children['1'].get_value())
-                    tare = float(custom.children['3'].get_value())
-                else:
-                    vol = self.h.keg_data[new_size][0]
-                    tare = self.h.keg_data[new_size][1]
-                hx_conf['channels']['B']['name'] = new_name
-                hx_conf['channels']['B']['size_name'] = new_size
-                hx_conf['channels']['B']['size'] = [vol, tare]
+                self.get_keg_settings(hx_conf, index, 'B')
 
             except (KeyError, IndexError):
                 pass
