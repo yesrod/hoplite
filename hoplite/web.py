@@ -113,7 +113,8 @@ class Web(App):
                                                         w, (tare * 1000), mode=w_mode))
                 except (KeyError, IndexError):
                     pass
-        t = self.h.as_degF(self.ShData['data'].get('temp', '0'))
+
+        t = self.h.as_degF(self.ShData['data'].get('temp', 0))
         co2 = self.ShData['data'].get('co2', '???')
         self.temp.set_text("%s<br />CO2:%s%%" % (t, co2))
 
@@ -277,7 +278,7 @@ class Web(App):
         first_row = gui.TableRow(height = 60)
 
         # temperature
-        t = self.h.as_degF(self.ShData['data'].get('temp', '0'))
+        t = self.h.as_degF(self.ShData['data'].get('temp', 0))
         co2 = self.ShData['data'].get('co2', '???')
         self.temp = gui.Label("%s<br />CO2:%s%%" % (t, co2))
         self.temp.style['padding-bottom'] = '1em'
