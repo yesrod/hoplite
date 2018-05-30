@@ -136,6 +136,12 @@ class Web(App):
         self.dialog = gui.GenericDialog(title='Settings', 
                         width='500px')
 
+        # weight display options
+        weight_options_list = ['as_kg_gross', 'as_kg_net', 'as_pint']
+        weight_options = gui.DropDown.new_from_list(weight_options_list)
+        weight_options.select_by_value(self.ShData['config']['weight_mode'])
+        self.dialog.add_field_with_label('weight_options', 'Display Keg Weight', weight_options)
+
         for line in self.KegLines:
             for index, hx_conf in enumerate(self.ShData['config']['hx']):
 
@@ -228,6 +234,9 @@ class Web(App):
 
     def apply_settings(self, widget):
         self.settings_up = False
+
+        weight_mode = self.dialog.get_field('weight_options').get_value()
+        self.ShData['config']['weight_mode'] = weight_mode
 
         for index, hx_conf in enumerate(self.ShData['config']['hx']):
 
