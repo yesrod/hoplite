@@ -76,9 +76,9 @@ class Hoplite():
         self.ShLock.acquire(timeout)
         self.ShMem.seek(0, 0)
         while True:
-                line = self.ShMem.readline()
-                if line == '': break
-                map_data += line.rstrip('\0')
+            line = self.ShMem.readline()
+            if line == '': break
+            map_data += line.rstrip('\0')
         self.ShMem.seek(0, 0)
         self.ShLock.release()
         self.ShData = json.loads(map_data)
@@ -210,6 +210,7 @@ class Hoplite():
     
     def build_config(self):
         config = dict()
+        config['weight_mode'] = 'as_kg_gross'
         config['co2'] = dict()
         config['co2']['size'] = [2.27, 1.8]
         config['co2']['dout'] = 12
@@ -275,13 +276,44 @@ class Hoplite():
         # default in case something breaks
         return "gray"
 
-    
+
     def as_kg(self, val):
         return "%s kg" % "{0:.2f}".format(val / 1000.0)
 
 
     def as_pint(self, val):
         return '%s pt.' % int(val / 473)
+
+
+    def format_weight(self, val, tare=None, mode=None):
+        if mode == None:
+            try:
+                mode = self.config['weight_mode']
+            except ( KeyError, ValueError ):
+                mode = 'as_kg_gross'
+                self.debug_msg('using default weight mode %s' % mode)
+
+        if mode == 'as_kg_gross':
+            return self.as_kg(val)
+
+        elif mode == 'as_kg_net':
+            if tare == None:
+                raise ValueError('tare must not be None when using as_kg_net')
+                return None
+            else:
+                return self.as_kg(val - tare)
+
+        elif mode == 'as_pint':
+            if tare == None:
+                raise ValueError('tare must not be None when using as_pint')
+                return None
+            else:
+                return self.as_pint(val - tare)
+
+        else:
+            raise ValueError('bad mode %s' % mode)
+            return None
+
 
     def read_weight(self, hx):
         hx.reset()
@@ -330,12 +362,14 @@ class Hoplite():
             if kegA_name:
                 self.text_align_center(40, 15, kegA_name)
                 self.fill_bar(30, 35, kegA_min, kegA_max, kegA)
-                self.text_align_center(40, self.device.height-10, self.as_pint(kegA - kegA_min))
+                self.text_align_center(40, self.device.height-10,
+                                       self.format_weight(kegA, kegA_min))
 
             if kegB_name:
                 self.text_align_center(120, 15, kegB_name)
                 self.fill_bar(110, 35, kegB_min, kegB_max, kegB)
-                self.text_align_center(120, self.device.height-10, self.as_pint(kegB - kegB_min))
+                self.text_align_center(120, self.device.height-10,
+                                       self.format_weight(kegB, kegB_min))
 
 
     def read_temp(self):
@@ -403,6 +437,12 @@ class Hoplite():
 	if self.config == None:
             print "No valid config, bailing out"
             sys.exit()
+
+        # compatibility fixes
+        # add weight mode if absent
+        if not 'weight_mode' in self.config:
+            self.config['weight_mode'] = 'as_kg_gross'
+            self.debug_msg('adding weight_mode = %s to config' % self.config['weight_mode'])
 
         self.ShData = dict()
         self.ShData['data'] = dict()

@@ -78,6 +78,8 @@ class Web(App):
     def idle( self ):
         self.shmem_read(5)
 
+        w_mode = self.ShData['config'].get('weight_mode', 'as_kg_gross')
+
         for line in self.KegLines:
             for index, hx_conf in enumerate(self.ShData['config']['hx']):
                 # channel A update
@@ -91,7 +93,8 @@ class Web(App):
                     self.KegLines[index][0][0].set_text(name)
                     self.KegLines[index][0][1].set_size(240 * fill_pct, 30)
                     self.KegLines[index][0][1].style['fill'] = self.h.fill_bar_color(fill_pct)
-                    self.KegLines[index][0][2].set_text(self.h.as_pint(w - (tare * 1000)))
+                    self.KegLines[index][0][2].set_text(self.h.format_weight(
+                                                        w, (tare * 1000),  mode=w_mode))
                 except (KeyError, IndexError):
                     pass
 
@@ -106,7 +109,8 @@ class Web(App):
                     self.KegLines[index][1][0].set_text(name)
                     self.KegLines[index][1][1].set_size(240 * fill_pct, 30)
                     self.KegLines[index][1][1].style['fill'] = self.h.fill_bar_color(fill_pct)
-                    self.KegLines[index][1][2].set_text(self.h.as_pint(w - (tare * 1000)))
+                    self.KegLines[index][1][2].set_text(self.h.format_weight(
+                                                        w, (tare * 1000), mode=w_mode))
                 except (KeyError, IndexError):
                     pass
         t = self.h.as_degF(self.ShData['data'].get('temp', '0'))
@@ -310,6 +314,7 @@ class Web(App):
 
         self.container.append(first_row)
 
+        w_mode = self.ShData['config'].get('weight_mode', 'as_kg_gross')
 
         # iterate through HX sensors
         for index, hx_conf in enumerate(self.ShData['config']['hx']):
@@ -341,7 +346,7 @@ class Web(App):
                 kegA_bar.append(kegA_bar_rect)
                 kegA_bar.append(kegA_bar_outline)
 
-                kegA_weight=gui.Label(self.h.as_pint(kegA_w - (kegA_tare * 1000)), width=100, height=30)
+                kegA_weight=gui.Label(self.h.format_weight(kegA_w, (kegA_tare * 1000), mode=w_mode), width=100, height=30)
 
                 try:
                     self.KegLines[index].insert(0, [kegA_label, kegA_bar_rect, kegA_weight])
@@ -379,7 +384,7 @@ class Web(App):
                 kegB_bar.append(kegB_bar_rect)
                 kegB_bar.append(kegB_bar_outline)
 
-                kegB_weight=gui.Label(self.h.as_pint(kegB_w - (kegB_tare * 1000)), width=100, height=30)
+                kegB_weight=gui.Label(self.h.format_weight(kegB_w, (kegB_tare * 1000), mode=w_mode), width=100, height=30)
 
                 try:
                     self.KegLines[index].insert(1, [kegB_label, kegB_bar_rect, kegB_weight])
