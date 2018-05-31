@@ -25,13 +25,18 @@ Supports:
 INSTALLATION
 ------------
 
-For now you'll need to use my version of hx711py.  Install that first.
+You'll save time and skip having to install ```gfortran``` if you install the repo version of ```python-numpy```.
+```
+sudo apt-get update
+sudo apt-get install python-numpy
+```
 
+For now you'll need to use my version of hx711py.  Install that first.
 ```
 sudo pip install git+https://github.com/yesrod/hx711py.git
 ```
 
-Clone this respository and run
+Finally, clone this respository and run
 ```
 sudo python setup.py install
 ```
