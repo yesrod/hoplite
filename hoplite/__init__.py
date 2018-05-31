@@ -162,11 +162,11 @@ class Hoplite():
 
     
     def hx711_read_chA(self, hx):
-        return int(hx.get_weight_A(3))
+        return int(hx.get_weight_A(5))
 
     
     def hx711_read_chB(self, hx):
-        return int(hx.get_weight_B(3))
+        return int(hx.get_weight_B(5))
 
 
     def hx711_cal_chA(self, hx, real_w):
