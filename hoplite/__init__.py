@@ -72,16 +72,16 @@ class Hoplite():
 
 
     def shmem_read(self, timeout=None):
-        map_data = ''
+        map_data = b''
         self.ShLock.acquire(timeout)
         self.ShMem.seek(0, 0)
         while True:
             line = self.ShMem.readline()
-            if line == '': break
-            map_data += line.rstrip('\0')
+            if line == b'': break
+            map_data += line.rstrip(b'\0')
         self.ShMem.seek(0, 0)
         self.ShLock.release()
-        self.ShData = json.loads(map_data)
+        self.ShData = json.loads(map_data.decode())
 
 
     def shmem_write(self, timeout=None):
