@@ -68,7 +68,7 @@ class Hoplite():
 
     def debug_msg(self, message):
         if self.debug:
-            print message
+            print(message)
 
 
     def shmem_read(self, timeout=None):
@@ -87,13 +87,13 @@ class Hoplite():
     def shmem_write(self, timeout=None):
         self.ShLock.acquire(timeout)
         self.shmem_clear()
-        self.ShMem.write(json.dumps(self.ShData, indent=2))
+        self.ShMem.write(json.dumps(self.ShData, indent=2).encode())
         self.ShMem.flush()
         self.ShLock.release()
 
 
     def shmem_clear(self):
-        zero_fill = '\0' * (self.ShMem.size())
+        zero_fill = b'\0' * (self.ShMem.size())
         self.ShMem.seek(0, 0)
         self.ShMem.write(zero_fill)
         self.ShMem.seek(0, 0)
@@ -135,7 +135,7 @@ class Hoplite():
                 hx.set_offset_A(offset_A)
             else:
                 hx.tare_A()
-                self.debug_msg("channel A offset: %s" % hx.OFFSET_A)
+                self.debug_msg("channel A offset: %s" % hx.OFFSET)
 
         if refunit_B: 
             hx.set_reference_unit_B(refunit_B)
@@ -170,7 +170,7 @@ class Hoplite():
 
 
     def hx711_cal_chA(self, hx, real_w):
-        ref = hx.REFERENCE_UNIT_A
+        ref = hx.REFERENCE_UNIT
         hx.set_reference_unit_A(1)
         raw_w = hx.get_weight_A(7)
         hx.set_reference_unit_A(ref)
@@ -191,10 +191,10 @@ class Hoplite():
             config = json.load(save)
             save.close()
         except IOError:
-            print "No config found at %s, using defaults" % config_file
+            print("No config found at %s, using defaults" % config_file)
             config = self.build_config()
-	except ValueError:
-            print "Config at %s has syntax issues, cannot load" % config_file
+        except ValueError:
+            print("Config at %s has syntax issues, cannot load" % config_file)
             config = None
         return config
 
@@ -205,7 +205,7 @@ class Hoplite():
             json.dump(config, save, indent=2)
             save.close()
         except IOError as e:
-            print "Could not save config: %s" % e.strerror
+            print("Could not save config: %s" % e.strerror)
 
     
     def build_config(self):
@@ -434,8 +434,8 @@ class Hoplite():
     def main(self, config_file='config.json'):
         self.config_file = config_file
         self.config = self.load_config(self.config_file)
-	if self.config == None:
-            print "No valid config, bailing out"
+        if self.config == None:
+            print("No valid config, bailing out")
             sys.exit()
 
         # compatibility fixes

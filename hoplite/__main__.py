@@ -12,7 +12,7 @@ def calibrate(index, channel, weight, conf_file):
         cal = h.hx711_cal_chA(co2, weight)
 
         config['co2']['refunit'] = cal
-        print "Calibration unit %s, saved to config" % cal
+        print("Calibration unit %s, saved to config" % cal)
         h.save_config(config, conf_file)
 
         GPIO.cleanup()
@@ -22,7 +22,7 @@ def calibrate(index, channel, weight, conf_file):
             i = int(index) - 1
             hx = h.init_hx711(config['hx'][i])
         except (KeyError, ValueError):
-            print 'Sensor %s not found!' % index
+            print("Sensor %s not found!" % index)
             GPIO.cleanup()
             sys.exit()
 
@@ -33,14 +33,14 @@ def calibrate(index, channel, weight, conf_file):
             cal = h.hx711_cal_chB(hx, weight)
             ch = 'B'
         else:
-            print 'Sensor %s channel %s not found!' % (index, channel)
+            print("Sensor %s channel %s not found!" % (index, channel))
             GPIO.cleanup()
             sys.exit()
         try:
             config['hx'][i]['channels'][ch]['refunit'] = cal
-            print "Calibration unit %s, saved to config" % cal
+            print("Calibration unit %s, saved to config" % cal)
         except KeyError:
-            print 'Sensor %s channel %s not found!' % (index, channel)
+            print("Sensor %s channel %s not found!" % (index, channel))
         h.save_config(config, conf_file)
         GPIO.cleanup()
         sys.exit()
@@ -54,23 +54,23 @@ def tare(conf_file):
         hx = h.init_hx711(hx_conf)
         hx.tare_A()
         try:
-            hx_conf['channels']['A']['offset'] = hx.OFFSET_A
-            print "Sensor %s channel A offset saved as %s" % (str(index + 1), hx.OFFSET_A)
+            hx_conf['channels']['A']['offset'] = hx.OFFSET
+            print("Sensor %s channel A offset saved as %s" % (str(index + 1), hx.OFFSET))
         except KeyError:
             pass
 
         hx.tare_B()
         try:
             hx_conf['channels']['B']['offset'] = hx.OFFSET_B
-            print "Sensor %s channel B offset saved as %s" % (str(index + 1), hx.OFFSET_B)
+            print("Sensor %s channel B offset saved as %s" % (str(index + 1), hx.OFFSET_B))
         except KeyError:
             pass
 
     co2 = h.init_co2(config['co2'])
     co2.tare_A()
     try:
-        config['co2']['offset'] = co2.OFFSET_A
-        print "CO2 channel A offset saved as %s" % co2.OFFSET_A
+        config['co2']['offset'] = co2.OFFSET
+        print("CO2 channel A offset saved as %s" % co2.OFFSET)
     except KeyError:
         pass
 
