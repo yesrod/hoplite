@@ -41,29 +41,29 @@ class Web(App):
 
 
     def shmem_read(self, timeout=None):
-        map_data = ''
+        map_data = b''
         self.ShLock.acquire(timeout)
         self.ShMem.seek(0, 0)
         while True:
                 line = self.ShMem.readline()
-                if line == '':
+                if line == b'':
                     break
-                map_data += line.rstrip('\0')
+                map_data += line.rstrip(b'\0')
         self.ShMem.seek(0, 0)
         self.ShLock.release()
-        self.ShData = json.loads(map_data)
+        self.ShData = json.loads(map_data.decode())
 
 
     def shmem_write(self, timeout=None):
         self.ShLock.acquire(timeout)
         self.shmem_clear()
-        self.ShMem.write(json.dumps(self.ShData, indent=2) + '\0')
+        self.ShMem.write(json.dumps(self.ShData, indent=2).encode())
         self.ShMem.flush()
         self.ShLock.release()
 
 
     def shmem_clear(self):
-        zero_fill = '\0' * (self.ShMem.size())
+        zero_fill = b'\0' * (self.ShMem.size())
         self.ShMem.seek(0, 0)
         self.ShMem.write(zero_fill)
         self.ShMem.seek(0, 0)
@@ -125,7 +125,7 @@ class Web(App):
         size_name = hx_conf['channels'][channel]['size_name']
         size = hx_conf['channels'][channel]['size']
 
-        keg_size_list = self.h.keg_data.keys()
+        keg_size_list = list(self.h.keg_data)
         keg_size_list.append('custom')
 
         keg_box = gui.Widget()
