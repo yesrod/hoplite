@@ -31,6 +31,13 @@ sudo apt-get update
 sudo apt-get install python-numpy
 ```
 
+I also recommend disabling CPU frequency scaling.  On my system, this fixed weight updates occasionally failing, causing keg weights to fluctuate randomly.
+```
+sudo apt-get install cpufrequtils
+echo "GOVERNOR=performance" | sudo tee /etc/default/cpufrequtils
+sudo systemctl restart cpufrequtils
+```
+
 For now you'll need to use my version of hx711py.  Install that first.
 ```
 sudo pip install git+https://github.com/yesrod/hx711py.git
