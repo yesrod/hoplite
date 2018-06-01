@@ -357,4 +357,5 @@ class Web(App):
 
 if __name__ == '__main__':
     start(Web, address="0.0.0.0", port=80,
-          standalone=False, update_interval=0.5)
+          standalone=False, update_interval=0.5,
+          title='HOPLITE')
