@@ -70,11 +70,11 @@ class Web(App):
         self.ShMem.flush()
 
 
-    def get_keg_fill_percent(self, w, net_w, tare):
-        max_net_w = net_w * 1000
+    def get_keg_fill_percent(self, w, cap, tare):
+        keg_cap = cap * 1000
         keg_tare = tare * 1000
         net_w = max((w - keg_tare), 0)
-        fill_percent = net_w / max_net_w
+        fill_percent = net_w / keg_cap
         return fill_percent
 
 
@@ -89,10 +89,10 @@ class Web(App):
                     # channel update
                     try:
                         w = self.ShData['data']['weight'][index][subindex]
-                        net_w = hx_conf['channels'][channel]['size'][0]
+                        cap = hx_conf['channels'][channel]['size'][0]
                         tare = hx_conf['channels'][channel]['size'][1]
                         name = hx_conf['channels'][channel]['name']
-                        fill_pct = self.get_keg_fill_percent(w, net_w, tare)
+                        fill_pct = self.get_keg_fill_percent(w, cap, tare)
 
                         self.KegLines[index][subindex][0].set_text(name)
                         self.KegLines[index][subindex][
@@ -100,7 +100,7 @@ class Web(App):
                         self.KegLines[index][subindex][1].style[
                             'fill'] = self.h.fill_bar_color(fill_pct)
                         self.KegLines[index][subindex][2].set_text(self.h.format_weight(
-                            w, (tare * 1000),  mode=w_mode))
+                            w, (tare * 1000),  mode=w_mode, cap=(cap * 1000)))
                     except (KeyError, IndexError):
                         pass
 
@@ -119,7 +119,7 @@ class Web(App):
 
 
     def build_keg_settings(self, hx_conf, index, channel):
-        net_w = hx_conf['channels'][channel]['size'][0]
+        cap = hx_conf['channels'][channel]['size'][0]
         tare = hx_conf['channels'][channel]['size'][1]
         name = hx_conf['channels'][channel]['name']
         size_name = hx_conf['channels'][channel]['size_name']
@@ -178,7 +178,7 @@ class Web(App):
                                         width='500px')
 
         # weight display options
-        weight_options_list = ['as_kg_gross', 'as_kg_net', 'as_pint']
+        weight_options_list = ['as_kg_gross', 'as_kg_net', 'as_pint', 'as_pct']
         weight_options = gui.DropDown.new_from_list(weight_options_list)
         weight_options.select_by_value(self.ShData['config']['weight_mode'])
         self.dialog.add_field_with_label(
@@ -319,10 +319,10 @@ class Web(App):
 
                     keg_bar = gui.Svg(240, 30)
                     keg_w = hx_weight[subindex]
-                    keg_net_w = hx_conf['channels'][channel]['size'][0]
+                    keg_cap = hx_conf['channels'][channel]['size'][0]
                     keg_tare = hx_conf['channels'][channel]['size'][1]
                     keg_fill_pct = self.get_keg_fill_percent(
-                        keg_w, keg_net_w, keg_tare)
+                        keg_w, keg_cap, keg_tare)
                     keg_bar_rect = gui.SvgRectangle(0, 0, 240 * keg_fill_pct, 30)
                     keg_bar_rect.style[
                         'fill'] = self.h.fill_bar_color(keg_fill_pct)
@@ -333,7 +333,8 @@ class Web(App):
                     keg_bar.append(keg_bar_outline)
 
                     keg_weight = gui.Label(self.h.format_weight(
-                        keg_w, (keg_tare * 1000), mode=w_mode), width=100, height=30)
+                        keg_w, (keg_tare * 1000), mode=w_mode, cap=(keg_cap * 1000)), 
+                        width=100, height=30)
 
                     try:
                         self.KegLines[index].insert(

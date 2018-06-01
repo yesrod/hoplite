@@ -285,7 +285,7 @@ class Hoplite():
         return '%s pt.' % int(val / 473)
 
 
-    def format_weight(self, val, tare=None, mode=None):
+    def format_weight(self, val, tare=None, mode=None, cap=None):
         if mode == None:
             try:
                 mode = self.config['weight_mode']
@@ -310,6 +310,16 @@ class Hoplite():
             else:
                 return self.as_pint(val - tare)
 
+        elif mode == 'as_pct':
+            if tare == None:
+                raise ValueError('tare must not be None when using as_pct')
+                return None
+            elif max == None:
+                raise ValueError('max must not be None when using as_pct')
+                return None
+            else:
+                return "%s%%" % int(((val - tare) / cap) * 100)
+
         else:
             raise ValueError('bad mode %s' % mode)
             return None
@@ -327,24 +337,28 @@ class Hoplite():
             kegA = weight[0]
             kegA_name = hx_conf['channels']['A']['name'][0:13]
             kegA_min = hx_conf['channels']['A']['size'][1] * 1000
-            kegA_max = kegA_min + ( hx_conf['channels']['A']['size'][0] * 1000 )
+            kegA_cap = hx_conf['channels']['A']['size'][0] * 1000
+            kegA_max = kegA_min + kegA_cap
         except (ValueError, KeyError):
             # no channel A data
             kegA = 0
             kegA_name = None
             kegA_min = 0
+            kegA_cap = 0
             kegA_max = 0
 
         try:
             kegB = weight[1]
             kegB_name = hx_conf['channels']['B']['name'][0:13]
             kegB_min = hx_conf['channels']['B']['size'][1] * 1000
-            kegB_max = kegB_min + ( hx_conf['channels']['B']['size'][0] * 1000 )
+            kegB_cap = hx_conf['channels']['B']['size'][0] * 1000
+            kegB_max = kegB_min + kegB_cap
         except (ValueError, KeyError):
             # no channel B data
             kegB = 0
             kegB_name = None
             kegB_min = 0
+            kegB_cap = 0
             kegB_max = 0
 
 
@@ -363,13 +377,13 @@ class Hoplite():
                 self.text_align_center(40, 15, kegA_name)
                 self.fill_bar(30, 35, kegA_min, kegA_max, kegA)
                 self.text_align_center(40, self.device.height-10,
-                                       self.format_weight(kegA, kegA_min))
+                                       self.format_weight(kegA, tare=kegA_min, cap=kegA_cap))
 
             if kegB_name:
                 self.text_align_center(120, 15, kegB_name)
                 self.fill_bar(110, 35, kegB_min, kegB_max, kegB)
                 self.text_align_center(120, self.device.height-10,
-                                       self.format_weight(kegB, kegB_min))
+                                       self.format_weight(kegB, tare=kegB_min, cap=kegB_cap))
 
 
     def read_temp(self):
@@ -388,8 +402,8 @@ class Hoplite():
     def get_co2_pct(self):
         co2_max = self.config['co2']['size'][0] * 1000
         co2_tare = self.config['co2']['size'][1] * 1000
-        co2_net_wt = max((self.co2_w - co2_tare), 0)
-        co2_pct = co2_net_wt / float(co2_max)
+        co2_net_w = max((self.co2_w - co2_tare), 0)
+        co2_pct = co2_net_w / float(co2_max)
         return int(co2_pct * 100)
 
 
