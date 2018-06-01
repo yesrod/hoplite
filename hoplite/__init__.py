@@ -431,6 +431,33 @@ class Hoplite():
             self.hx_handles.insert(index, hx)
 
 
+    def update(self):
+        index = 0
+        while True:
+            self.temp = self.read_temp()
+            self.co2_w = self.hx711_read_chA(self.co2)
+            weight = self.read_weight(self.hx_handles[index])
+
+            self.render_st7735(weight, self.config['hx'][index])
+
+            self.shmem_read()
+            if self.ShData['config']:
+                self.config = self.ShData['config']
+            try:
+                self.ShData['data']['weight'][index] = weight
+            except IndexError:
+                self.ShData['data']['weight'].insert(index, weight)
+            self.ShData['data']['temp'] = self.temp
+            self.ShData['data']['co2'] = self.get_co2_pct()
+            self.shmem_write()
+
+            index += 1
+            if index >= len(self.hx_handles):
+                index = 0
+
+            time.sleep(0.1)
+
+
     def main(self, config_file='config.json'):
         self.config_file = config_file
         self.config = self.load_config(self.config_file)
@@ -453,35 +480,10 @@ class Hoplite():
         self.device = self.init_st7735()
         self.co2 = self.init_co2(self.config['co2'])
         self.setup_all_kegs()
-        
-        index = 0
 
         while True:
             try:
-                hx = self.hx_handles[index]
-
-                weight = self.read_weight(hx)
-                self.co2_w = self.hx711_read_chA(self.co2)
-                self.temp = self.read_temp()
-
-                self.render_st7735(weight, self.config['hx'][index])
-
-                self.shmem_read()
-                if self.ShData['config']:
-                    self.config = self.ShData['config']
-                try:
-                    self.ShData['data']['weight'][index] = weight
-                except IndexError:
-                    self.ShData['data']['weight'].insert(index, weight)
-                self.ShData['data']['temp'] = self.temp
-                self.ShData['data']['co2'] = self.get_co2_pct()
-                self.shmem_write()
-
-                index += 1
-                if index >= len(self.hx_handles):
-                    index = 0
-
-                time.sleep(3)
+                self.update()
             except (KeyboardInterrupt, SystemExit, RuntimeError):
                 self.cleanup()
                 sys.exit()
