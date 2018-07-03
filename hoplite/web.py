@@ -180,7 +180,10 @@ class Web(App):
         # weight display options
         weight_options_list = ['as_kg_gross', 'as_kg_net', 'as_pint', 'as_pct']
         weight_options = gui.DropDown.new_from_list(weight_options_list)
-        weight_options.select_by_value(self.ShData['config']['weight_mode'])
+        try:
+            weight_options.select_by_value(self.ShData['config']['weight_mode'])
+        except (KeyError, IndexError):
+            pass
         self.dialog.add_field_with_label(
             'weight_options', 'Display Keg Weight', weight_options)
 
