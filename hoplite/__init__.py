@@ -13,38 +13,7 @@ from hx711 import HX711
 
 
 class Hoplite():
-    # keg data dictionary
-    global keg_data
     
-    # config
-    global config
-
-    # output device and draw handle
-    global device
-    global draw
-
-    # list of all keg HX711's detected
-    global hx_handles
-
-    # one special HX711 for CO2
-    global co2
-    global co2_w
-
-    # temperature sensor output
-    global temp
-
-    # shared memory segment for communicating with web interface,
-    # semaphore lock, and data to be shared
-    global ShMem
-    global ShLock
-    global ShData
-
-    # config file location
-    global config_file
-
-    # debug flag
-    global debug
-
     def __init__(self):
         # keg data dictionary
         # value is list( volume in liters, empty weight in kg )
@@ -56,14 +25,43 @@ class Hoplite():
             'corny': (18.9, 4),
         }
 
+        # debug flag
         self.debug = False
 
+        # shared memory segment for communicating with web interface
         mem = posix_ipc.SharedMemory('/hoplite', flags=posix_ipc.O_CREAT, size=65536)
         self.ShMem = mmap.mmap(mem.fd, mem.size)
         mem.close_fd()
 
+        # semaphore lock for shared memory
         self.ShLock = posix_ipc.Semaphore('/hoplite', flags=posix_ipc.O_CREAT)
         self.ShLock.release()
+
+        # dictionary containing current shared memory data
+        self.ShData = dict()
+
+        # config file location
+        self.config_file = None
+
+        # dict containing current config
+        self.config = dict()
+
+        # output device
+        self.device = None
+
+        # canvas for output device
+        self.draw = None
+
+        # temperature sensor output
+        # TODO: evaluate if this can be replaced by read_temp()
+        self.temp = None
+
+        # list of handles for all keg HX711's found in config
+        self.hx_handles = list()
+
+        # one special HX711 for CO2, and current weight data
+        self.co2 = None
+        self.co2_w = None
 
 
     def debug_msg(self, message):
@@ -437,8 +435,6 @@ class Hoplite():
 
 
     def setup_all_kegs(self):
-        self.hx_handles = list()
-
         # grab each keg definition from the config
         for index, hx_conf in enumerate(self.config['hx']):
             hx = self.init_hx711(hx_conf)
@@ -485,7 +481,6 @@ class Hoplite():
             self.config['weight_mode'] = 'as_kg_gross'
             self.debug_msg('adding weight_mode = %s to config' % self.config['weight_mode'])
 
-        self.ShData = dict()
         self.ShData['data'] = dict()
         self.ShData['data']['weight'] = list()
         self.ShData['config'] = self.config
