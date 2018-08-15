@@ -67,7 +67,7 @@ python -m hoplite --config /etc/hoplite/config.json
 ```
 
 The config is in JSON.  I've tried to make it as self-documenting as possible.
-More documentation on configuration will be provided eventually.
+More documentation on configuration is available [on the wiki.](https://github.com/yesrod/hoplite/wiki/Configuration)
 
 After you have a roughly accurate config, tare all the connected HX711s:
 ```
@@ -77,6 +77,7 @@ python -m hoplite --tare --config /etc/hoplite/config.json
 Then get a known weight of some sort (in grams) and calibrate your weight 
 sensors:
 ```
+# this example assumes a 1000 gram test weight
 python -m hoplite --cal 1 A 1000 --config /etc/hoplite/config.json
 # repeat for all channels defined in the config
 ```
