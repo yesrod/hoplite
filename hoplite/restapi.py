@@ -1,11 +1,14 @@
+import json
 from flask import Flask
 
 app = Flask(__name__)
+instance = None
 
 class RestApi():
 
-    def __init__(self, instance):
-        self.instance = instance
+    def __init__(self, hoplite):
+        global instance
+        instance = hoplite
 
     def worker(self):
         global app
@@ -13,5 +16,6 @@ class RestApi():
 
     @app.route('/config')
     def get_config():
-        return self.instance.config
+        global instance
+        return json.dumps(instance.config, indent=2)
 

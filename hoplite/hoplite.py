@@ -526,6 +526,7 @@ class Hoplite():
         self.setup_all_kegs()
 
         self.api_process = threading.Thread(None, self.api.worker, 'hoplite REST api')
+        self.api_process.daemon=True
         self.api_process.start()
 
         while True:
