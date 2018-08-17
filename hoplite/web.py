@@ -8,7 +8,7 @@ import mmap
 import posix_ipc
 import pkg_resources
 
-from . import Hoplite
+from .hoplite import Hoplite
 
 
 class Web(App):
