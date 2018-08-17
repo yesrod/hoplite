@@ -1,4 +1,4 @@
-from . import Hoplite
+from .hoplite import Hoplite
 
 import argparse
 import sys
@@ -170,7 +170,7 @@ def __main__():
     else:
         config = "config.json"
 
-    if hasattr(parsed_args, 'tare'):
+    if parsed_args.tare != None:
         if len(parsed_args.tare) == 0:
             tare(config)
         elif len(parsed_args.tare) == 1:
