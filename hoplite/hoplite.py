@@ -11,6 +11,8 @@ import mmap
 import glob
 from hx711 import HX711
 
+import threading
+from .restapi import RestApi
 
 class Hoplite():
     
@@ -62,6 +64,8 @@ class Hoplite():
         # co2 weights are a list now, could be multiple co2 cylinders
         self.co2_w = list()
 
+        # REST API class
+        self.api = RestApi(self)
 
     def debug_msg(self, message):
         if self.debug:
@@ -520,6 +524,9 @@ class Hoplite():
 
         self.device = self.init_st7735()
         self.setup_all_kegs()
+
+        self.api_process = threading.Thread(None, self.api.worker, 'hoplite REST api')
+        self.api_process.start()
 
         while True:
             try:
