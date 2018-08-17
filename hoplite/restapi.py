@@ -14,8 +14,36 @@ class RestApi():
         global app
         app.run(use_reloader=False)
 
+    # dumps the entire config
+    # TODO: Remove me later, only here for troubleshooting purposes
     @app.route('/config')
-    def get_config():
+    def api_config():
         global instance
-        return json.dumps(instance.config, indent=2)
+        return json.dumps(instance.ShData['config'], indent=2)
 
+
+    # get current temperature
+    @app.route('/api/temp')
+    def api_temp():
+        global instance
+        return "{ 'temp' : %s }" % instance.temp
+
+
+    # get keg specific data per channel
+    # /api/keg/<index>/<channel>/<weight>
+    @app.route('/api/keg/<index>/<channel>/<action>')
+    def api_keg(index, channel, action):
+        if channel == 'A':
+            chan_index = 0
+        elif channel == 'B':
+            chan_index = 1
+        else:
+            return "{ 'error' : 'Cannot find channel %s at index %s'}" % ( channel, index )
+
+        if action == 'weight':
+            try:
+                chan_config = instance.ShData['config']['hx'][int(index)]['channels'][channel]
+                message = "{ 'weight' : %s }" % instance.ShData['data']['weight'][int(index)][chan_index]
+            except ( IndexError, KeyError ):
+                message = "{ 'error' : 'Cannot find channel %s at index %s'}" % ( channel, index )
+        return message
