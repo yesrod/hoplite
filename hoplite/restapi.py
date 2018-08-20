@@ -1,11 +1,10 @@
-import json
-from flask import Flask
+from flask import Flask, jsonify
 
 app = Flask(__name__)
 instance = None
 
-def error(message):
-    return "{ 'error' : '%s' }" % message
+def error(code, message):
+    return jsonify(error=code, text=message)
 
 class RestApi():
 
@@ -22,7 +21,7 @@ class RestApi():
     @app.route('/config')
     def api_config():
         global instance
-        return json.dumps(instance.ShData['config'], indent=2)
+        return jsonify(instance.ShData['config'])
 
 
     # get current temperature
@@ -41,14 +40,20 @@ class RestApi():
         elif channel == 'B':
             chan_index = 1
         else:
-            return error('Channel %s out of range at index %s' % ( channel, index ) )
+            return error(400, 'Channel %s out of range at index %s' % ( channel, index ) )
 
         if action == 'weight':
             try:
                 chan_config = instance.ShData['config']['hx'][int(index)]['channels'][channel]
-                message = "{ 'weight' : %s }" % instance.ShData['data']['weight'][int(index)][chan_index]
-            except ( IndexError, KeyError ):
-                message = error('Channel %s at index %s not defined in config' % ( channel, index ) )
+                message = jsonify(weight=instance.ShData['data']['weight'][int(index)][chan_index])
+            except ( IndexError, KeyError, ValueError ):
+                message = error(400, 'Channel %s at index %s not defined in config' % ( channel, index ) )
         else:
-            message = error('%s undefined for channel %s at index %s' % ( action, channel, index ) )
+            message = error(400, '%s undefined for channel %s at index %s' % ( action, channel, index ) )
         return message
+
+
+    # custom 404, JSON format
+    @app.errorhandler(404)
+    def page_not_found(e):
+        return jsonify(error=404, text=str(e)), 404
