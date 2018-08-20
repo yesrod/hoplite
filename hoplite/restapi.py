@@ -28,7 +28,7 @@ class RestApi():
     @app.route('/api/temp')
     def api_temp():
         global instance
-        return "{ 'temp' : %s }" % instance.temp
+        return jsonify(temp=instance.temp)
 
 
     # get keg specific data per channel
