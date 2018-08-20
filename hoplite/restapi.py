@@ -31,7 +31,14 @@ class RestApi():
         return jsonify(temp=instance.temp)
 
 
-    # get keg specific data per channel
+    # handle weight display mode
+    @app.route('/api/weight_mode')
+    def api_weight_mode():
+        global instance
+        return jsonify(weight_mode=instance.ShData['config']['weight_mode'])
+
+
+    # handle keg specific data per channel
     # /api/keg/<index>/<channel>/<weight>
     @app.route('/api/keg/<index>/<channel>/<action>')
     def api_keg(index, channel, action):
@@ -42,14 +49,66 @@ class RestApi():
         else:
             return error(400, 'Channel %s out of range at index %s' % ( channel, index ) )
 
-        if action == 'weight':
-            try:
-                chan_config = instance.ShData['config']['hx'][int(index)]['channels'][channel]
+        try:
+            chan_config = instance.ShData['config']['hx'][int(index)]['channels'][channel]
+
+            if action == 'weight':                
                 message = jsonify(weight=instance.ShData['data']['weight'][int(index)][chan_index])
-            except ( IndexError, KeyError, ValueError ):
-                message = error(400, 'Channel %s at index %s not defined in config' % ( channel, index ) )
-        else:
-            message = error(400, '%s undefined for channel %s at index %s' % ( action, channel, index ) )
+
+            elif action == 'name':
+                message = jsonify(name=chan_config['name'])
+
+            elif action == 'size':
+                message = jsonify(size=chan_config['size_name'])
+
+            elif action == 'tare':
+                message = jsonify(tare=chan_config['size'][1])
+
+            elif action == 'volume':
+                message = jsonify(volume=chan_config['size'][0])
+
+            elif action == 'offset':
+                message = jsonify(offset=chan_config['offset'])
+
+            elif action == 'refunit':
+                message = jsonify(refunit=chan_config['refunit'])
+
+            else:
+                message = error(400, '%s undefined for channel %s at index %s' % ( action, channel, index ) )
+
+        except ( IndexError, KeyError, ValueError ):
+            message = error(400, 'Channel %s at index %s not defined in config' % ( channel, index ) )
+
+        return message
+
+
+    # handle CO2 data
+    @app.route('/api/co2/<action>')
+    def api_co2(action):
+        try:
+            chan_config = instance.ShData['config']['co2']
+
+            if action == 'percent':
+                message = jsonify(percent=instance.ShData['data']['co2'])
+
+            elif action == 'tare':
+                message = jsonify(tare=chan_config['size'][1])
+
+            elif action == 'volume':
+                message = jsonify(volume=chan_config['size'][0])
+
+            elif action == 'offset':
+                message = jsonify(offset=chan_config['offset'])
+
+            elif action == 'refunit':
+                message = jsonify(refunit=chan_config['refunit'])
+
+            else:
+                message = error(400, '%s undefined for CO2 channel' % action )
+
+        except ( IndexError, KeyError, ValueError ):
+            message = error(400, 'CO2 sensor not defined in config' )
+
         return message
 
 
@@ -57,3 +116,9 @@ class RestApi():
     @app.errorhandler(404)
     def page_not_found(e):
         return jsonify(error=404, text=str(e)), 404
+
+
+    # custom 500, JSON format
+    @app.errorhandler(500)
+    def internal_error(e):
+        return jsonify(error=500, text=str(e)), 500
