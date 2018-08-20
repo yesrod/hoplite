@@ -4,6 +4,9 @@ from flask import Flask
 app = Flask(__name__)
 instance = None
 
+def error(message):
+    return "{ 'error' : '%s' }" % message
+
 class RestApi():
 
     def __init__(self, hoplite):
@@ -38,12 +41,14 @@ class RestApi():
         elif channel == 'B':
             chan_index = 1
         else:
-            return "{ 'error' : 'Cannot find channel %s at index %s'}" % ( channel, index )
+            return error('Channel %s out of range at index %s' % ( channel, index ) )
 
         if action == 'weight':
             try:
                 chan_config = instance.ShData['config']['hx'][int(index)]['channels'][channel]
                 message = "{ 'weight' : %s }" % instance.ShData['data']['weight'][int(index)][chan_index]
             except ( IndexError, KeyError ):
-                message = "{ 'error' : 'Cannot find channel %s at index %s'}" % ( channel, index )
+                message = error('Channel %s at index %s not defined in config' % ( channel, index ) )
+        else:
+            message = error('%s undefined for channel %s at index %s' % ( action, channel, index ) )
         return message
