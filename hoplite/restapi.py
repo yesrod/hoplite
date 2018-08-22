@@ -4,7 +4,16 @@ app = Flask(__name__)
 instance = None
 
 def error(code, message):
-    return jsonify(error=code, text=message)
+    return response(True, code, None, message)
+
+def response(error, code, data, message=None):
+    if error == True:
+        status = 'error'
+    elif error == False:
+        status = 'ok'
+    else:
+        raise ValueError('error must be boolean')
+    return jsonify(status=status, code=code, data=data, message=message)
 
 class RestApi():
 
@@ -18,29 +27,29 @@ class RestApi():
 
     # dumps the entire config
     # TODO: Remove me later, only here for troubleshooting purposes
-    @app.route('/config')
+    @app.route('/v1/config')
     def api_config():
         global instance
-        return jsonify(instance.ShData['config'])
+        return response(False, '200', {'config': instance.ShData['config']})
 
 
     # get current temperature
-    @app.route('/api/temp')
+    @app.route('/v1/temp')
     def api_temp():
         global instance
-        return jsonify(temp=instance.temp)
+        return response(False, 200, {'temp': instance.temp})
 
 
     # handle weight display mode
-    @app.route('/api/weight_mode')
+    @app.route('/v1/weight_mode')
     def api_weight_mode():
         global instance
-        return jsonify(weight_mode=instance.ShData['config']['weight_mode'])
+        return response(False, 200, {'weight_mode': instance.ShData['config']['weight_mode']})
 
 
     # handle keg specific data per channel
     # /api/keg/<index>/<channel>/<weight>
-    @app.route('/api/keg/<index>/<channel>/<action>')
+    @app.route('/v1/kegs/<index>/<channel>/<action>')
     def api_keg(index, channel, action):
         if channel == 'A':
             chan_index = 0
@@ -53,25 +62,25 @@ class RestApi():
             chan_config = instance.ShData['config']['hx'][int(index)]['channels'][channel]
 
             if action == 'weight':                
-                message = jsonify(weight=instance.ShData['data']['weight'][int(index)][chan_index])
+                message = response(False, '200', {'weight': instance.ShData['data']['weight'][int(index)][chan_index]})
 
             elif action == 'name':
-                message = jsonify(name=chan_config['name'])
+                message = response(False, '200', {'name': chan_config['name']})
 
             elif action == 'size':
-                message = jsonify(size=chan_config['size_name'])
+                message = response(False, '200', {'size': chan_config['size_name']})
 
             elif action == 'tare':
-                message = jsonify(tare=chan_config['size'][1])
+                message = response(False, '200', {'tare': chan_config['size'][1]})
 
             elif action == 'volume':
-                message = jsonify(volume=chan_config['size'][0])
+                message = response(False, '200', {'volume': chan_config['size'][0]})
 
             elif action == 'offset':
-                message = jsonify(offset=chan_config['offset'])
+                message = response(False, '200', {'offset': chan_config['offset']})
 
             elif action == 'refunit':
-                message = jsonify(refunit=chan_config['refunit'])
+                message = response(False, '200', {'refunit': chan_config['refunit']})
 
             else:
                 message = error(400, '%s undefined for channel %s at index %s' % ( action, channel, index ) )
@@ -83,25 +92,25 @@ class RestApi():
 
 
     # handle CO2 data
-    @app.route('/api/co2/<action>')
+    @app.route('/v1/co2/<action>')
     def api_co2(action):
         try:
             chan_config = instance.ShData['config']['co2']
 
             if action == 'percent':
-                message = jsonify(percent=instance.ShData['data']['co2'])
+                message = response(False, '200', {'percent': instance.ShData['data']['co2']})
 
             elif action == 'tare':
-                message = jsonify(tare=chan_config['size'][1])
+                message = response(False, '200', {'tare': chan_config['size'][1]})
 
             elif action == 'volume':
-                message = jsonify(volume=chan_config['size'][0])
+                message = response(False, '200', {'volume': chan_config['size'][0]})
 
             elif action == 'offset':
-                message = jsonify(offset=chan_config['offset'])
+                message = response(False, '200', {'offset': chan_config['offset']})
 
             elif action == 'refunit':
-                message = jsonify(refunit=chan_config['refunit'])
+                message = response(False, '200', {'refunit': chan_config['refunit']})
 
             else:
                 message = error(400, '%s undefined for CO2 channel' % action )
@@ -115,10 +124,10 @@ class RestApi():
     # custom 404, JSON format
     @app.errorhandler(404)
     def page_not_found(e):
-        return jsonify(error=404, text=str(e)), 404
+        return error(404, str(e)), 404
 
 
     # custom 500, JSON format
     @app.errorhandler(500)
     def internal_error(e):
-        return jsonify(error=500, text=str(e)), 500
+        return error(500, str(e)), 500
