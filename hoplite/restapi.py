@@ -1,6 +1,7 @@
 from flask import Flask, jsonify
 
 app = Flask(__name__)
+app.url_map.strict_slashes = False
 instance = None
 
 def error(code, message):
@@ -27,98 +28,111 @@ class RestApi():
 
     # dumps the entire config
     # TODO: Remove me later, only here for troubleshooting purposes
-    @app.route('/v1/config')
+    @app.route('/v1/config', methods=['GET'])
     def api_config():
         global instance
         return response(False, '200', {'config': instance.ShData['config']})
 
 
     # get current temperature
-    @app.route('/v1/temp')
+    @app.route('/v1/temp', methods=['GET'])
     def api_temp():
         global instance
         return response(False, 200, {'temp': instance.temp})
 
 
     # handle weight display mode
-    @app.route('/v1/weight_mode')
+    @app.route('/v1/weight_mode', methods=['GET'])
     def api_weight_mode():
         global instance
         return response(False, 200, {'weight_mode': instance.ShData['config']['weight_mode']})
 
 
-    # handle keg specific data per channel
-    # /api/keg/<index>/<channel>/<weight>
-    @app.route('/v1/kegs/<index>/<channel>/<action>')
-    def api_keg(index, channel, action):
-        if channel == 'A':
-            chan_index = 0
-        elif channel == 'B':
-            chan_index = 1
-        else:
-            return error(400, 'Channel %s out of range at index %s' % ( channel, index ) )
-
-        try:
-            chan_config = instance.ShData['config']['hx'][int(index)]['channels'][channel]
-
-            if action == 'weight':                
-                message = response(False, '200', {'weight': instance.ShData['data']['weight'][int(index)][chan_index]})
-
-            elif action == 'name':
-                message = response(False, '200', {'name': chan_config['name']})
-
-            elif action == 'size':
-                message = response(False, '200', {'size': chan_config['size_name']})
-
-            elif action == 'tare':
-                message = response(False, '200', {'tare': chan_config['size'][1]})
-
-            elif action == 'volume':
-                message = response(False, '200', {'volume': chan_config['size'][0]})
-
-            elif action == 'offset':
-                message = response(False, '200', {'offset': chan_config['offset']})
-
-            elif action == 'refunit':
-                message = response(False, '200', {'refunit': chan_config['refunit']})
-
+    # handle keg specific data, per channel, per index, and overall
+    @app.route('/v1/kegs/<index>/<channel>/<action>', methods=['GET'])
+    @app.route('/v1/kegs/<index>/<channel>', methods=['GET'])
+    @app.route('/v1/kegs/<index>', methods=['GET'])
+    @app.route('/v1/kegs', methods=['GET'])
+    def api_keg(index=None, channel=None, action=None):
+        # /v1/kegs/<index>/<channel>/<action>
+        if index and channel and action:
+            if channel == 'A':
+                chan_index = 0
+            elif channel == 'B':
+                chan_index = 1
             else:
-                message = error(400, '%s undefined for channel %s at index %s' % ( action, channel, index ) )
+                return error(400, 'Channel %s out of range at index %s' % ( channel, index ) )
 
-        except ( IndexError, KeyError, ValueError ):
-            message = error(400, 'Channel %s at index %s not defined in config' % ( channel, index ) )
+            try:
+                chan_config = instance.ShData['config']['hx'][int(index)]['channels'][channel]
 
-        return message
+                if action == 'weight':                
+                    message = response(False, '200', {'weight': instance.ShData['data']['weight'][int(index)][chan_index]})
+
+                elif action == 'name':
+                    message = response(False, '200', {'name': chan_config['name']})
+
+                elif action == 'size':
+                    message = response(False, '200', {'size': chan_config['size_name']})
+
+                elif action == 'tare':
+                    message = response(False, '200', {'tare': chan_config['size'][1]})
+
+                elif action == 'volume':
+                    message = response(False, '200', {'volume': chan_config['size'][0]})
+
+                elif action == 'offset':
+                    message = response(False, '200', {'offset': chan_config['offset']})
+
+                elif action == 'refunit':
+                    message = response(False, '200', {'refunit': chan_config['refunit']})
+
+                else:
+                    message = error(400, '%s undefined for channel %s at index %s' % ( action, channel, index ) )
+
+            except ( IndexError, KeyError, ValueError ):
+                message = error(400, 'Channel %s at index %s not defined in config' % ( channel, index ) )
+
+            return message
+
+        else:
+            return error(400, 'Malformed request: index=%s channel=%s action=%s' % ( index, channel, action ) )
 
 
     # handle CO2 data
-    @app.route('/v1/co2/<action>')
-    def api_co2(action):
-        try:
-            chan_config = instance.ShData['config']['co2']
+    @app.route('/v1/co2/<action>', methods=['GET'])
+    @app.route('/v1/co2', methods=['GET'])
+    def api_co2(action=None):
+        # /vi/co2/<action>
+        if action:
+            try:
+                chan_config = instance.ShData['config']['co2']
 
-            if action == 'percent':
-                message = response(False, '200', {'percent': instance.ShData['data']['co2']})
+                if action == 'percent':
+                    message = response(False, '200', {'percent': instance.ShData['data']['co2']})
 
-            elif action == 'tare':
-                message = response(False, '200', {'tare': chan_config['size'][1]})
+                elif action == 'tare':
+                    message = response(False, '200', {'tare': chan_config['size'][1]})
 
-            elif action == 'volume':
-                message = response(False, '200', {'volume': chan_config['size'][0]})
+                elif action == 'volume':
+                    message = response(False, '200', {'volume': chan_config['size'][0]})
 
-            elif action == 'offset':
-                message = response(False, '200', {'offset': chan_config['offset']})
+                elif action == 'offset':
+                    message = response(False, '200', {'offset': chan_config['offset']})
 
-            elif action == 'refunit':
-                message = response(False, '200', {'refunit': chan_config['refunit']})
+                elif action == 'refunit':
+                    message = response(False, '200', {'refunit': chan_config['refunit']})
 
-            else:
-                message = error(400, '%s undefined for CO2 channel' % action )
+                else:
+                    message = error(400, '%s undefined for CO2 channel' % action )
 
-        except ( IndexError, KeyError, ValueError ):
-            message = error(400, 'CO2 sensor not defined in config' )
+            except ( IndexError, KeyError, ValueError ):
+                message = error(400, 'CO2 sensor not defined in config' )
 
-        return message
+            return message
+
+        else:
+            return error(400, 'Malformed request: action=%s' % action)
 
 
     # custom 404, JSON format
