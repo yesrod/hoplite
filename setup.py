@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='hoplite',
-    version='1.1.0-alpha2',
+    version='1.1.0-alpha3',
     description='HOPLITE: A system for monitoring kegerator levels and temperatures',
     #    py_modules=['Hoplite', 'hoplite-web'],
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
