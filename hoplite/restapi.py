@@ -49,19 +49,54 @@ class RestApi():
 
 
     # handle keg specific data, per channel, per index, and overall
-    @app.route('/v1/kegs/<index>/<channel>/<action>', methods=['GET'])
-    @app.route('/v1/kegs/<index>/<channel>', methods=['GET'])
-    @app.route('/v1/kegs/<index>', methods=['GET'])
-    @app.route('/v1/kegs', methods=['GET'])
+    @app.route('/v1/keg_sensors/<index>/<channel>/<action>', methods=['GET'])
+    @app.route('/v1/keg_sensors/<index>/<channel>', methods=['GET'])
+    @app.route('/v1/keg_sensors/<index>', methods=['GET'])
+    @app.route('/v1/keg_sensors', methods=['GET'])
     def api_keg(index=None, channel=None, action=None):
-        # /v1/kegs/<index>/<channel>/<action>
-        if index and channel and action:
+        # /v1/keg_sensors/
+        if index == None and channel == None and action == None:
+            kegs = dict()
+            try:
+                kegs_config = instance.ShData['config']['hx']
+                for index, sensor_unit in enumerate(kegs_config):
+                    kegs[index] = sensor_unit
+
+            except ( IndexError, KeyError, ValueError ):
+                pass
+
+            return response(False, 200, {'keg_sensors': kegs})
+
+        # /v1/keg_sensors/<index>
+        elif index != None and channel == None and action == None:
+            try:
+                kegs = instance.ShData['config']['hx'][int(index)]
+                message = response(False, 200, {'keg_sensor': kegs} )
+
+            except ( IndexError, KeyError, ValueError ):
+                message = error(400, 'No such index %s' % index )
+
+            return message
+
+        # /v1/keg_sensors/<index>/<channel>
+        elif index != None and channel != None and action == None:
+            try:
+                channel = instance.ShData['config']['hx'][int(index)]['channels'][channel]
+                message = response(False, 200, {'channel': channel} )
+
+            except ( IndexError, KeyError, ValueError ):
+                message = error(400, 'No such channel %s at index %s' % ( channel, index ) )
+
+            return message
+
+        # /v1/keg_sensors/<index>/<channel>/<action>
+        elif index and channel and action:
             if channel == 'A':
                 chan_index = 0
             elif channel == 'B':
                 chan_index = 1
             else:
-                return error(400, 'Channel %s out of range at index %s' % ( channel, index ) )
+                return error(400, 'No such channel %s at index %s' % ( channel, index ) )
 
             try:
                 chan_config = instance.ShData['config']['hx'][int(index)]['channels'][channel]
@@ -91,7 +126,7 @@ class RestApi():
                     message = error(400, '%s undefined for channel %s at index %s' % ( action, channel, index ) )
 
             except ( IndexError, KeyError, ValueError ):
-                message = error(400, 'Channel %s at index %s not defined in config' % ( channel, index ) )
+                message = error(400, 'No such channel %s at index %s' % ( channel, index ) )
 
             return message
 
@@ -104,35 +139,35 @@ class RestApi():
     @app.route('/v1/co2', methods=['GET'])
     def api_co2(action=None):
         # /vi/co2/<action>
-        if action:
-            try:
-                chan_config = instance.ShData['config']['co2']
+        try:
+            chan_config = instance.ShData['config']['co2']
 
-                if action == 'percent':
-                    message = response(False, '200', {'percent': instance.ShData['data']['co2']})
+            if action == 'percent':
+                message = response(False, '200', {'percent': instance.ShData['data']['co2']})
 
-                elif action == 'tare':
-                    message = response(False, '200', {'tare': chan_config['size'][1]})
+            elif action == 'tare':
+                message = response(False, '200', {'tare': chan_config['size'][1]})
 
-                elif action == 'volume':
-                    message = response(False, '200', {'volume': chan_config['size'][0]})
+            elif action == 'volume':
+                message = response(False, '200', {'volume': chan_config['size'][0]})
 
-                elif action == 'offset':
-                    message = response(False, '200', {'offset': chan_config['offset']})
+            elif action == 'offset':
+                message = response(False, '200', {'offset': chan_config['offset']})
 
-                elif action == 'refunit':
-                    message = response(False, '200', {'refunit': chan_config['refunit']})
+            elif action == 'refunit':
+                message = response(False, '200', {'refunit': chan_config['refunit']})
 
-                else:
-                    message = error(400, '%s undefined for CO2 channel' % action )
+            # /v1/co2
+            elif action == None:
+                message = response(False, '200',  {'co2': chan_config} )
 
-            except ( IndexError, KeyError, ValueError ):
-                message = error(400, 'CO2 sensor not defined in config' )
+            else:
+                message = error(400, '%s undefined for CO2 channel' % action )
 
-            return message
+        except ( IndexError, KeyError, ValueError ):
+            message = error(400, 'CO2 sensor not defined in config' )
 
-        else:
-            return error(400, 'Malformed request: action=%s' % action)
+        return message
 
 
     # custom 404, JSON format
