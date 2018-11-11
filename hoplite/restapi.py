@@ -54,6 +54,7 @@ class RestApi():
     @app.route('/v1/keg_sensors/<index>', methods=['GET'])
     @app.route('/v1/keg_sensors', methods=['GET'])
     def api_keg(index=None, channel=None, action=None):
+        global instance
         # /v1/keg_sensors/
         if index == None and channel == None and action == None:
             kegs = dict()
@@ -61,6 +62,16 @@ class RestApi():
                 kegs_config = instance.ShData['config']['hx']
                 for index, sensor_unit in enumerate(kegs_config):
                     kegs[index] = sensor_unit
+
+                for channel in ('A', 'B'):
+                    if channel == 'A':
+                        chan_index = 0
+                    elif channel == 'B':
+                        chan_index = 1
+                    try:
+                        kegs[index]['channels'][channel]['weight'] = instance.ShData['data']['weight'][index][chan_index]
+                    except ( IndexError, KeyError, ValueError ):
+                        kegs[index]['channels'][channel]['weight'] = -1
 
             except ( IndexError, KeyError, ValueError ):
                 pass
@@ -71,6 +82,17 @@ class RestApi():
         elif index != None and channel == None and action == None:
             try:
                 kegs = instance.ShData['config']['hx'][int(index)]
+
+                for channel in ('A', 'B'):
+                    if channel == 'A':
+                        chan_index = 0
+                    elif channel == 'B':
+                        chan_index = 1
+                    try:
+                        kegs['channels'][channel]['weight'] = instance.ShData['data']['weight'][int(index)][chan_index]
+                    except ( IndexError, KeyError, ValueError ):
+                        kegs['channels'][channel]['weight'] = -1
+
                 message = response(False, 200, {'keg_sensor': kegs} )
 
             except ( IndexError, KeyError, ValueError ):
@@ -81,8 +103,21 @@ class RestApi():
         # /v1/keg_sensors/<index>/<channel>
         elif index != None and channel != None and action == None:
             try:
-                channel = instance.ShData['config']['hx'][int(index)]['channels'][channel]
-                message = response(False, 200, {'channel': channel} )
+                chan_data = instance.ShData['config']['hx'][int(index)]['channels'][channel]
+
+                if channel == 'A':
+                    chan_index = 0
+                elif channel == 'B':
+                    chan_index = 1
+                else:
+                    return error(400, 'No such channel %s at index %s' % ( channel, index ) )
+
+                try:
+                    chan_data['weight'] = instance.ShData['data']['weight'][int(index)][chan_index]
+                except ( IndexError, KeyError, ValueError ):
+                    chan_data['weight'] = -1
+
+                message = response(False, 200, {'channel': chan_data} )
 
             except ( IndexError, KeyError, ValueError ):
                 message = error(400, 'No such channel %s at index %s' % ( channel, index ) )
