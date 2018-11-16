@@ -124,7 +124,7 @@ class Hoplite():
             refunit_B = None
 
         hx = HX711(dout, pd_sck)
-        hx.set_reading_format("LSB", "MSB")
+        hx.set_reading_format("MSB", "MSB")
         hx.reset()
 
         if refunit_A: 
