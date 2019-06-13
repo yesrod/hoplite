@@ -9,10 +9,11 @@ HOPLITE
 
 [Wiki](https://github.com/yesrod/hoplite/wiki)
 
-A Python module to monitor the status of a kegerator.  Runs on a Raspberry Pi
+A Python application to monitor the status of a kegerator.  Runs on a Raspberry Pi
 that has one or more HX711 load cell amplifiers and an ST7735 LCD attached.
 
-Hardware docs will be forthcoming when the hardware is done.
+Hardware docs are barebones at the moment.  After the reference hardware has been reworked,
+better documentation will be provided.
 
 Supports:
  * Monitoring beer levels via weight, using HX711 load cell amplifiers
@@ -21,6 +22,14 @@ Supports:
  * Outputting data to an attached ST7735 LCD
  * A web interface that reports data and allows configuring keg names and 
    sizes on-the-fly in a more convenient manner
+
+SECURITY
+--------
+**THIS SOFTWARE IS NOT BEING CREATED WITH ANY SORT OF SECURITY CONSIDERATIONS IN MIND.**
+
+**DO NOT EXPOSE THIS APPLICATION TO THE INTERNET, ESPECIALLY THE WEB INTERFACE.**
+
+**IF YOU REALLY WANT REMOTE ACCESS, USE A VPN.**
 
 INSTALLATION
 ------------
