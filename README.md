@@ -40,7 +40,7 @@ sudo apt-get update
 sudo apt-get install python-numpy
 ```
 
-I also recommend disabling CPU frequency scaling.  On my system, this fixed weight updates occasionally failing, causing keg weights to fluctuate randomly.
+I also recommend disabling CPU frequency scaling.  On my system, this helped with weight updates occasionally failing, causing keg weights to fluctuate randomly.
 ```
 sudo apt-get install cpufrequtils
 echo "GOVERNOR=performance" | sudo tee /etc/default/cpufrequtils
