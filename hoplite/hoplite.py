@@ -66,7 +66,7 @@ class Hoplite():
 
     def debug_msg(self, message):
         if self.debug:
-            print(message)
+            print("%s: %s" % (sys._getframe(1).f_code.co_name, message))
 
 
     def shmem_read(self, timeout=None):
@@ -146,7 +146,7 @@ class Hoplite():
         return hx
 
 
-    def init_co2(self, co2_conf):
+    def init_co2_A(self, co2_conf):
         co2 = self.init_hx711(co2_conf)
         try:
             co2.set_reference_unit_A(co2_conf['refunit'])
@@ -156,6 +156,33 @@ class Hoplite():
             co2.set_offset_A(co2_conf['offset'])
         except KeyError:
             pass
+        return co2
+
+
+    def init_co2_B(self, co2_conf):
+        co2 = self.init_hx711(co2_conf)
+        try:
+            co2.set_reference_unit_B(co2_conf['refunit'])
+        except KeyError:
+            pass
+        try:
+            co2.set_offset_B(co2_conf['offset'])
+        except KeyError:
+            pass
+        return co2
+
+
+    def init_co2(self, co2_conf):
+        try:
+            if co2_conf['channel'] == "B":
+                self.debug_msg("init co2 channel B")
+                co2 = self.init_co2_B(co2_conf)
+            else:
+                self.debug_msg("init co2 channel A")
+                co2 = self.init_co2_A(co2_conf)
+        except KeyError:
+            self.debug_msg("init co2 channel A")
+            co2 = self.init_co2_A(co2_conf)
         return co2
 
     
@@ -213,6 +240,7 @@ class Hoplite():
         config['co2']['size'] = [2.27, 1.8]
         config['co2']['dout'] = 12
         config['co2']['pd_sck'] = 13
+        config['co2']['channel'] = "A"
         config['hx'] = list()
         hx = dict()
         hx['channels'] = dict()
@@ -416,14 +444,20 @@ class Hoplite():
 
 
     def cleanup(self, signum=None, frame=None):
+        self.debug_msg("begin cleanup")
         self.save_config(self.config, self.config_file)
-        for hx in self.hx_handles:
+        self.debug_msg("config saved")
+        for index, hx in enumerate(self.hx_handles):
             try:
+                self.debug_msg("power down %s" % index)
                 hx.power_down()
             except RuntimeError:
+                self.debug_msg("%s already powered down" % index)
                 # GPIO already cleaned up
                 pass
+        self.debug_msg("gpio cleanup")
         GPIO.cleanup()
+        self.debug_msg("shmem cleanup")
         try:
             self.ShMem.close()
             posix_ipc.unlink_shared_memory('/hoplite')
@@ -431,7 +465,9 @@ class Hoplite():
             self.ShLock.unlink()
         except posix_ipc.ExistentialError:
             # shmem already cleaned up
+            self.debug_msg("shmem already cleaned up")
             pass
+        self.debug_msg("cleanup complete")
 
 
     def setup_all_kegs(self):
@@ -445,9 +481,15 @@ class Hoplite():
         index = 0
         while True:
             self.temp = self.read_temp()
-            self.co2_w = self.hx711_read_chA(self.co2)
+            try:
+                if self.config['co2']['channel'] == "B":
+                    self.co2_w = self.hx711_read_chB(self.co2)
+                else:
+                    self.co2_w = self.hx711_read_chA(self.co2)
+            except KeyError:
+                self.co2_w = self.hx711_read_chA(self.co2)
             weight = self.read_weight(self.hx_handles[index])
-
+            self.debug_msg("temp: %s co2: %s" % (self.temp, self.co2_w))
             self.render_st7735(weight, self.config['hx'][index])
 
             self.shmem_read()
