@@ -47,12 +47,12 @@ echo "GOVERNOR=performance" | sudo tee /etc/default/cpufrequtils
 sudo systemctl restart cpufrequtils
 ```
 
-For now you'll need to use my version of hx711py.  Install that first.
+The only prerequisite that you'll need to manually install is the hx711py module.
 ```
-sudo pip install git+https://github.com/yesrod/hx711py.git
+sudo pip install git+https://github.com/tatobari/hx711py.git
 ```
 
-Finally, clone this respository and run
+After installing hx711py, clone this respository and run
 ```
 sudo python setup.py install
 ```
