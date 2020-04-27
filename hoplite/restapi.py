@@ -76,46 +76,53 @@ class RestApi():
         global instance
         # /v1/hx/
         if index == None and channel == None and action == None:
-            kegs = dict()
+            hxs = dict()
             try:
                 instance.debug_msg("get keg config")
-                kegs_config = instance.ShData['config']['hx']
+                hxs_config = instance.ShData['config']['hx']
                 instance.debug_msg("enumerate hx")
-                for index, hx in enumerate(kegs_config):
-                    instance.debug_msg("enumerate hx %s" % index)
-                    kegs[index] = hx
+                for index, hx in enumerate(hxs_config):
+                    instance.debug_msg("hx %s" % index)
+                    hxs[index] = hx
 
                     instance.debug_msg("enumerate channels")
                     chan = ('A', 'B')
                     for chan_index, channel in enumerate(chan):
                         try:
                             instance.debug_msg("update weight index %s chan %s" % (index, channel))
-                            kegs[index]['channels'][channel]['weight'] = instance.ShData['data']['weight'][index][chan_index]
+                            hxs[index]['channels'][channel]['weight'] = instance.ShData['data']['weight'][index][chan_index]
                         except ( IndexError, KeyError, ValueError ):
                             instance.debug_msg("index %s chan %s weight fail" % (index, channel))
                             try:
-                                kegs[index]['channels'][channel]['weight'] = -1
+                                hxs[index]['channels'][channel]['weight'] = -1
                             except ( IndexError, KeyError, ValueError ):
                                 instance.debug_msg("index %s chan %s doesn't exist" % (index, channel))
 
             except ( IndexError, KeyError, ValueError ) as e:
                 traceback.print_exc()
 
-            return response(False, 200, {'hx': kegs})
+            return response(False, 200, {'hx_list': hxs})
 
         # /v1/hx/<index>
         elif index != None and channel == None and action == None:
             try:
-                kegs = instance.ShData['config']['hx'][int(index)]
+                instance.debug_msg("hx %s" % index)
+                hx = instance.ShData['config']['hx'][int(index)]
 
+                instance.debug_msg("enumerate channels")
                 chan = ('A', 'B')
                 for chan_index, channel in enumerate(chan):
+                    instance.debug_msg("update weight index %s chan %s" % (index, channel))
                     try:
-                        kegs['channels'][channel]['weight'] = instance.ShData['data']['weight'][int(index)][chan_index]
+                        hx['channels'][channel]['weight'] = instance.ShData['data']['weight'][int(index)][chan_index]
                     except ( IndexError, KeyError, ValueError ):
-                        kegs['channels'][channel]['weight'] = -1
+                        instance.debug_msg("index %s chan %s weight fail" % (index, channel))
+                        try:
+                            hx['channels'][channel]['weight'] = -1
+                        except ( IndexError, KeyError, ValueError ):
+                            instance.debug_msg("index %s chan %s doesn't exist" % (index, channel))
 
-                message = response(False, 200, {'keg_sensor': kegs} )
+                message = response(False, 200, {'hx': hx} )
 
             except ( IndexError, KeyError, ValueError ):
                 message = error(400, 'No such index %s' % index )
