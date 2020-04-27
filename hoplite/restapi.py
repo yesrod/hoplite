@@ -29,21 +29,21 @@ class RestApi():
     # dumps the entire config
     # TODO: Remove me later, only here for troubleshooting purposes
     @app.route('/v1/config', methods=['GET'])
-    def api_config():
+    def api_config(self):
         global instance
         return response(False, '200', {'config': instance.ShData['config']})
 
 
     # get current temperature
     @app.route('/v1/temp', methods=['GET'])
-    def api_temp():
+    def api_temp(self):
         global instance
         return response(False, 200, {'temp': instance.temp})
 
 
     # handle weight display mode
     @app.route('/v1/weight_mode', methods=['GET'])
-    def api_weight_mode():
+    def api_weight_mode(self):
         global instance
         return response(False, 200, {'weight_mode': instance.ShData['config']['weight_mode']})
 
@@ -53,7 +53,7 @@ class RestApi():
     @app.route('/v1/hx/<index>/<channel>', methods=['GET'])
     @app.route('/v1/hx/<index>', methods=['GET'])
     @app.route('/v1/hx', methods=['GET'])
-    def api_keg(index=None, channel=None, action=None):
+    def api_keg(self, index=None, channel=None, action=None):
         global instance
         # /v1/hx/
         if index == None and channel == None and action == None:
@@ -177,11 +177,11 @@ class RestApi():
 
     # custom 404, JSON format
     @app.errorhandler(404)
-    def page_not_found(e):
+    def page_not_found(self, e):
         return error(404, str(e)), 404
 
 
     # custom 500, JSON format
     @app.errorhandler(500)
-    def internal_error(e):
+    def internal_error(self, e):
         return error(500, str(e)), 500
