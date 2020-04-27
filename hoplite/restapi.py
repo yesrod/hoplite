@@ -93,7 +93,10 @@ class RestApi():
                             kegs[index]['channels'][channel]['weight'] = instance.ShData['data']['weight'][index][chan_index]
                         except ( IndexError, KeyError, ValueError ):
                             instance.debug_msg("index %s chan %s weight fail" % (index, channel))
-                            #kegs[index]['channels'][channel]['weight'] = -1
+                            try:
+                                kegs[index]['channels'][channel]['weight'] = -1
+                            except ( IndexError, KeyError, ValueError ):
+                                instance.debug_msg("index %s chan %s doesn't exist" % (index, channel))
 
             except ( IndexError, KeyError, ValueError ) as e:
                 traceback.print_exc()
@@ -105,11 +108,8 @@ class RestApi():
             try:
                 kegs = instance.ShData['config']['hx'][int(index)]
 
-                for channel in ('A', 'B'):
-                    if channel == 'A':
-                        chan_index = 0
-                    elif channel == 'B':
-                        chan_index = 1
+                chan = ('A', 'B')
+                for chan_index, channel in enumerate(chan):
                     try:
                         kegs['channels'][channel]['weight'] = instance.ShData['data']['weight'][int(index)][chan_index]
                     except ( IndexError, KeyError, ValueError ):
