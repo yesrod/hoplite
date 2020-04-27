@@ -1,3 +1,4 @@
+import traceback
 from flask import Flask, jsonify
 
 app = Flask(__name__)
@@ -22,9 +23,19 @@ class RestApi():
         global instance
         instance = hoplite
 
+
     def worker(self):
         global app
         app.run(use_reloader=False, host='0.0.0.0')
+
+
+    # dumps everything
+    # TODO: Remove me later, only here for troubleshooting purposes
+    @app.route('/v1/shdata', methods=['GET'])
+    def api_shdata():
+        global instance
+        return response(False, '200', {'shdata': instance.ShData})
+
 
     # dumps the entire config
     # TODO: Remove me later, only here for troubleshooting purposes
@@ -32,6 +43,14 @@ class RestApi():
     def api_config():
         global instance
         return response(False, '200', {'config': instance.ShData['config']})
+
+
+    # dumps all data
+    # TODO: Remove me later, only here for troubleshooting purposes
+    @app.route('/v1/data', methods=['GET'])
+    def api_data():
+        global instance
+        return response(False, '200', {'data': instance.ShData['data']})
 
 
     # get current temperature
@@ -59,22 +78,25 @@ class RestApi():
         if index == None and channel == None and action == None:
             kegs = dict()
             try:
+                instance.debug_msg("get keg config")
                 kegs_config = instance.ShData['config']['hx']
-                for index, sensor_unit in enumerate(kegs_config):
-                    kegs[index] = sensor_unit
+                instance.debug_msg("enumerate hx")
+                for index, hx in enumerate(kegs_config):
+                    instance.debug_msg("enumerate hx %s" % index)
+                    kegs[index] = hx
 
-                for channel in ('A', 'B'):
-                    if channel == 'A':
-                        chan_index = 0
-                    elif channel == 'B':
-                        chan_index = 1
-                    try:
-                        kegs[index]['channels'][channel]['weight'] = instance.ShData['data']['weight'][index][chan_index]
-                    except ( IndexError, KeyError, ValueError ):
-                        kegs[index]['channels'][channel]['weight'] = -1
+                    instance.debug_msg("enumerate channels")
+                    chan = ('A', 'B')
+                    for chan_index, channel in enumerate(chan):
+                        try:
+                            instance.debug_msg("update weight index %s chan %s" % (index, channel))
+                            kegs[index]['channels'][channel]['weight'] = instance.ShData['data']['weight'][index][chan_index]
+                        except ( IndexError, KeyError, ValueError ):
+                            instance.debug_msg("index %s chan %s weight fail" % (index, channel))
+                            #kegs[index]['channels'][channel]['weight'] = -1
 
-            except ( IndexError, KeyError, ValueError ):
-                pass
+            except ( IndexError, KeyError, ValueError ) as e:
+                traceback.print_exc()
 
             return response(False, 200, {'hx': kegs})
 
