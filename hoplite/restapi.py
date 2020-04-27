@@ -123,23 +123,27 @@ class RestApi():
             return message
 
         # /v1/hx/<index>/<channel>
+        # /v1/hx/<index>/(pd_sck|dout)
         elif index != None and channel != None and action == None:
             try:
-                chan_data = instance.ShData['config']['hx'][int(index)]['channels'][channel]
-
                 if channel == 'A':
                     chan_index = 0
                 elif channel == 'B':
                     chan_index = 1
+                elif channel == 'pd_sck' or channel == 'dout':
+                    chan_index = None
                 else:
                     return error(400, 'No such channel %s at index %s' % ( channel, index ) )
 
-                try:
-                    chan_data['weight'] = instance.ShData['data']['weight'][int(index)][chan_index]
-                except ( IndexError, KeyError, ValueError ):
-                    chan_data['weight'] = -1
-
-                message = response(False, 200, {'channel': chan_data} )
+                if chan_index != None:
+                    chan_data = instance.ShData['config']['hx'][int(index)]['channels'][channel]
+                    try:
+                        chan_data['weight'] = instance.ShData['data']['weight'][int(index)][chan_index]
+                    except ( IndexError, KeyError, ValueError ):
+                        chan_data['weight'] = -1
+                    message = response(False, 200, {'channel': chan_data} )
+                else:
+                    message = response(False, 200, {channel: instance.ShData['config']['hx'][int(index)][channel]})
 
             except ( IndexError, KeyError, ValueError ):
                 message = error(400, 'No such channel %s at index %s' % ( channel, index ) )
