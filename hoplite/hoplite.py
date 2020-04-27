@@ -355,11 +355,11 @@ class Hoplite():
                                              kegB_name, kegB, kegB_max ))
             self.debug_msg("min: %s %s" % ( kegA_min, kegB_min ))
             self.debug_msg(self.as_degF(self.temp))
-            self.debug_msg("CO2: "+str(self.get_co2_pct())+"%")
+            self.debug_msg("CO2: "+str(self.co2_w[0])+"%") #TODO: Handle multiple CO2 sources
 
             self.text_header(0, "HOPLITE", fill="red")
             self.text_align_center(30, 0, self.as_degF(self.temp), fill="blue")
-            self.text_align_center(130, 0, "CO2:"+str(self.get_co2_pct())+"%", fill="blue")
+            self.text_align_center(130, 0, "CO2:"+str(self.co2_w[0])+"%", fill="blue")
 
             if kegA_name:
                 self.text_align_center(40, 15, kegA_name)
@@ -390,22 +390,27 @@ class Hoplite():
     def read_co2(self):
         co2 = list()
         for index, hx_conf in enumerate(self.config['hx']):
-            if (hx_conf['channels']['A']['co2'] == True or 
-                hx_conf['channels']['B']['co2'] == True):
-                local_w = self.read_weight(self.hx_handles[index])
+            try:
                 if hx_conf['channels']['A']['co2'] == True:
-                    co2.append(local_w[0])
+                    local_w = self.hx711_read_chA(self.hx_handles[index])
+                    local_max = hx_conf['channels']['A']['size'][0] * 1000
+                    local_tare = hx_conf['channels']['A']['size'][1] * 1000
+                    local_net_w = max((local_w - local_tare), 0) 
+                    local_pct = local_net_w / float(local_max)
+                    co2.append(local_pct)
+            except KeyError:
+                pass
+            try:
                 if hx_conf['channels']['B']['co2'] == True:
-                    co2.append(local_w[1])
+                    local_w = self.hx711_read_chB(self.hx_handles[index])
+                    local_max = hx_conf['channels']['B']['size'][0]
+                    local_tare = hx_conf['channels']['B']['size'][1]
+                    local_net_w = max((local_w - local_tare), 0)    
+                    local_pct = local_net_w / float(local_max)
+                    co2.append(local_pct)
+            except KeyError:
+                pass
         return co2
-
-
-    def get_co2_pct(self):
-        co2_max = self.config['co2']['size'][0] * 1000
-        co2_tare = self.config['co2']['size'][1] * 1000
-        co2_net_w = max((self.co2_w[0] - co2_tare), 0) # TODO: handle multiple CO2 weights, or none
-        co2_pct = co2_net_w / float(co2_max)
-        return int(co2_pct * 100)
 
 
     def as_degC(self, temp):
@@ -471,7 +476,7 @@ class Hoplite():
             except IndexError:
                 self.ShData['data']['weight'].insert(index, weight)
             self.ShData['data']['temp'] = self.temp
-            self.ShData['data']['co2'] = self.get_co2_pct()
+            self.ShData['data']['co2'] = self.co2_w
             self.shmem_write()
 
             index += 1
