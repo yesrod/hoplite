@@ -336,6 +336,12 @@ class Hoplite():
             kegA_max = 0
 
         try:
+            if hx_conf['channels']['A']['co2'] == True:
+                kegA_name = None
+        except KeyError:
+            pass
+
+        try:
             kegB = weight[1]
             kegB_name = hx_conf['channels']['B']['name'][0:13]
             kegB_min = hx_conf['channels']['B']['size'][1] * 1000
@@ -349,6 +355,14 @@ class Hoplite():
             kegB_cap = 0
             kegB_max = 0
 
+        try:
+            if hx_conf['channels']['B']['co2'] == True:
+                kegB_name = None
+        except KeyError:
+            pass
+
+        if kegA_name == None and kegB_name == None:
+            return
 
         with canvas(self.device) as self.draw:
             self.debug_msg("%s: %s/%s  %s: %s/%s" % ( kegA_name, kegA, kegA_max, 
@@ -397,7 +411,7 @@ class Hoplite():
                     local_tare = hx_conf['channels']['A']['size'][1] * 1000
                     local_net_w = max((local_w - local_tare), 0) 
                     local_pct = local_net_w / float(local_max)
-                    co2.append(local_pct)
+                    co2.append(int(local_pct * 100))
             except KeyError:
                 pass
             try:
@@ -407,7 +421,7 @@ class Hoplite():
                     local_tare = hx_conf['channels']['B']['size'][1]
                     local_net_w = max((local_w - local_tare), 0)    
                     local_pct = local_net_w / float(local_max)
-                    co2.append(local_pct)
+                    co2.append(int(local_pct * 100))
             except KeyError:
                 pass
         return co2
