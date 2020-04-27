@@ -49,13 +49,13 @@ class RestApi():
 
 
     # handle keg specific data, per channel, per index, and overall
-    @app.route('/v1/keg_sensors/<index>/<channel>/<action>', methods=['GET'])
-    @app.route('/v1/keg_sensors/<index>/<channel>', methods=['GET'])
-    @app.route('/v1/keg_sensors/<index>', methods=['GET'])
-    @app.route('/v1/keg_sensors', methods=['GET'])
+    @app.route('/v1/hx/<index>/<channel>/<action>', methods=['GET'])
+    @app.route('/v1/hx/<index>/<channel>', methods=['GET'])
+    @app.route('/v1/hx/<index>', methods=['GET'])
+    @app.route('/v1/hx', methods=['GET'])
     def api_keg(index=None, channel=None, action=None):
         global instance
-        # /v1/keg_sensors/
+        # /v1/hx/
         if index == None and channel == None and action == None:
             kegs = dict()
             try:
@@ -76,9 +76,9 @@ class RestApi():
             except ( IndexError, KeyError, ValueError ):
                 pass
 
-            return response(False, 200, {'keg_sensors': kegs})
+            return response(False, 200, {'hx': kegs})
 
-        # /v1/keg_sensors/<index>
+        # /v1/hx/<index>
         elif index != None and channel == None and action == None:
             try:
                 kegs = instance.ShData['config']['hx'][int(index)]
@@ -100,7 +100,7 @@ class RestApi():
 
             return message
 
-        # /v1/keg_sensors/<index>/<channel>
+        # /v1/hx/<index>/<channel>
         elif index != None and channel != None and action == None:
             try:
                 chan_data = instance.ShData['config']['hx'][int(index)]['channels'][channel]
@@ -124,7 +124,7 @@ class RestApi():
 
             return message
 
-        # /v1/keg_sensors/<index>/<channel>/<action>
+        # /v1/hx/<index>/<channel>/<action>
         elif index and channel and action:
             if channel == 'A':
                 chan_index = 0
@@ -157,6 +157,12 @@ class RestApi():
                 elif action == 'refunit':
                     message = response(False, '200', {'refunit': chan_config['refunit']})
 
+                elif action == 'co2':
+                    try:
+                        message = response(False, '200', {'name': chan_config['co2']})
+                    except KeyError:
+                        message = response(False, '200', {'name': False})
+
                 else:
                     message = error(400, '%s undefined for channel %s at index %s' % ( action, channel, index ) )
 
@@ -167,42 +173,6 @@ class RestApi():
 
         else:
             return error(400, 'Malformed request: index=%s channel=%s action=%s' % ( index, channel, action ) )
-
-
-    # handle CO2 data
-    @app.route('/v1/co2/<action>', methods=['GET'])
-    @app.route('/v1/co2', methods=['GET'])
-    def api_co2(action=None):
-        # /vi/co2/<action>
-        try:
-            chan_config = instance.ShData['config']['co2']
-
-            if action == 'percent':
-                message = response(False, '200', {'percent': instance.ShData['data']['co2']})
-
-            elif action == 'tare':
-                message = response(False, '200', {'tare': chan_config['size'][1]})
-
-            elif action == 'volume':
-                message = response(False, '200', {'volume': chan_config['size'][0]})
-
-            elif action == 'offset':
-                message = response(False, '200', {'offset': chan_config['offset']})
-
-            elif action == 'refunit':
-                message = response(False, '200', {'refunit': chan_config['refunit']})
-
-            # /v1/co2
-            elif action == None:
-                message = response(False, '200',  {'co2': chan_config} )
-
-            else:
-                message = error(400, '%s undefined for CO2 channel' % action )
-
-        except ( IndexError, KeyError, ValueError ):
-            message = error(400, 'CO2 sensor not defined in config' )
-
-        return message
 
 
     # custom 404, JSON format
