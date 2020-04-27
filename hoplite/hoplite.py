@@ -59,9 +59,8 @@ class Hoplite():
         # list of handles for all keg HX711's found in config
         self.hx_handles = list()
 
-        # one special HX711 for CO2, and current weight data
-        self.co2 = None
-        self.co2_w = None
+        # co2 weights are a list now, could be multiple co2 cylinders
+        self.co2_w = list()
 
 
     def debug_msg(self, message):
@@ -145,46 +144,6 @@ class Hoplite():
 
         return hx
 
-
-    def init_co2_A(self, co2_conf):
-        co2 = self.init_hx711(co2_conf)
-        try:
-            co2.set_reference_unit_A(co2_conf['refunit'])
-        except KeyError:
-            pass
-        try:
-            co2.set_offset_A(co2_conf['offset'])
-        except KeyError:
-            pass
-        return co2
-
-
-    def init_co2_B(self, co2_conf):
-        co2 = self.init_hx711(co2_conf)
-        try:
-            co2.set_reference_unit_B(co2_conf['refunit'])
-        except KeyError:
-            pass
-        try:
-            co2.set_offset_B(co2_conf['offset'])
-        except KeyError:
-            pass
-        return co2
-
-
-    def init_co2(self, co2_conf):
-        try:
-            if co2_conf['channel'] == "B":
-                self.debug_msg("init co2 channel B")
-                co2 = self.init_co2_B(co2_conf)
-            else:
-                self.debug_msg("init co2 channel A")
-                co2 = self.init_co2_A(co2_conf)
-        except KeyError:
-            self.debug_msg("init co2 channel A")
-            co2 = self.init_co2_A(co2_conf)
-        return co2
-
     
     def hx711_read_chA(self, hx):
         return int(hx.get_weight_A(5))
@@ -236,11 +195,6 @@ class Hoplite():
     def build_config(self):
         config = dict()
         config['weight_mode'] = 'as_kg_gross'
-        config['co2'] = dict()
-        config['co2']['size'] = [2.27, 1.8]
-        config['co2']['dout'] = 12
-        config['co2']['pd_sck'] = 13
-        config['co2']['channel'] = "A"
         config['hx'] = list()
         hx = dict()
         hx['channels'] = dict()
@@ -261,6 +215,19 @@ class Hoplite():
         hx['channels']['A'] = kegA
         hx['channels']['B'] = kegB
         config['hx'].append(hx)
+        co2_hx = dict()
+        co2_hx['channels'] = dict()
+        co2_hx['dout'] = 12
+        co2_hx['pd_sck'] = 13
+        co2_A = dict()
+        co2_A['offset'] = None
+        co2_A['refunit'] = 21.7
+        co2_A['name'] = "CO2"
+        co2_A['size'] = [2.27, 4.82]
+        co2_A['size_name'] = "custom"
+        co2_A['co2'] = True
+        co2_hx['channels']['A'] = co2_A
+        config['hx'].append(co2_hx)
         return config
 
     
@@ -325,30 +292,25 @@ class Hoplite():
         elif mode == 'as_kg_net':
             if tare == None:
                 raise ValueError('tare must not be None when using as_kg_net')
-                return None
             else:
                 return self.as_kg(val - tare)
 
         elif mode == 'as_pint':
             if tare == None:
                 raise ValueError('tare must not be None when using as_pint')
-                return None
             else:
                 return self.as_pint(val - tare)
 
         elif mode == 'as_pct':
             if tare == None:
                 raise ValueError('tare must not be None when using as_pct')
-                return None
             elif max == None:
                 raise ValueError('max must not be None when using as_pct')
-                return None
             else:
                 return "%s%%" % int(((val - tare) / cap) * 100)
 
         else:
             raise ValueError('bad mode %s' % mode)
-            return None
 
 
     def read_weight(self, hx):
@@ -425,10 +387,23 @@ class Hoplite():
         return int(temp)
 
 
+    def read_co2(self):
+        co2 = list()
+        for index, hx_conf in enumerate(self.config['hx']):
+            if (hx_conf['channels']['A']['co2'] == True or 
+                hx_conf['channels']['B']['co2'] == True):
+                local_w = self.read_weight(self.hx_handles[index])
+                if hx_conf['channels']['A']['co2'] == True:
+                    co2.append(local_w[0])
+                if hx_conf['channels']['B']['co2'] == True:
+                    co2.append(local_w[1])
+        return co2
+
+
     def get_co2_pct(self):
         co2_max = self.config['co2']['size'][0] * 1000
         co2_tare = self.config['co2']['size'][1] * 1000
-        co2_net_w = max((self.co2_w - co2_tare), 0)
+        co2_net_w = max((self.co2_w[0] - co2_tare), 0) # TODO: handle multiple CO2 weights, or none
         co2_pct = co2_net_w / float(co2_max)
         return int(co2_pct * 100)
 
@@ -481,13 +456,9 @@ class Hoplite():
         index = 0
         while True:
             self.temp = self.read_temp()
-            try:
-                if self.config['co2']['channel'] == "B":
-                    self.co2_w = self.hx711_read_chB(self.co2)
-                else:
-                    self.co2_w = self.hx711_read_chA(self.co2)
-            except KeyError:
-                self.co2_w = self.hx711_read_chA(self.co2)
+
+            self.co2_w = self.read_co2()
+
             weight = self.read_weight(self.hx_handles[index])
             self.debug_msg("temp: %s co2: %s" % (self.temp, self.co2_w))
             self.render_st7735(weight, self.config['hx'][index])
@@ -529,7 +500,6 @@ class Hoplite():
         self.shmem_write()
 
         self.device = self.init_st7735()
-        self.co2 = self.init_co2(self.config['co2'])
         self.setup_all_kegs()
 
         while True:
