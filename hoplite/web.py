@@ -86,6 +86,13 @@ class Web(App):
         for line in self.KegLines:
             for index, hx_conf in enumerate(self.ShData['config']['hx']):
                 for subindex, channel in enumerate(['A', 'B']):
+                    # skip co2
+                    try:
+                        if hx_conf['channels'][channel]['co2'] == True:
+                            continue
+                    except KeyError:
+                        pass
+
                     # channel update
                     try:
                         w = self.ShData['data']['weight'][index][subindex]
@@ -105,7 +112,8 @@ class Web(App):
                         pass
 
         t = self.h.as_degF(self.ShData['data'].get('temp', 0))
-        co2 = self.ShData['data'].get('co2', '???')
+        co2_list = self.ShData['data'].get('co2', '???')
+        co2 = co2_list[0] #TODO: Handle multiple CO2 sources
         self.temp.set_text("%s<br />CO2:%s%%" % (t, co2))
 
 
@@ -275,7 +283,8 @@ class Web(App):
 
         # temperature
         t = self.h.as_degF(self.ShData['data'].get('temp', 0))
-        co2 = self.ShData['data'].get('co2', '???')
+        co2_list = self.ShData['data'].get('co2', '???')
+        co2 = co2_list[0] #TODO: Handle multiple CO2 sources
         self.temp = gui.Label("%s<br />CO2:%s%%" % (t, co2))
         self.temp.style['padding-bottom'] = '1em'
         table_item = gui.TableItem()
@@ -316,6 +325,11 @@ class Web(App):
                     keg_name = hx_conf['channels'][channel].get('name', None)
                 except KeyError:
                     keg_name = None
+                try:
+                    if hx_conf['channels'][channel]['co2'] == True:
+                        continue
+                except KeyError:
+                    pass
 
                 if keg_name != None:
                     keg_label = gui.Label(keg_name, width=100, height=30)
