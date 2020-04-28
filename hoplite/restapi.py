@@ -17,7 +17,7 @@ def response(error, code, data, message=None):
         status = 'ok'
     else:
         raise ValueError('error must be boolean')
-    return jsonify(status=status, code=code, data=data, message=message)
+    return jsonify(status=status, code=code, data=data, message=message), code
 
 
 # enumerate HX711 channels
@@ -206,10 +206,10 @@ class RestApi():
     # custom 404, JSON format
     @app.errorhandler(404)
     def page_not_found(e):
-        return error(404, str(e)), 404
+        return error(404, str(e))
 
 
     # custom 500, JSON format
     @app.errorhandler(500)
     def internal_error(e):
-        return error(500, str(e)), 500
+        return error(500, str(e))
