@@ -66,7 +66,7 @@ class RestApi():
     # dumps everything
     # TODO: Remove me later, only here for troubleshooting purposes
     @app.route('/v1/shdata', methods=['GET'])
-    def api_shdata():
+    def get_shdata():
         global instance
         return response(False, '200', {'shdata': instance.ShData})
 
@@ -74,7 +74,7 @@ class RestApi():
     # dumps the entire config
     # TODO: Remove me later, only here for troubleshooting purposes
     @app.route('/v1/config', methods=['GET'])
-    def api_config():
+    def get_config():
         global instance
         return response(False, '200', {'config': instance.ShData['config']})
 
@@ -82,29 +82,35 @@ class RestApi():
     # dumps all data
     # TODO: Remove me later, only here for troubleshooting purposes
     @app.route('/v1/data', methods=['GET'])
-    def api_data():
+    def get_data():
         global instance
         return response(False, '200', {'data': instance.ShData['data']})
 
 
     # get current temperature
     @app.route('/v1/temp', methods=['GET'])
-    def api_temp():
+    def get_temp():
         global instance
         return response(False, 200, {'temp': instance.temp})
 
 
     # handle weight display mode
     @app.route('/v1/weight_mode', methods=['GET'])
-    def api_weight_mode():
+    def get_weight_mode():
         global instance
         return response(False, 200, {'weight_mode': instance.ShData['config']['weight_mode']})
+
+
+    # set weight display mode
+    @app.route('/v1/weight_mode', methods=['PUT'])
+    def set_weight_mode():
+        return error(501, 'Not implemented' )
 
 
     # root element for api v1
     # not much here past /v1/hx really
     @app.route('/v1', methods=['GET'])
-    def api_root():
+    def get_root():
         global instance
         root = dict()
         root['hx_list'] = get_all_hx_with_weight()
@@ -116,7 +122,7 @@ class RestApi():
     @app.route('/v1/hx/<index>/<channel>', methods=['GET'])
     @app.route('/v1/hx/<index>', methods=['GET'])
     @app.route('/v1/hx', methods=['GET'])
-    def api_keg(index=None, channel=None, action=None):
+    def get_keg(index=None, channel=None, action=None):
         global instance
         # /v1/hx/
         if index == None and channel == None and action == None:
@@ -214,6 +220,13 @@ class RestApi():
 
         else:
             return error(400, 'Malformed request: index=%s channel=%s action=%s' % ( index, channel, action ) )
+
+
+    @app.route('/v1/hx/<index>/<channel>/<action>', methods=['PUT'])
+    @app.route('/v1/hx/<index>/<channel>', methods=['POST', 'DELETE'])
+    @app.route('/v1/hx/<index>', methods=['POST', 'DELETE'])
+    def set_keg(index=None, channel=None, action=None):
+        return error(501, 'Not implemented' )
 
 
     # custom 404, JSON format
