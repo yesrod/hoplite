@@ -5,8 +5,10 @@ app = Flask(__name__)
 app.url_map.strict_slashes = False
 instance = None
 
+
 def error(code, message):
     return response(True, code, None, message)
+
 
 def response(error, code, data, message=None):
     if error == True:
@@ -16,6 +18,24 @@ def response(error, code, data, message=None):
     else:
         raise ValueError('error must be boolean')
     return jsonify(status=status, code=code, data=data, message=message)
+
+
+# enumerate HX711 channels
+def add_weight_to_hx(index, hx):
+    instance.debug_msg("enumerate channels")
+    chan = ('A', 'B')
+    for chan_index, channel in enumerate(chan):
+        instance.debug_msg("update weight index %s chan %s" % (index, channel))
+        try:
+            hx['channels'][channel]['weight'] = instance.ShData['data']['weight'][int(index)][chan_index]
+        except ( IndexError, KeyError, ValueError ):
+            instance.debug_msg("index %s chan %s weight fail" % (index, channel))
+            try:
+                hx['channels'][channel]['weight'] = -1
+            except ( IndexError, KeyError, ValueError ):
+                instance.debug_msg("index %s chan %s doesn't exist" % (index, channel))
+    return hx
+
 
 class RestApi():
 
@@ -83,7 +103,7 @@ class RestApi():
                 instance.debug_msg("enumerate hx")
                 for index, hx in enumerate(hxs_config):
                     instance.debug_msg("hx %s" % index)
-                    hxs[index] = add_weight_to_hx(hx)
+                    hxs[index] = add_weight_to_hx(index, hx)
 
             except ( IndexError, KeyError, ValueError ) as e:
                 traceback.print_exc()
@@ -95,7 +115,7 @@ class RestApi():
             try:
                 instance.debug_msg("hx %s" % index)
                 hx = instance.ShData['config']['hx'][int(index)]
-                hx = add_weight_to_hx(hx)
+                hx = add_weight_to_hx(index, hx)
 
                 message = response(False, 200, {'hx': hx} )
 
@@ -181,23 +201,6 @@ class RestApi():
 
         else:
             return error(400, 'Malformed request: index=%s channel=%s action=%s' % ( index, channel, action ) )
-
-
-    # enumerate HX711 channels
-    def add_weight_to_hx(hx):
-        instance.debug_msg("enumerate channels")
-        chan = ('A', 'B')
-        for chan_index, channel in enumerate(chan):
-            instance.debug_msg("update weight index %s chan %s" % (index, channel))
-            try:
-                hx['channels'][channel]['weight'] = instance.ShData['data']['weight'][int(index)][chan_index]
-            except ( IndexError, KeyError, ValueError ):
-                instance.debug_msg("index %s chan %s weight fail" % (index, channel))
-                try:
-                    hx['channels'][channel]['weight'] = -1
-                except ( IndexError, KeyError, ValueError ):
-                    instance.debug_msg("index %s chan %s doesn't exist" % (index, channel))
-        return hx
 
 
     # custom 404, JSON format
