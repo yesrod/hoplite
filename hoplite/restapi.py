@@ -37,6 +37,20 @@ def add_weight_to_hx(index, hx):
     return hx
 
 
+# get all HXs, in list, with weight
+def get_all_hx_with_weight():
+    hxs = list()
+    try:
+        instance.debug_msg("get keg config")
+        hxs_config = instance.ShData['config']['hx']
+        instance.debug_msg("enumerate hx")
+        for index, hx in enumerate(hxs_config):
+            instance.debug_msg("hx %s" % index)
+            hxs[index] = add_weight_to_hx(index, hx)
+    except ( IndexError, KeyError, ValueError ):
+        traceback.print_exc()
+    return hxs
+
 class RestApi():
 
     def __init__(self, hoplite):
@@ -87,6 +101,17 @@ class RestApi():
         return response(False, 200, {'weight_mode': instance.ShData['config']['weight_mode']})
 
 
+    # root element for api v1
+    # not much here past /v1/hx really
+    @app.route('/v1', methods=['GET'])
+    def api_root():
+        global instance
+        # /v1/hx/
+        root = dict()
+        root['hx'] = get_all_hx_with_weight()
+        return response(False, 200, {'v1': root})
+
+
     # handle keg specific data, per channel, per index, and overall
     @app.route('/v1/hx/<index>/<channel>/<action>', methods=['GET'])
     @app.route('/v1/hx/<index>/<channel>', methods=['GET'])
@@ -96,18 +121,7 @@ class RestApi():
         global instance
         # /v1/hx/
         if index == None and channel == None and action == None:
-            hxs = dict()
-            try:
-                instance.debug_msg("get keg config")
-                hxs_config = instance.ShData['config']['hx']
-                instance.debug_msg("enumerate hx")
-                for index, hx in enumerate(hxs_config):
-                    instance.debug_msg("hx %s" % index)
-                    hxs[index] = add_weight_to_hx(index, hx)
-
-            except ( IndexError, KeyError, ValueError ) as e:
-                traceback.print_exc()
-
+            hxs = get_all_hx_with_weight()
             return response(False, 200, {'hx_list': hxs})
 
         # /v1/hx/<index>
