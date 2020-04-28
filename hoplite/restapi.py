@@ -235,6 +235,12 @@ class RestApi():
         return error(404, str(e))
 
 
+    # custom 405, JSON format
+    @app.errorhandler(405)
+    def method_not_allowed(e):
+        return error(405, str(e))
+
+
     # custom 500, JSON format
     @app.errorhandler(500)
     def internal_error(e):
