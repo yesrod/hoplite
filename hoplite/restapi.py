@@ -46,7 +46,7 @@ def get_all_hx_with_weight():
         instance.debug_msg("enumerate hx")
         for index, hx in enumerate(hxs_config):
             instance.debug_msg("hx %s" % index)
-            hxs[index] = add_weight_to_hx(index, hx)
+            hxs.insert(index, add_weight_to_hx(index, hx))
     except ( IndexError, KeyError, ValueError ):
         traceback.print_exc()
     return hxs
@@ -106,9 +106,8 @@ class RestApi():
     @app.route('/v1', methods=['GET'])
     def api_root():
         global instance
-        # /v1/hx/
         root = dict()
-        root['hx'] = get_all_hx_with_weight()
+        root['hx_list'] = get_all_hx_with_weight()
         return response(False, 200, {'v1': root})
 
 
