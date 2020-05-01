@@ -1,5 +1,6 @@
 import traceback
-from flask import Flask, jsonify
+from werkzeug.exceptions import BadRequest
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
@@ -50,6 +51,18 @@ def get_all_hx_with_weight():
     except ( IndexError, KeyError, ValueError ):
         traceback.print_exc()
     return hxs
+
+
+# validate data from PUT and POST
+def validate_request():
+    try:
+        data = request.json
+        instance.debug_msg(data)
+    except BadRequest:
+        instance.debug_msg("request is not valid JSON: %s" % request.get_data())
+        data = None
+    return data
+
 
 class RestApi():
 
@@ -104,7 +117,11 @@ class RestApi():
     # set weight display mode
     @app.route('/v1/weight_mode', methods=['PUT'])
     def set_weight_mode():
-        return error(501, 'Not implemented' )
+        data = validate_request()
+        if data == None:
+            return error(400, 'Bad Request - invalid JSON')
+        else:
+            return error(501, 'Not implemented' )
 
 
     # root element for api v1
@@ -226,7 +243,17 @@ class RestApi():
     @app.route('/v1/hx/<index>/<channel>', methods=['POST', 'DELETE'])
     @app.route('/v1/hx/<index>', methods=['POST', 'DELETE'])
     def set_keg(index=None, channel=None, action=None):
-        return error(501, 'Not implemented' )
+        data = validate_request()
+        if data == None:
+            return error(400, 'Bad Request - invalid JSON')
+        else:
+            return error(501, 'Not implemented' )
+
+
+    # custom 400, JSON format
+    @app.errorhandler(400)
+    def bad_request(e):
+        return error(400, str(e))
 
 
     # custom 404, JSON format
