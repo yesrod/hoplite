@@ -65,7 +65,7 @@ class Hoplite():
 
     def debug_msg(self, message):
         if self.debug:
-            print("%s: %s" % (sys._getframe(1).f_code.co_name, message))
+            print("%s::%s: %s" % (self.__class__.__name__, sys._getframe(1).f_code.co_name, message))
 
 
     def shmem_read(self, timeout=None):
