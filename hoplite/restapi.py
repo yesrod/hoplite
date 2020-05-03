@@ -210,7 +210,7 @@ class RestApi():
             try:
                 chan_config = instance.ShData['config']['hx'][int(index)]['channels'][channel]
 
-                if action == 'weight':                
+                if action == 'weight':
                     message = response(False, '200', {'weight': instance.ShData['data']['weight'][int(index)][chan_index]})
 
                 elif action == 'name':
