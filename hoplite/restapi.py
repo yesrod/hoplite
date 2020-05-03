@@ -121,7 +121,17 @@ class RestApi():
         if data == None:
             return error(400, 'Bad Request - invalid JSON')
         else:
-            return error(501, 'Not implemented' )
+            try:
+                weight_mode = data['weight_mode']
+            except KeyError:
+                return error(400, 'Bad Request - no weight_mode in request')
+            valid_modes = ('as_kg_gross', 'as_kg_net', 'as_pint', 'as_pct')
+            if not weight_mode in valid_modes:
+                return error(400, 'Bad Request - invalid weight_mode %s' % weight_mode)
+            else:
+                instance.ShData['config']['weight_mode'] = weight_mode
+                instance.shmem_write()
+                return response(False, 200, {'weight_mode': weight_mode}, 'weight_mode successfully updated' )
 
 
     # root element for api v1
