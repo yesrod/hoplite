@@ -30,6 +30,9 @@ class Hoplite():
         # debug flag
         self.debug = False
 
+        # while true, run update loop
+        self.updating = False
+
         # shared memory segment for communicating with web interface
         mem = posix_ipc.SharedMemory('/hoplite', flags=posix_ipc.O_CREAT, size=65536)
         self.ShMem = mmap.mmap(mem.fd, mem.size)
@@ -483,7 +486,7 @@ class Hoplite():
 
     def update(self):
         index = 0
-        while True:
+        while self.updating:
             self.temp = self.read_temp()
 
             self.co2_w = self.read_co2()
@@ -508,6 +511,7 @@ class Hoplite():
                 index = 0
 
             time.sleep(0.1)
+        self.debug_msg("updates stopped")
 
 
     def main(self, config_file='config.json'):
@@ -536,12 +540,19 @@ class Hoplite():
         self.api_process.daemon=True
         self.api_process.start()
 
-        while True:
-            try:
-                self.update()
-            except (KeyboardInterrupt, SystemExit, RuntimeError):
-                self.cleanup()
-                sys.exit()
+        try:
+            self.updating = True
+            self.update_process = threading.Thread(None, self.update, 'hoplite data collection')
+            self.update_process.daemon = True
+            self.update_process.start()
+            while self.updating:
+                time.sleep(1)
+        except (KeyboardInterrupt, SystemExit, RuntimeError):
+            self.debug_msg("stop updating")
+            self.updating = False
+            self.update_process.join(30)
+            self.cleanup()
+            sys.exit()
 
 
 # this is here in case we get run as a standalone script
