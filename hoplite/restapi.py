@@ -30,10 +30,12 @@ def add_weight_to_hx(index, hx):
         try:
             hx['channels'][channel]['weight'] = instance.ShData['data']['weight'][int(index)][chan_index]
         except ( IndexError, KeyError, ValueError ):
+            traceback.print_exc()
             instance.debug_msg("index %s chan %s weight fail" % (index, channel))
             try:
                 hx['channels'][channel]['weight'] = -1
             except ( IndexError, KeyError, ValueError ):
+                traceback.print_exc()
                 instance.debug_msg("index %s chan %s doesn't exist" % (index, channel))
     return hx
 
@@ -59,6 +61,7 @@ def validate_request():
         data = request.json
         instance.debug_msg(data)
     except BadRequest:
+        traceback.print_exc()
         instance.debug_msg("request is not valid JSON: %s" % request.get_data())
         data = None
     return data
@@ -124,6 +127,7 @@ class RestApi():
             try:
                 weight_mode = data['weight_mode']
             except KeyError:
+                traceback.print_exc()
                 return error(400, 'Bad Request - no weight_mode in request')
             valid_modes = ('as_kg_gross', 'as_kg_net', 'as_pint', 'as_pct')
             if not weight_mode in valid_modes:
@@ -166,6 +170,7 @@ class RestApi():
                 message = response(False, 200, {'hx': hx} )
 
             except ( IndexError, KeyError, ValueError ):
+                traceback.print_exc()
                 message = error(400, 'No such index %s' % index )
 
             return message
@@ -188,12 +193,14 @@ class RestApi():
                     try:
                         chan_data['weight'] = instance.ShData['data']['weight'][int(index)][chan_index]
                     except ( IndexError, KeyError, ValueError ):
+                        traceback.print_exc()
                         chan_data['weight'] = -1
                     message = response(False, 200, {'channel': chan_data} )
                 else:
                     message = response(False, 200, {channel: instance.ShData['config']['hx'][int(index)][channel]})
 
             except ( IndexError, KeyError, ValueError ):
+                traceback.print_exc()
                 message = error(400, 'No such channel %s at index %s' % ( channel, index ) )
 
             return message
@@ -235,12 +242,14 @@ class RestApi():
                     try:
                         message = response(False, '200', {'name': chan_config['co2']})
                     except KeyError:
+                        traceback.print_exc()
                         message = response(False, '200', {'name': False})
 
                 else:
                     message = error(400, '%s undefined for channel %s at index %s' % ( action, channel, index ) )
 
             except ( IndexError, KeyError, ValueError ):
+                traceback.print_exc()
                 message = error(400, 'No such channel %s at index %s' % ( channel, index ) )
 
             return message
@@ -254,10 +263,61 @@ class RestApi():
     @app.route('/v1/hx/<index>', methods=['POST', 'DELETE'])
     def set_keg(index=None, channel=None, action=None):
         data = validate_request()
+        instance.debug_msg(data)
         if data == None:
             return error(400, 'Bad Request - invalid JSON')
+        # /v1/hx/<index>/<channel>/<action>
+        elif index and channel and action:
+            if channel == 'A':
+                chan_index = 0
+            elif channel == 'B':
+                chan_index = 1
+            else:
+                return error(400, 'No such channel %s at index %s' % ( channel, index ) )
+
+            try:
+                chan_config = instance.ShData['config']['hx'][int(index)]['channels'][channel]
+                valid_actions = ['name', 'size_name', 'offset', 'refunit', 'co2']
+
+                if action == 'weight':
+                    message = error('400', 'Bad Request - cannot manually specify weight')
+
+                elif action in valid_actions:
+                    try:
+                        if action == 'co2':
+                            if data[action] != True and data[action] != False:
+                                return error(400, 'Bad Request - %s must be true or false' % action)
+                        instance.ShData['config']['hx'][int(index)]['channels'][channel][action] = data[action]
+                        instance.shmem_write()
+                        message = response(False, 200, {action: data[action]}, '%s successfully updated' % action)
+                    except KeyError:
+                        traceback.print_exc()
+                        message = error(400, 'Bad Request - no %s in request' % action)
+
+                elif action == 'tare' or action == 'volume':
+                    if action == 'tare':
+                        var_offset = 1
+                    else:
+                        var_offset = 0
+                    try:
+                        instance.ShData['config']['hx'][int(index)]['channels'][channel]['size'][var_offset] = float(data[action])
+                        instance.shmem_write()
+                        message = response(False, 200, {action: data[action]}, '%s successfully updated' % action)
+                    except KeyError:
+                        traceback.print_exc()
+                        message = error(400, 'Bad Request - no %s in request' % action)
+
+                else:
+                    message = error(400, '%s undefined for channel %s at index %s' % ( action, channel, index ) )
+
+            except ( IndexError, KeyError, ValueError ):
+                traceback.print_exc()
+                message = error(400, 'No such channel %s at index %s' % ( channel, index ) )
+
+            return message
+
         else:
-            return error(501, 'Not implemented' )
+            return error(400, 'Malformed request: index=%s channel=%s action=%s' % ( index, channel, action ) )
 
 
     # custom 400, JSON format
