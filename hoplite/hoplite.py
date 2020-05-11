@@ -184,6 +184,7 @@ class Hoplite():
         except ValueError:
             print("Config at %s has syntax issues, cannot load" % config_file)
             config = None
+        self.debug_msg(config)
         return config
 
     
@@ -416,6 +417,7 @@ class Hoplite():
                     local_w = self.hx711_read_chA(self.hx_handles[index])
                     local_max = hx_conf['channels']['A']['volume'] * 1000
                     local_tare = hx_conf['channels']['A']['tare'] * 1000
+                    self.debug_msg("%s, %s, %s" % (local_w, local_max, local_tare))
                     local_net_w = max((local_w - local_tare), 0) 
                     local_pct = local_net_w / float(local_max)
                     co2.append(int(local_pct * 100))
@@ -424,8 +426,9 @@ class Hoplite():
             try:
                 if hx_conf['channels']['B']['co2'] == True:
                     local_w = self.hx711_read_chB(self.hx_handles[index])
-                    local_max = hx_conf['channels']['B']['volume']
-                    local_tare = hx_conf['channels']['B']['tare']
+                    local_max = hx_conf['channels']['B']['volume'] * 1000
+                    local_tare = hx_conf['channels']['B']['tare'] * 1000
+                    self.debug_msg("%s, %s, %s" % (local_w, local_max, local_tare))
                     local_net_w = max((local_w - local_tare), 0)    
                     local_pct = local_net_w / float(local_max)
                     co2.append(int(local_pct * 100))
@@ -508,6 +511,7 @@ class Hoplite():
 
 
     def main(self, config_file='config.json'):
+        self.debug_msg("debug enabled")
         self.config_file = config_file
         self.config = self.load_config(self.config_file)
         if self.config == None:
