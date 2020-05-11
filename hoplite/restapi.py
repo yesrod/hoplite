@@ -224,13 +224,13 @@ class RestApi():
                     message = response(False, '200', {'name': chan_config['name']})
 
                 elif action == 'size':
-                    message = response(False, '200', {'size': chan_config['size_name']})
+                    message = response(False, '200', {'size': chan_config['size']})
 
                 elif action == 'tare':
-                    message = response(False, '200', {'tare': chan_config['size'][1]})
+                    message = response(False, '200', {'tare': chan_config['tare']})
 
                 elif action == 'volume':
-                    message = response(False, '200', {'volume': chan_config['size'][0]})
+                    message = response(False, '200', {'volume': chan_config['volume']})
 
                 elif action == 'offset':
                     message = response(False, '200', {'offset': chan_config['offset']})
@@ -277,7 +277,7 @@ class RestApi():
 
             try:
                 chan_config = instance.ShData['config']['hx'][int(index)]['channels'][channel]
-                valid_actions = ['name', 'size_name', 'offset', 'refunit', 'co2']
+                valid_actions = ['name', 'size', 'offset', 'refunit', 'tare', 'volume', 'co2']
 
                 if action == 'weight':
                     message = error('400', 'Bad Request - cannot manually specify weight')
@@ -288,19 +288,6 @@ class RestApi():
                             if data[action] != True and data[action] != False:
                                 return error(400, 'Bad Request - %s must be true or false' % action)
                         instance.ShData['config']['hx'][int(index)]['channels'][channel][action] = data[action]
-                        instance.shmem_write()
-                        message = response(False, 200, {action: data[action]}, '%s successfully updated' % action)
-                    except KeyError:
-                        instance.debug_msg(traceback.format_exc())
-                        message = error(400, 'Bad Request - no %s in request' % action)
-
-                elif action == 'tare' or action == 'volume':
-                    if action == 'tare':
-                        var_offset = 1
-                    else:
-                        var_offset = 0
-                    try:
-                        instance.ShData['config']['hx'][int(index)]['channels'][channel]['size'][var_offset] = float(data[action])
                         instance.shmem_write()
                         message = response(False, 200, {action: data[action]}, '%s successfully updated' % action)
                     except KeyError:

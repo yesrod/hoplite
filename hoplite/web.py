@@ -96,8 +96,8 @@ class Web(App):
                     # channel update
                     try:
                         w = self.ShData['data']['weight'][index][subindex]
-                        cap = hx_conf['channels'][channel]['size'][0]
-                        tare = hx_conf['channels'][channel]['size'][1]
+                        cap = hx_conf['channels'][channel]['volume']
+                        tare = hx_conf['channels'][channel]['tare']
                         name = hx_conf['channels'][channel]['name']
                         fill_pct = self.get_keg_fill_percent(w, cap, tare)
 
@@ -127,11 +127,10 @@ class Web(App):
 
 
     def build_keg_settings(self, hx_conf, index, channel):
-        cap = hx_conf['channels'][channel]['size'][0]
-        tare = hx_conf['channels'][channel]['size'][1]
+        cap = hx_conf['channels'][channel]['volume']
+        tare = hx_conf['channels'][channel]['tare']
         name = hx_conf['channels'][channel]['name']
-        size_name = hx_conf['channels'][channel]['size_name']
-        size = hx_conf['channels'][channel]['size']
+        size_name = hx_conf['channels'][channel]['size']
 
         keg_size_list = list(self.h.keg_data)
         keg_size_list.append('custom')
@@ -162,13 +161,13 @@ class Web(App):
         custom.append(vol_lbl, 0)
         custom_vol = gui.TextInput(
             single_line=True, height='1.5em', width='30%')
-        custom_vol.set_value(str(size[0]))
+        custom_vol.set_value(str(cap))
         custom.append(custom_vol, 1)
         tare_lbl = gui.Label('Empty Weight (kg)', width='30%')
         custom.append(tare_lbl, 2)
         custom_tare = gui.TextInput(
             single_line=True, height='1.5em', width='20%')
-        custom_tare.set_value(str(size[1]))
+        custom_tare.set_value(str(tare))
         custom.append(custom_tare, 3)
 
         keg_box.append(custom, 'custom')
@@ -238,7 +237,8 @@ class Web(App):
             tare = self.h.keg_data[new_size][1]
         hx_conf['channels'][channel]['name'] = new_name
         hx_conf['channels'][channel]['size_name'] = new_size
-        hx_conf['channels'][channel]['size'] = [vol, tare]
+        hx_conf['channels'][channel]['volume'] = vol
+        hx_conf['channels'][channel]['tare'] = tare
 
 
     def apply_settings(self, widget):
@@ -336,8 +336,8 @@ class Web(App):
 
                     keg_bar = gui.Svg(240, 30)
                     keg_w = hx_weight[subindex]
-                    keg_cap = hx_conf['channels'][channel]['size'][0]
-                    keg_tare = hx_conf['channels'][channel]['size'][1]
+                    keg_cap = hx_conf['channels'][channel]['volume']
+                    keg_tare = hx_conf['channels'][channel]['tare']
                     keg_fill_pct = self.get_keg_fill_percent(
                         keg_w, keg_cap, keg_tare)
                     keg_bar_rect = gui.SvgRectangle(0, 0, 240 * keg_fill_pct, 30)

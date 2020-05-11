@@ -209,13 +209,15 @@ class Hoplite():
         kegA['offset'] = None
         kegA['refunit'] = 21.7
         kegA['name'] = "Yuengling"
-        kegA['size'] = self.keg_data['half_bbl']
-        kegA['size_name'] = 'half_bbl'
+        kegA['volume'] = self.keg_data['half_bbl'][0]
+        kegA['tare'] = self.keg_data['half_bbl'][1]
+        kegA['size'] = 'half_bbl'
         kegB['offset'] = None
         kegB['refunit'] = 5.4
         kegB['name'] = "Angry Orchard"
-        kegB['size'] = self.keg_data['sixth_bbl']
-        kegB['size_name'] = 'sixth_bbl'
+        kegB['volume'] = self.keg_data['sixth_bbl'][0]
+        kegB['tare'] = self.keg_data['sixth_bbl'][0]
+        kegB['size'] = 'sixth_bbl'
         hx['channels']['A'] = kegA
         hx['channels']['B'] = kegB
         config['hx'].append(hx)
@@ -227,8 +229,9 @@ class Hoplite():
         co2_A['offset'] = None
         co2_A['refunit'] = 21.7
         co2_A['name'] = "CO2"
-        co2_A['size'] = [2.27, 4.82]
-        co2_A['size_name'] = "custom"
+        co2_A['volume'] = 2.27
+        co2_A['tare'] = 4.82
+        co2_A['size'] = "custom"
         co2_A['co2'] = True
         co2_hx['channels']['A'] = co2_A
         config['hx'].append(co2_hx)
@@ -328,8 +331,8 @@ class Hoplite():
         try:
             kegA = weight[0]
             kegA_name = hx_conf['channels']['A']['name'][0:13]
-            kegA_min = hx_conf['channels']['A']['size'][1] * 1000
-            kegA_cap = hx_conf['channels']['A']['size'][0] * 1000
+            kegA_min = hx_conf['channels']['A']['tare'] * 1000
+            kegA_cap = hx_conf['channels']['A']['volume'] * 1000
             kegA_max = kegA_min + kegA_cap
         except (ValueError, KeyError):
             # no channel A data
@@ -348,8 +351,8 @@ class Hoplite():
         try:
             kegB = weight[1]
             kegB_name = hx_conf['channels']['B']['name'][0:13]
-            kegB_min = hx_conf['channels']['B']['size'][1] * 1000
-            kegB_cap = hx_conf['channels']['B']['size'][0] * 1000
+            kegB_min = hx_conf['channels']['B']['tare'] * 1000
+            kegB_cap = hx_conf['channels']['B']['volume'] * 1000
             kegB_max = kegB_min + kegB_cap
         except (ValueError, KeyError):
             # no channel B data
@@ -411,8 +414,8 @@ class Hoplite():
             try:
                 if hx_conf['channels']['A']['co2'] == True:
                     local_w = self.hx711_read_chA(self.hx_handles[index])
-                    local_max = hx_conf['channels']['A']['size'][0] * 1000
-                    local_tare = hx_conf['channels']['A']['size'][1] * 1000
+                    local_max = hx_conf['channels']['A']['volume'] * 1000
+                    local_tare = hx_conf['channels']['A']['tare'] * 1000
                     local_net_w = max((local_w - local_tare), 0) 
                     local_pct = local_net_w / float(local_max)
                     co2.append(int(local_pct * 100))
@@ -421,8 +424,8 @@ class Hoplite():
             try:
                 if hx_conf['channels']['B']['co2'] == True:
                     local_w = self.hx711_read_chB(self.hx_handles[index])
-                    local_max = hx_conf['channels']['B']['size'][0]
-                    local_tare = hx_conf['channels']['B']['size'][1]
+                    local_max = hx_conf['channels']['B']['volume']
+                    local_tare = hx_conf['channels']['B']['tare']
                     local_net_w = max((local_w - local_tare), 0)    
                     local_pct = local_net_w / float(local_max)
                     co2.append(int(local_pct * 100))
