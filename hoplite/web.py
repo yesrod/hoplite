@@ -236,7 +236,7 @@ class Web(App):
             vol = self.h.keg_data[new_size][0]
             tare = self.h.keg_data[new_size][1]
         hx_conf['channels'][channel]['name'] = new_name
-        hx_conf['channels'][channel]['size_name'] = new_size
+        hx_conf['channels'][channel]['size'] = new_size
         hx_conf['channels'][channel]['volume'] = vol
         hx_conf['channels'][channel]['tare'] = tare
 
