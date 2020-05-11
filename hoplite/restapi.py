@@ -30,12 +30,12 @@ def add_weight_to_hx(index, hx):
         try:
             hx['channels'][channel]['weight'] = instance.ShData['data']['weight'][int(index)][chan_index]
         except ( IndexError, KeyError, ValueError ):
-            traceback.print_exc()
+            instance.debug_msg(traceback.format_exc())
             instance.debug_msg("index %s chan %s weight fail" % (index, channel))
             try:
                 hx['channels'][channel]['weight'] = -1
             except ( IndexError, KeyError, ValueError ):
-                traceback.print_exc()
+                instance.debug_msg(traceback.format_exc())
                 instance.debug_msg("index %s chan %s doesn't exist" % (index, channel))
     return hx
 
@@ -51,7 +51,7 @@ def get_all_hx_with_weight():
             instance.debug_msg("hx %s" % index)
             hxs.insert(index, add_weight_to_hx(index, hx))
     except ( IndexError, KeyError, ValueError ):
-        traceback.print_exc()
+        instance.debug_msg(traceback.format_exc())
     return hxs
 
 
@@ -61,7 +61,7 @@ def validate_request():
         data = request.json
         instance.debug_msg(data)
     except BadRequest:
-        traceback.print_exc()
+        instance.debug_msg(traceback.format_exc())
         instance.debug_msg("request is not valid JSON: %s" % request.get_data())
         data = None
     return data
@@ -127,7 +127,7 @@ class RestApi():
             try:
                 weight_mode = data['weight_mode']
             except KeyError:
-                traceback.print_exc()
+                instance.debug_msg(traceback.format_exc())
                 return error(400, 'Bad Request - no weight_mode in request')
             valid_modes = ('as_kg_gross', 'as_kg_net', 'as_pint', 'as_pct')
             if not weight_mode in valid_modes:
@@ -170,7 +170,7 @@ class RestApi():
                 message = response(False, 200, {'hx': hx} )
 
             except ( IndexError, KeyError, ValueError ):
-                traceback.print_exc()
+                instance.debug_msg(traceback.format_exc())
                 message = error(400, 'No such index %s' % index )
 
             return message
@@ -193,14 +193,14 @@ class RestApi():
                     try:
                         chan_data['weight'] = instance.ShData['data']['weight'][int(index)][chan_index]
                     except ( IndexError, KeyError, ValueError ):
-                        traceback.print_exc()
+                        instance.debug_msg(traceback.format_exc())
                         chan_data['weight'] = -1
                     message = response(False, 200, {'channel': chan_data} )
                 else:
                     message = response(False, 200, {channel: instance.ShData['config']['hx'][int(index)][channel]})
 
             except ( IndexError, KeyError, ValueError ):
-                traceback.print_exc()
+                instance.debug_msg(traceback.format_exc())
                 message = error(400, 'No such channel %s at index %s' % ( channel, index ) )
 
             return message
@@ -242,14 +242,14 @@ class RestApi():
                     try:
                         message = response(False, '200', {'name': chan_config['co2']})
                     except KeyError:
-                        traceback.print_exc()
+                        instance.debug_msg(traceback.format_exc())
                         message = response(False, '200', {'name': False})
 
                 else:
                     message = error(400, '%s undefined for channel %s at index %s' % ( action, channel, index ) )
 
             except ( IndexError, KeyError, ValueError ):
-                traceback.print_exc()
+                instance.debug_msg(traceback.format_exc())
                 message = error(400, 'No such channel %s at index %s' % ( channel, index ) )
 
             return message
@@ -291,7 +291,7 @@ class RestApi():
                         instance.shmem_write()
                         message = response(False, 200, {action: data[action]}, '%s successfully updated' % action)
                     except KeyError:
-                        traceback.print_exc()
+                        instance.debug_msg(traceback.format_exc())
                         message = error(400, 'Bad Request - no %s in request' % action)
 
                 elif action == 'tare' or action == 'volume':
@@ -304,14 +304,14 @@ class RestApi():
                         instance.shmem_write()
                         message = response(False, 200, {action: data[action]}, '%s successfully updated' % action)
                     except KeyError:
-                        traceback.print_exc()
+                        instance.debug_msg(traceback.format_exc())
                         message = error(400, 'Bad Request - no %s in request' % action)
 
                 else:
                     message = error(400, '%s undefined for channel %s at index %s' % ( action, channel, index ) )
 
             except ( IndexError, KeyError, ValueError ):
-                traceback.print_exc()
+                instance.debug_msg(traceback.format_exc())
                 message = error(400, 'No such channel %s at index %s' % ( channel, index ) )
 
             return message
