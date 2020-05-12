@@ -487,23 +487,26 @@ class Hoplite():
     def update(self):
         index = 0
         while self.updating:
+            self.debug_msg("index %s" % index)
             self.temp = self.read_temp()
-
             self.co2_w = self.read_co2()
-
-            weight = self.read_weight(self.hx_handles[index])
-            self.debug_msg("temp: %s co2: %s" % (self.temp, self.co2_w))
-            self.render_st7735(weight, self.config['hx'][index])
-
-            self.shmem_read()
-            if self.ShData['config'] != self.config:
-                self.debug_msg('config changed, save and update')
-                self.config = self.ShData['config']
-                self.save_config(self.config, self.config_file)
             try:
-                self.ShData['data']['weight'][index] = weight
+                weight = self.read_weight(self.hx_handles[index])
+                self.debug_msg("temp: %s co2: %s" % (self.temp, self.co2_w))
+                self.render_st7735(weight, self.config['hx'][index])
+
+                self.shmem_read()
+                if self.ShData['config'] != self.config:
+                    self.debug_msg('config changed, save and update')
+                    self.config = self.ShData['config']
+                    self.save_config(self.config, self.config_file)
+                try:
+                    self.ShData['data']['weight'][index] = weight
+                except IndexError:
+                    self.ShData['data']['weight'].insert(index, weight)
             except IndexError:
-                self.ShData['data']['weight'].insert(index, weight)
+                self.debug_msg("index %s disappeared, probably deleted during read and render" % index)
+
             self.ShData['data']['temp'] = self.temp
             self.ShData['data']['co2'] = self.co2_w
             self.shmem_write()
