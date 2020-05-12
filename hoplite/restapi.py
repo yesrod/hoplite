@@ -266,6 +266,30 @@ class RestApi():
         instance.debug_msg(data)
         if data == None:
             return error(400, 'Bad Request - invalid JSON')
+        # /v1/hx/<index>
+        elif index != None and channel == None and action == None:
+            return error(500, 'Not implemented')
+        # /v1/hx/<index>/<channel>
+        # /v1/hx/<index>/(pd_sck|dout)
+        elif index != None and channel != None and action == None:
+            if channel == 'A':
+                chan_index = 0
+            elif channel == 'B':
+                chan_index = 1
+            elif channel == 'pd_sck' or channel == 'dout':
+                chan_index = None
+            else:
+                return error(400, 'No such channel %s at index %s' % ( channel, index ) )
+
+            if chan_index != None:
+                try:
+                    instance.ShData['config']['hx'][int(index)]['channels'][channel] = data[channel]
+                except ( IndexError, KeyError, ValueError ):
+                    instance.debug_msg(traceback.format_exc())
+                    return error(400, 'No %s at index %s' % ( channel, index ) )
+                return response(False, 200, {channel: data[channel]}, '%s successfully updated' % action)
+            else:
+                return error(500, 'Not implemented')
         # /v1/hx/<index>/<channel>/<action>
         elif index and channel and action:
             if channel == 'A':
@@ -276,7 +300,6 @@ class RestApi():
                 return error(400, 'No such channel %s at index %s' % ( channel, index ) )
 
             try:
-                chan_config = instance.ShData['config']['hx'][int(index)]['channels'][channel]
                 valid_actions = ['name', 'size', 'offset', 'refunit', 'tare', 'volume', 'co2']
 
                 if action == 'weight':
