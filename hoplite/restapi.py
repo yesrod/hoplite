@@ -259,12 +259,12 @@ class RestApi():
 
 
     @app.route('/v1/hx/<index>/<channel>/<action>', methods=['PUT'])
-    @app.route('/v1/hx/<index>/<channel>', methods=['POST', 'DELETE'])
+    @app.route('/v1/hx/<index>/<channel>', methods=['PUT', 'POST', 'DELETE'])
     @app.route('/v1/hx/<index>', methods=['POST', 'DELETE'])
     def set_keg(index=None, channel=None, action=None):
         data = validate_request()
         instance.debug_msg(data)
-        if data == None:
+        if data == None and request.method != 'DELETE':
             return error(400, 'Bad Request - invalid JSON')
         # /v1/hx/<index>
         elif index != None and channel == None and action == None:
@@ -281,15 +281,47 @@ class RestApi():
             else:
                 return error(400, 'No such channel %s at index %s' % ( channel, index ) )
 
-            if chan_index != None:
+            if chan_index == None and request.method == 'PUT':
                 try:
                     instance.ShData['config']['hx'][int(index)]['channels'][channel] = data[channel]
                 except ( IndexError, KeyError, ValueError ):
                     instance.debug_msg(traceback.format_exc())
                     return error(400, 'No %s at index %s' % ( channel, index ) )
                 return response(False, 200, {channel: data[channel]}, '%s successfully updated' % action)
+            elif request.method == 'POST' and chan_index != None:
+                required_keys = ('name', 'size', 'tare', 'volume')
+                optional_keys = {'co2': False, 'refunit': 0, 'offset': 0}
+                submission = dict()
+                for key in required_keys:
+                    if not key in data.keys():
+                        return error(400, 'Key %s is required' % key)
+                    submission[key] = data[key]
+                for key in optional_keys.keys():
+                    if not key in data.keys():
+                        submission[key] = optional_keys[key]
+                    else:
+                        submission[key] = data[key]
+                try:
+                    instance.ShData['config']['hx'][int(index)]['channels'][channel] = submission
+                    instance.shmem_write()
+                    return response(False, 200, {channel: submission}, '%s successfully created or updated' % channel)
+                except IndexError:
+                    instance.debug_msg(traceback.format_exc())
+                    return error(400, 'No existing index %s' % index)
+
+            elif request.method == 'DELETE' and chan_index != None:
+                try:
+                    deleted_data = instance.ShData['config']['hx'][int(index)]['channels'][channel]
+                    del instance.ShData['config']['hx'][int(index)]['channels'][channel]
+                    instance.shmem_write()
+                    return response(False, 200, {channel: deleted_data}, '%s successfully deleted' % channel)
+                except KeyError:
+                    instance.debug_msg(traceback.format_exc())
+                    return error(400, 'No existing channel %s' % channel)
+
             else:
-                return error(500, 'Not implemented')
+                return error(400, '%s not supported for %s' % (request.method, channel))
+
         # /v1/hx/<index>/<channel>/<action>
         elif index and channel and action:
             if channel == 'A':
@@ -298,6 +330,9 @@ class RestApi():
                 chan_index = 1
             else:
                 return error(400, 'No such channel %s at index %s' % ( channel, index ) )
+
+            if request.method != 'PUT':
+                return error(400, '%s not supported for %s' % (request.method, action))
 
             try:
                 valid_actions = ['name', 'size', 'offset', 'refunit', 'tare', 'volume', 'co2']
