@@ -313,27 +313,13 @@ class RestApi():
 
             try:
                 chan_config = instance.ShData['config']['hx'][int(index)]['channels'][channel]
+                valid_actions = ['name', 'size', 'offset', 'refunit', 'tare', 'volume']
 
                 if action == 'weight':
                     message = response(False, '200', {'weight': instance.ShData['data']['weight'][int(index)][chan_index]})
 
-                elif action == 'name':
-                    message = response(False, '200', {'name': chan_config['name']})
-
-                elif action == 'size':
-                    message = response(False, '200', {'size': chan_config['size']})
-
-                elif action == 'tare':
-                    message = response(False, '200', {'tare': chan_config['tare']})
-
-                elif action == 'volume':
-                    message = response(False, '200', {'volume': chan_config['volume']})
-
-                elif action == 'offset':
-                    message = response(False, '200', {'offset': chan_config['offset']})
-
-                elif action == 'refunit':
-                    message = response(False, '200', {'refunit': chan_config['refunit']})
+                elif action in valid_actions:
+                    message = response(False, '200', {action: chan_config[action]})
 
                 elif action == 'co2':
                     try:
