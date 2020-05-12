@@ -496,8 +496,10 @@ class Hoplite():
             self.render_st7735(weight, self.config['hx'][index])
 
             self.shmem_read()
-            if self.ShData['config']:
+            if self.ShData['config'] != self.config:
+                self.debug_msg('config changed, save and update')
                 self.config = self.ShData['config']
+                self.save_config(self.config, self.config_file)
             try:
                 self.ShData['data']['weight'][index] = weight
             except IndexError:
