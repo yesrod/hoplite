@@ -67,6 +67,103 @@ def validate_request():
     return data
 
 
+# add a channel
+def add_channel(index, channel, data):
+    if channel == 'A':
+        chan_index = 0
+    elif channel == 'B':
+        chan_index = 1
+    else:
+        return error(400, 'No such channel %s at index %s' % ( channel, index ) )
+
+    required_keys = ('name', 'size', 'tare', 'volume')
+    optional_keys = {'co2': False, 'refunit': 0, 'offset': 0}
+    submission = dict()
+    for key in required_keys:
+        if not key in data.keys():
+            return error(400, 'Key %s is required' % key)
+        submission[key] = data[key]
+    for key in optional_keys.keys():
+        if not key in data.keys():
+            submission[key] = optional_keys[key]
+        else:
+            submission[key] = data[key]
+    try:
+        instance.ShData['config']['hx'][int(index)]['channels'][channel] = submission
+        instance.shmem_write()
+        return response(False, 200, {channel: submission}, '%s successfully created or updated' % channel)
+    except IndexError:
+        instance.debug_msg(traceback.format_exc())
+        return error(400, 'No existing index %s' % index)
+
+
+# add an index
+def add_index(data):
+    new_index = dict()
+    for key in ('pd_sck', 'dout'):
+        if not key in data.keys():
+            return error(400, 'Key %s is required' % key)
+        new_index[key] = data[key]
+
+    new_index['channels'] = dict()
+    if not 'channels' in data.keys():
+        return error(400, 'channels must be a JSON object containing one or more channels')
+    try:
+        for channel in data['channels'].keys():
+            if channel not in ('A', 'B'):
+                return error(400, 'Invalid channel %s - must be A or B' % channel )
+
+            required_keys = ('name', 'size', 'tare', 'volume')
+            optional_keys = {'co2': False, 'refunit': 0, 'offset': 0}
+            submission = dict()
+            for key in required_keys:
+                if not key in data['channels'][channel].keys():
+                    return error(400, 'Channel %s key %s is required' % (channel, key))
+                submission[key] = data['channels'][channel][key]
+            for key in optional_keys.keys():
+                if not key in data['channels'][channel].keys():
+                    submission[key] = optional_keys[key]
+                else:
+                    submission[key] = data['channels'][channel][key]
+            new_index['channels'][channel] = submission
+
+    except AttributeError:
+        instance.debug_msg(traceback.format_exc())
+        return error(400, 'channels must be a JSON object containing one or more channels also represented as JSON objects')
+
+    instance.ShData['config']['hx'].append(new_index)
+    instance.shmem_write()
+    last_index = len(instance.ShData['config']['hx']) - 1
+    return response(False, 200, {last_index: new_index}, 'Index %s successfully created or updated' % last_index)
+
+
+# delete a channel
+def delete_channel(index, channel):
+    try:
+        deleted_data = instance.ShData['config']['hx'][int(index)]['channels'][channel]
+        del instance.ShData['config']['hx'][int(index)]['channels'][channel]
+        instance.shmem_write()
+        return response(False, 200, {channel: deleted_data}, '%s successfully deleted' % channel)
+    except KeyError:
+        instance.debug_msg(traceback.format_exc())
+        return error(400, 'No existing channel %s' % channel)
+    except IndexError:
+        instance.debug_msg(traceback.format_exc())
+        return error(400, 'No existing index %s' % index)
+
+
+# delete an index
+def delete_index(index):
+    try:
+        deleted_data = instance.ShData['config']['hx'][int(index)]
+        del instance.ShData['config']['hx'][int(index)]
+        instance.shmem_write()
+        return response(False, 200, {index: deleted_data}, '%s successfully deleted' % index)
+    except IndexError:
+        instance.debug_msg(traceback.format_exc())
+        return error(400, 'No existing index %s' % index)
+
+
 class RestApi():
 
     def __init__(self, hoplite):
@@ -260,15 +357,19 @@ class RestApi():
 
     @app.route('/v1/hx/<index>/<channel>/<action>', methods=['PUT'])
     @app.route('/v1/hx/<index>/<channel>', methods=['PUT', 'POST', 'DELETE'])
-    @app.route('/v1/hx/<index>', methods=['POST', 'DELETE'])
+    @app.route('/v1/hx/<index>', methods=['DELETE'])
+    @app.route('/v1/hx/', methods=['POST'])
     def set_keg(index=None, channel=None, action=None):
         data = validate_request()
         instance.debug_msg(data)
         if data == None and request.method != 'DELETE':
             return error(400, 'Bad Request - invalid JSON')
+        # /v1/hx/
+        elif index == None and channel == None and action == None:
+            return add_index(data)
         # /v1/hx/<index>
         elif index != None and channel == None and action == None:
-            return error(500, 'Not implemented')
+            return delete_index(index)
         # /v1/hx/<index>/<channel>
         # /v1/hx/<index>/(pd_sck|dout)
         elif index != None and channel != None and action == None:
@@ -289,25 +390,7 @@ class RestApi():
                     return error(400, 'No %s at index %s' % ( channel, index ) )
                 return response(False, 200, {channel: data[channel]}, '%s successfully updated' % action)
             elif request.method == 'POST' and chan_index != None:
-                required_keys = ('name', 'size', 'tare', 'volume')
-                optional_keys = {'co2': False, 'refunit': 0, 'offset': 0}
-                submission = dict()
-                for key in required_keys:
-                    if not key in data.keys():
-                        return error(400, 'Key %s is required' % key)
-                    submission[key] = data[key]
-                for key in optional_keys.keys():
-                    if not key in data.keys():
-                        submission[key] = optional_keys[key]
-                    else:
-                        submission[key] = data[key]
-                try:
-                    instance.ShData['config']['hx'][int(index)]['channels'][channel] = submission
-                    instance.shmem_write()
-                    return response(False, 200, {channel: submission}, '%s successfully created or updated' % channel)
-                except IndexError:
-                    instance.debug_msg(traceback.format_exc())
-                    return error(400, 'No existing index %s' % index)
+                return add_channel(index, channel, data)
 
             elif request.method == 'DELETE' and chan_index != None:
                 try:
