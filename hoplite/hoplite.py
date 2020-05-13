@@ -495,7 +495,7 @@ class Hoplite():
         self.debug_msg("updates stopped")
 
 
-    def main(self, config_file='config.json'):
+    def main(self, config_file='config.json', api_listen=None):
         self.debug_msg("debug enabled")
         self.config_file = config_file
         self.config = self.load_config(self.config_file)
@@ -517,7 +517,25 @@ class Hoplite():
         self.device = self.init_st7735()
         self.setup_all_kegs()
 
-        self.api_process = threading.Thread(None, self.api.worker, 'hoplite REST api')
+        self.debug_msg('api listener: %s' % api_listen)
+        if api_listen != None:
+            api_listen_split = api_listen.split(':')
+            if len(api_listen_split) == 2:
+                api_host = api_listen_split[0]
+                api_port = api_listen_split[1]
+            elif len(api_listen_split) == 1:
+                api_host = api_listen_split[0]
+                api_port = '5000'
+            else:
+                print('Incorrect formatting for API listen address, using defaults')
+                api_host = '0.0.0.0'
+                api_port = '5000'
+        else:
+            api_host = '0.0.0.0'
+            api_port = '5000'
+
+        print('Starting API at %s:%s' % (api_host, api_port))
+        self.api_process = threading.Thread(None, self.api.worker, 'hoplite REST api', kwargs={'host': api_host, 'port': api_port})
         self.api_process.daemon=True
         self.api_process.start()
 
