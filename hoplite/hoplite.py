@@ -9,6 +9,7 @@ import json
 import posix_ipc
 import mmap
 import glob
+import traceback
 from hx711 import HX711
 
 import threading
@@ -204,41 +205,6 @@ class Hoplite():
         config = dict()
         config['weight_mode'] = 'as_kg_gross'
         config['hx'] = list()
-        hx = dict()
-        hx['channels'] = dict()
-        hx['dout'] = 5
-        hx['pd_sck'] = 6
-        kegA = dict()
-        kegB = dict()
-        kegA['offset'] = None
-        kegA['refunit'] = 21.7
-        kegA['name'] = "Yuengling"
-        kegA['volume'] = self.keg_data['half_bbl'][0]
-        kegA['tare'] = self.keg_data['half_bbl'][1]
-        kegA['size'] = 'half_bbl'
-        kegB['offset'] = None
-        kegB['refunit'] = 5.4
-        kegB['name'] = "Angry Orchard"
-        kegB['volume'] = self.keg_data['sixth_bbl'][0]
-        kegB['tare'] = self.keg_data['sixth_bbl'][0]
-        kegB['size'] = 'sixth_bbl'
-        hx['channels']['A'] = kegA
-        hx['channels']['B'] = kegB
-        config['hx'].append(hx)
-        co2_hx = dict()
-        co2_hx['channels'] = dict()
-        co2_hx['dout'] = 12
-        co2_hx['pd_sck'] = 13
-        co2_A = dict()
-        co2_A['offset'] = None
-        co2_A['refunit'] = 21.7
-        co2_A['name'] = "CO2"
-        co2_A['volume'] = 2.27
-        co2_A['tare'] = 4.82
-        co2_A['size'] = "custom"
-        co2_A['co2'] = True
-        co2_hx['channels']['A'] = co2_A
-        config['hx'].append(co2_hx)
         return config
 
     
@@ -379,12 +345,16 @@ class Hoplite():
             self.debug_msg("%s: %s/%s  %s: %s/%s" % ( kegA_name, kegA, kegA_max, 
                                              kegB_name, kegB, kegB_max ))
             self.debug_msg("min: %s %s" % ( kegA_min, kegB_min ))
-            self.debug_msg(self.as_degF(self.temp))
-            self.debug_msg("CO2: "+str(self.co2_w[0])+"%") #TODO: Handle multiple CO2 sources
-
             self.text_header(0, "HOPLITE", fill="red")
+
+            self.debug_msg("temp: %s" % self.as_degF(self.temp))
             self.text_align_center(30, 0, self.as_degF(self.temp), fill="blue")
-            self.text_align_center(130, 0, "CO2:"+str(self.co2_w[0])+"%", fill="blue")
+            try:
+                self.debug_msg("CO2: "+str(self.co2_w[0])+"%") #TODO: Handle multiple CO2 sources
+                self.text_align_center(130, 0, "CO2: "+str(self.co2_w[0])+"%", fill="blue")
+            except IndexError:
+                self.debug_msg("CO2: N/A") #TODO: Handle multiple CO2 sources
+                self.text_align_center(130, 0, "CO2: N/A", fill="blue")
 
             if kegA_name:
                 self.text_align_center(40, 15, kegA_name)
@@ -490,23 +460,29 @@ class Hoplite():
             self.debug_msg("index %s" % index)
             self.temp = self.read_temp()
             self.co2_w = self.read_co2()
-            try:
-                weight = self.read_weight(self.hx_handles[index])
-                self.debug_msg("temp: %s co2: %s" % (self.temp, self.co2_w))
-                self.render_st7735(weight, self.config['hx'][index])
+            self.debug_msg("temp: %s co2: %s" % (self.temp, self.co2_w))
+            weight = None
 
-                self.shmem_read()
-                if self.ShData['config'] != self.config:
-                    self.debug_msg('config changed, save and update')
-                    self.config = self.ShData['config']
-                    self.save_config(self.config, self.config_file)
+            self.shmem_read()
+            if len(self.hx_handles) <= 0:
+                self.debug_msg("no sensors currently configured")
+            else:
+                try:
+                    weight = self.read_weight(self.hx_handles[index])
+                    self.render_st7735(weight, self.config['hx'][index])
+                except IndexError:
+                    self.debug_msg(traceback.format_exc())
+                    self.debug_msg("index %s not present or removed during access" % index)
                 try:
                     self.ShData['data']['weight'][index] = weight
                 except IndexError:
                     self.ShData['data']['weight'].insert(index, weight)
-            except IndexError:
-                self.debug_msg("index %s disappeared, probably deleted during read and render" % index)
 
+            if self.ShData['config'] != self.config:
+                self.debug_msg('config changed, save and update')
+                self.config = self.ShData['config']
+                self.save_config(self.config, self.config_file)
+                self.setup_all_kegs()
             self.ShData['data']['temp'] = self.temp
             self.ShData['data']['co2'] = self.co2_w
             self.shmem_write()
