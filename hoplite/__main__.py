@@ -117,6 +117,9 @@ def __main__():
     parser.add_argument('--config', 
                     type=str, 
                     help='Config file location.  Default: ./config.json')
+    parser.add_argument('--api',
+                    type=str,
+                    help='Address where the API should listen.  Format is <ip>:<port>.  Port is optional.  Default is 0.0.0.0:5000 (listen on all IPs at port 5000)')
     parser.add_argument('--cal', 
                     type=str, 
                     nargs=3, 
@@ -154,7 +157,7 @@ def __main__():
         h = Hoplite()
         if parsed_args.debug:
             h.debug = True
-        h.main( config_file = config )
+        h.main( config_file = config , api_listen = parsed_args.api )
 
 if __name__ == "__main__":
     __main__()

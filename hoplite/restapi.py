@@ -171,9 +171,9 @@ class RestApi():
         instance = hoplite
 
 
-    def worker(self):
+    def worker(self, host=None, port=None):
         global app
-        app.run(use_reloader=False, host='0.0.0.0')
+        app.run(use_reloader=False, host=host, port=port)
 
 
     # dumps everything
