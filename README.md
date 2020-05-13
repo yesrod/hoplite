@@ -68,17 +68,13 @@ See [Hardware](https://github.com/yesrod/hoplite/wiki/Hardware)
 
 CONFIGURATION
 -------------
-Use the provided example config, or create a default config by specifying 
-a path to a config that doesn't exist yet:
-```
-mkdir /etc/hoplite
-python -m hoplite --config /etc/hoplite/config.json
-```
+All configuration is done via the REST API.  Hoplite will start with an empty 
+config to allow you to customize the config to your setup.
 
-The config is in JSON.  I've tried to make it as self-documenting as possible.
-More documentation on configuration is available [on the wiki.](https://github.com/yesrod/hoplite/wiki/Configuration)
+API documentation can be found [on the wiki.](https://github.com/yesrod/hoplite/wiki/API)
 
-After you have a roughly accurate config, tare all the connected HX711s:
+After you have a roughly accurate config, stop Hoplite and tare all the 
+connected HX711s.  Make sure the load sensor platforms are empty!
 ```
 python -m hoplite --tare --config /etc/hoplite/config.json
 ```
@@ -90,6 +86,9 @@ sensors:
 python -m hoplite --cal 1 A 1000 --config /etc/hoplite/config.json
 # repeat for all channels defined in the config
 ```
+
+Then start Hoplite again - weights should be accurate after tare and 
+calibration.
 
 RUNNING HOPLITE
 ---------------

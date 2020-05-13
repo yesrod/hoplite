@@ -9,8 +9,11 @@ import json
 import posix_ipc
 import mmap
 import glob
+import traceback
 from hx711 import HX711
 
+import threading
+from .restapi import RestApi
 
 class Hoplite():
     
@@ -27,6 +30,9 @@ class Hoplite():
 
         # debug flag
         self.debug = False
+
+        # while true, run update loop
+        self.updating = False
 
         # shared memory segment for communicating with web interface
         mem = posix_ipc.SharedMemory('/hoplite', flags=posix_ipc.O_CREAT, size=65536)
@@ -62,6 +68,8 @@ class Hoplite():
         # co2 weights are a list now, could be multiple co2 cylinders
         self.co2_w = list()
 
+        # REST API class
+        self.api = RestApi(self)
 
     def debug_msg(self, message):
         if self.debug:
@@ -180,6 +188,7 @@ class Hoplite():
         except ValueError:
             print("Config at %s has syntax issues, cannot load" % config_file)
             config = None
+        self.debug_msg(config)
         return config
 
     
@@ -196,38 +205,6 @@ class Hoplite():
         config = dict()
         config['weight_mode'] = 'as_kg_gross'
         config['hx'] = list()
-        hx = dict()
-        hx['channels'] = dict()
-        hx['dout'] = 5
-        hx['pd_sck'] = 6
-        kegA = dict()
-        kegB = dict()
-        kegA['offset'] = None
-        kegA['refunit'] = 21.7
-        kegA['name'] = "Yuengling"
-        kegA['size'] = self.keg_data['half_bbl']
-        kegA['size_name'] = 'half_bbl'
-        kegB['offset'] = None
-        kegB['refunit'] = 5.4
-        kegB['name'] = "Angry Orchard"
-        kegB['size'] = self.keg_data['sixth_bbl']
-        kegB['size_name'] = 'sixth_bbl'
-        hx['channels']['A'] = kegA
-        hx['channels']['B'] = kegB
-        config['hx'].append(hx)
-        co2_hx = dict()
-        co2_hx['channels'] = dict()
-        co2_hx['dout'] = 12
-        co2_hx['pd_sck'] = 13
-        co2_A = dict()
-        co2_A['offset'] = None
-        co2_A['refunit'] = 21.7
-        co2_A['name'] = "CO2"
-        co2_A['size'] = [2.27, 4.82]
-        co2_A['size_name'] = "custom"
-        co2_A['co2'] = True
-        co2_hx['channels']['A'] = co2_A
-        config['hx'].append(co2_hx)
         return config
 
     
@@ -324,8 +301,8 @@ class Hoplite():
         try:
             kegA = weight[0]
             kegA_name = hx_conf['channels']['A']['name'][0:13]
-            kegA_min = hx_conf['channels']['A']['size'][1] * 1000
-            kegA_cap = hx_conf['channels']['A']['size'][0] * 1000
+            kegA_min = hx_conf['channels']['A']['tare'] * 1000
+            kegA_cap = hx_conf['channels']['A']['volume'] * 1000
             kegA_max = kegA_min + kegA_cap
         except (ValueError, KeyError):
             # no channel A data
@@ -344,8 +321,8 @@ class Hoplite():
         try:
             kegB = weight[1]
             kegB_name = hx_conf['channels']['B']['name'][0:13]
-            kegB_min = hx_conf['channels']['B']['size'][1] * 1000
-            kegB_cap = hx_conf['channels']['B']['size'][0] * 1000
+            kegB_min = hx_conf['channels']['B']['tare'] * 1000
+            kegB_cap = hx_conf['channels']['B']['volume'] * 1000
             kegB_max = kegB_min + kegB_cap
         except (ValueError, KeyError):
             # no channel B data
@@ -368,12 +345,16 @@ class Hoplite():
             self.debug_msg("%s: %s/%s  %s: %s/%s" % ( kegA_name, kegA, kegA_max, 
                                              kegB_name, kegB, kegB_max ))
             self.debug_msg("min: %s %s" % ( kegA_min, kegB_min ))
-            self.debug_msg(self.as_degF(self.temp))
-            self.debug_msg("CO2: "+str(self.co2_w[0])+"%") #TODO: Handle multiple CO2 sources
-
             self.text_header(0, "HOPLITE", fill="red")
+
+            self.debug_msg("temp: %s" % self.as_degF(self.temp))
             self.text_align_center(30, 0, self.as_degF(self.temp), fill="blue")
-            self.text_align_center(130, 0, "CO2:"+str(self.co2_w[0])+"%", fill="blue")
+            try:
+                self.debug_msg("CO2: "+str(self.co2_w[0])+"%") #TODO: Handle multiple CO2 sources
+                self.text_align_center(130, 0, "CO2: "+str(self.co2_w[0])+"%", fill="blue")
+            except IndexError:
+                self.debug_msg("CO2: N/A") #TODO: Handle multiple CO2 sources
+                self.text_align_center(130, 0, "CO2: N/A", fill="blue")
 
             if kegA_name:
                 self.text_align_center(40, 15, kegA_name)
@@ -407,8 +388,9 @@ class Hoplite():
             try:
                 if hx_conf['channels']['A']['co2'] == True:
                     local_w = self.hx711_read_chA(self.hx_handles[index])
-                    local_max = hx_conf['channels']['A']['size'][0] * 1000
-                    local_tare = hx_conf['channels']['A']['size'][1] * 1000
+                    local_max = hx_conf['channels']['A']['volume'] * 1000
+                    local_tare = hx_conf['channels']['A']['tare'] * 1000
+                    self.debug_msg("%s, %s, %s" % (local_w, local_max, local_tare))
                     local_net_w = max((local_w - local_tare), 0) 
                     local_pct = local_net_w / float(local_max)
                     co2.append(int(local_pct * 100))
@@ -417,8 +399,9 @@ class Hoplite():
             try:
                 if hx_conf['channels']['B']['co2'] == True:
                     local_w = self.hx711_read_chB(self.hx_handles[index])
-                    local_max = hx_conf['channels']['B']['size'][0]
-                    local_tare = hx_conf['channels']['B']['size'][1]
+                    local_max = hx_conf['channels']['B']['volume'] * 1000
+                    local_tare = hx_conf['channels']['B']['tare'] * 1000
+                    self.debug_msg("%s, %s, %s" % (local_w, local_max, local_tare))
                     local_net_w = max((local_w - local_tare), 0)    
                     local_pct = local_net_w / float(local_max)
                     co2.append(int(local_pct * 100))
@@ -473,22 +456,33 @@ class Hoplite():
 
     def update(self):
         index = 0
-        while True:
+        while self.updating:
+            self.debug_msg("index %s" % index)
             self.temp = self.read_temp()
-
             self.co2_w = self.read_co2()
-
-            weight = self.read_weight(self.hx_handles[index])
             self.debug_msg("temp: %s co2: %s" % (self.temp, self.co2_w))
-            self.render_st7735(weight, self.config['hx'][index])
+            weight = None
 
             self.shmem_read()
-            if self.ShData['config']:
+            if len(self.hx_handles) <= 0:
+                self.debug_msg("no sensors currently configured")
+            else:
+                try:
+                    weight = self.read_weight(self.hx_handles[index])
+                    self.render_st7735(weight, self.config['hx'][index])
+                except IndexError:
+                    self.debug_msg(traceback.format_exc())
+                    self.debug_msg("index %s not present or removed during access" % index)
+                try:
+                    self.ShData['data']['weight'][index] = weight
+                except IndexError:
+                    self.ShData['data']['weight'].insert(index, weight)
+
+            if self.ShData['config'] != self.config:
+                self.debug_msg('config changed, save and update')
                 self.config = self.ShData['config']
-            try:
-                self.ShData['data']['weight'][index] = weight
-            except IndexError:
-                self.ShData['data']['weight'].insert(index, weight)
+                self.save_config(self.config, self.config_file)
+                self.setup_all_kegs()
             self.ShData['data']['temp'] = self.temp
             self.ShData['data']['co2'] = self.co2_w
             self.shmem_write()
@@ -498,9 +492,11 @@ class Hoplite():
                 index = 0
 
             time.sleep(0.1)
+        self.debug_msg("updates stopped")
 
 
-    def main(self, config_file='config.json'):
+    def main(self, config_file='config.json', api_listen=None):
+        self.debug_msg("debug enabled")
         self.config_file = config_file
         self.config = self.load_config(self.config_file)
         if self.config == None:
@@ -521,12 +517,41 @@ class Hoplite():
         self.device = self.init_st7735()
         self.setup_all_kegs()
 
-        while True:
-            try:
-                self.update()
-            except (KeyboardInterrupt, SystemExit, RuntimeError):
-                self.cleanup()
-                sys.exit()
+        self.debug_msg('api listener: %s' % api_listen)
+        if api_listen != None:
+            api_listen_split = api_listen.split(':')
+            if len(api_listen_split) == 2:
+                api_host = api_listen_split[0]
+                api_port = api_listen_split[1]
+            elif len(api_listen_split) == 1:
+                api_host = api_listen_split[0]
+                api_port = '5000'
+            else:
+                print('Incorrect formatting for API listen address, using defaults')
+                api_host = '0.0.0.0'
+                api_port = '5000'
+        else:
+            api_host = '0.0.0.0'
+            api_port = '5000'
+
+        print('Starting API at %s:%s' % (api_host, api_port))
+        self.api_process = threading.Thread(None, self.api.worker, 'hoplite REST api', kwargs={'host': api_host, 'port': api_port})
+        self.api_process.daemon=True
+        self.api_process.start()
+
+        try:
+            self.updating = True
+            self.update_process = threading.Thread(None, self.update, 'hoplite data collection')
+            self.update_process.daemon = True
+            self.update_process.start()
+            while self.updating:
+                time.sleep(1)
+        except (KeyboardInterrupt, SystemExit, RuntimeError):
+            self.debug_msg("stop updating")
+            self.updating = False
+            self.update_process.join(30)
+            self.cleanup()
+            sys.exit()
 
 
 # this is here in case we get run as a standalone script
