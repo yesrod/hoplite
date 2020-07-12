@@ -448,6 +448,7 @@ class Hoplite():
 
 
     def setup_all_kegs(self):
+        self.hx_handles = list()
         # grab each keg definition from the config
         for index, hx_conf in enumerate(self.config['hx']):
             hx = self.init_hx711(hx_conf)
@@ -457,41 +458,41 @@ class Hoplite():
     def update(self):
         index = 0
         while self.updating:
-            self.debug_msg("index %s" % index)
-            self.temp = self.read_temp()
-            self.co2_w = self.read_co2()
-            self.debug_msg("temp: %s co2: %s" % (self.temp, self.co2_w))
-            weight = None
+            for index, hx in enumerate(self.hx_handles):
+                if not self.updating: break
+                self.debug_msg("index %s" % index)
+                self.temp = self.read_temp()
+                self.co2_w = self.read_co2()
+                self.debug_msg("temp: %s co2: %s" % (self.temp, self.co2_w))
+                weight = None
 
-            self.shmem_read()
-            if len(self.hx_handles) <= 0:
-                self.debug_msg("no sensors currently configured")
-            else:
-                try:
-                    weight = self.read_weight(self.hx_handles[index])
-                    self.render_st7735(weight, self.config['hx'][index])
-                except IndexError:
-                    self.debug_msg(traceback.format_exc())
-                    self.debug_msg("index %s not present or removed during access" % index)
+                if len(self.hx_handles) <= 0:
+                    self.debug_msg("no sensors currently configured")
+                else:
+                    try:
+                        weight = self.read_weight(self.hx_handles[index])
+                        self.render_st7735(weight, self.config['hx'][index])
+                    except IndexError:
+                        self.debug_msg(traceback.format_exc())
+                        self.debug_msg("index %s not present or removed during access" % index)
+
+                self.shmem_read()
                 try:
                     self.ShData['data']['weight'][index] = weight
                 except IndexError:
                     self.ShData['data']['weight'].insert(index, weight)
 
-            if self.ShData['config'] != self.config:
-                self.debug_msg('config changed, save and update')
-                self.config = self.ShData['config']
-                self.save_config(self.config, self.config_file)
-                self.setup_all_kegs()
-            self.ShData['data']['temp'] = self.temp
-            self.ShData['data']['co2'] = self.co2_w
-            self.shmem_write()
+                self.ShData['data']['temp'] = self.temp
+                self.ShData['data']['co2'] = self.co2_w
 
-            index += 1
-            if index >= len(self.hx_handles):
-                index = 0
-
+                if self.ShData['config'] != self.config:
+                    self.debug_msg('config changed, save and update')
+                    self.config = self.ShData['config']
+                    self.save_config(self.config, self.config_file)
+                    self.setup_all_kegs()
+                self.shmem_write()
             time.sleep(0.1)
+
         self.debug_msg("updates stopped")
 
 
