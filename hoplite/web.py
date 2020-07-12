@@ -244,10 +244,12 @@ class Web(App):
     def apply_settings(self, widget):
         self.settings_up = False
 
-        weight_mode = self.dialog.get_field('weight_options').get_value()
-        self.ShData['config']['weight_mode'] = weight_mode
+        TempData = self.ShData
 
-        for index, hx_conf in enumerate(self.ShData['config']['hx']):
+        weight_mode = self.dialog.get_field('weight_options').get_value()
+        TempData['config']['weight_mode'] = weight_mode
+
+        for index, hx_conf in enumerate(TempData['config']['hx']):
 
             # channel A settings
             try:
@@ -263,6 +265,7 @@ class Web(App):
             except (KeyError, IndexError):
                 pass
 
+        self.ShData = TempData
         self.shmem_write(5)
 
 
