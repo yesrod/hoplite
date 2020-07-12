@@ -222,7 +222,7 @@ class Web(App):
         self.settings_up = False
 
 
-    def get_keg_settings(self, hx_conf, index, channel):
+    def get_keg_settings(self, index, channel):
         keg_box = self.dialog.get_field(str(index) + channel + '_box')
 
         new_name = keg_box.children['name'].children['val'].get_value()
@@ -235,10 +235,12 @@ class Web(App):
         else:
             vol = self.h.keg_data[new_size][0]
             tare = self.h.keg_data[new_size][1]
-        hx_conf['channels'][channel]['name'] = new_name
-        hx_conf['channels'][channel]['size'] = new_size
-        hx_conf['channels'][channel]['volume'] = vol
-        hx_conf['channels'][channel]['tare'] = tare
+        new_conf = dict()
+        new_conf['name'] = new_name
+        new_conf['size'] = new_size
+        new_conf['volume'] = vol
+        new_conf['tare'] = tare
+        return new_conf
 
 
     def apply_settings(self, widget):
@@ -250,20 +252,15 @@ class Web(App):
         TempData['config']['weight_mode'] = weight_mode
 
         for index, hx_conf in enumerate(TempData['config']['hx']):
-
-            # channel A settings
-            try:
-                self.get_keg_settings(hx_conf, index, 'A')
-
-            except (KeyError, IndexError):
-                pass
-
-            # channel B settings
-            try:
-                self.get_keg_settings(hx_conf, index, 'B')
-
-            except (KeyError, IndexError):
-                pass
+            for channel in ('A', 'B'):
+                try:
+                    new_conf = self.get_keg_settings(index, channel)
+                    hx_conf['channels'][channel]['name'] = new_conf['name']
+                    hx_conf['channels'][channel]['size'] = new_conf['size']
+                    hx_conf['channels'][channel]['volume'] = new_conf['volume']
+                    hx_conf['channels'][channel]['tare'] = new_conf['tare']
+                except (KeyError, IndexError):
+                    pass
 
         self.ShData = TempData
         self.shmem_write(5)
