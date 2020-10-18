@@ -1,7 +1,6 @@
 from luma.core.interface.serial import spi
 from luma.core.render import canvas
 from luma.lcd.device import st7735
-from luma.lcd.aux import backlight
 import RPi.GPIO as GPIO
 import sys
 import time
@@ -106,10 +105,9 @@ class Hoplite():
 
 
     def init_st7735(self):
-        light = backlight(gpio=GPIO, gpio_LIGHT=18, active_low=False)
-        light.enable(True)
         serial = spi(port=0, device=0, gpio_DC=23, gpio_RST=24)
-        device = st7735(serial)
+        device = st7735(serial, gpio_LIGHT=18, active_low=False)
+        device.backlight(True)
         return device
 
     
