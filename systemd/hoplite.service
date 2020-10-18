@@ -2,7 +2,7 @@
 Description=HOPLITE: A kegerator monitoring script for RasPi
 
 [Service]
-ExecStart=/usr/bin/python2 -m hoplite --config /etc/hoplite/config.json
+ExecStart=/usr/bin/python3 -m hoplite --config /etc/hoplite/config.json
 TimeoutStopSec=10
 KillSignal=SIGINT
 Nice=-15

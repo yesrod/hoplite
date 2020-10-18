@@ -34,6 +34,8 @@ SECURITY
 INSTALLATION
 ------------
 
+**AS OF VERSION 1.2.0 PYTHON 3 IS REQUIRED.**
+
 You'll save time and skip having to install ```gfortran``` if you install the repo version of ```python-numpy```.
 ```
 sudo apt-get update
@@ -49,17 +51,17 @@ sudo systemctl restart cpufrequtils
 
 The only prerequisite that you'll need to manually install is the hx711py module.
 ```
-sudo pip install git+https://github.com/tatobari/hx711py.git
+sudo pip3 install git+https://github.com/tatobari/hx711py.git
 ```
 
 After installing hx711py, clone this respository and run
 ```
-sudo python setup.py install
+sudo python3 setup.py install
 ```
 
 Or use pip:
 ```
-sudo pip install git+https://github.com/yesrod/hoplite.git
+sudo pip3 install git+https://github.com/yesrod/hoplite.git
 ```
 
 HARDWARE

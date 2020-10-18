@@ -4,7 +4,7 @@ Requires=hoplite.service
 After=hoplite.service
 
 [Service]
-ExecStart=/usr/bin/python2 -m hoplite.web
+ExecStart=/usr/bin/python3 -m hoplite.web
 
 [Install]
 WantedBy=multi-user.target hoplite.service
