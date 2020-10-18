@@ -101,6 +101,7 @@ def tare(conf_file, index=None, channel=None):
 
 
 def __main__():
+    global parsed_args
     parser = argparse.ArgumentParser(description="HOPLITE: A kegerator monitoring script for RasPi")
     parser.add_argument('--config', 
                     type=str, 
