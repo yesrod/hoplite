@@ -17,7 +17,10 @@ from .restapi import RestApi
 class Hoplite():
     
     def __init__(self, debug=False):
+        # debug flag - this should be first
+        self.debug = debug
         self.debug_msg("init start")
+        
         # keg data dictionary
         # value is list( volume in liters, empty weight in kg )
         self.keg_data = {
@@ -27,9 +30,6 @@ class Hoplite():
             'sixth_bbl': (19.5, 7.5),
             'corny': (18.9, 4),
         }
-
-        # debug flag
-        self.debug = debug
 
         # while true, run update loop
         self.updating = False

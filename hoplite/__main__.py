@@ -139,7 +139,6 @@ def __main__():
             tare(config, index=parsed_args.tare[0], channel=parsed_args.tare[1])
         else:
             raise argparse.ArgumentTypeError('--tare takes up to two arguments')
-            sys.exit()
     elif parsed_args.cal:
         calibrate(config, parsed_args.cal[0], parsed_args.cal[1], parsed_args.cal[2])
     else:
