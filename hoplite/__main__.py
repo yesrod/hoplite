@@ -55,7 +55,7 @@ def tare(conf_file, index=None, channel=None):
         if channel == 'A' or channel == None:
             hx.set_reference_unit_A(1)
             hx.tare_A()
-            h.debug_msg("refunit, offset: %s %s" % hx.get_reference_unit_A(), hx.get_offset_A())
+            h.debug_msg("refunit, offset: %s %s" % (hx.get_reference_unit_A(), hx.get_offset_A()))
             try:
                 hx_conf['channels']['A']['offset'] = hx.OFFSET
                 print("Sensor %s channel A offset saved as %s" % (index, hx.OFFSET))
@@ -64,7 +64,7 @@ def tare(conf_file, index=None, channel=None):
         elif channel == 'B' or channel == None:
             hx.set_reference_unit_B(1)
             hx.tare_B()
-            hx.debug_msg("refunit, offset: %s %s" % hx.get_reference_unit_B(), hx.get_offset_B())
+            hx.debug_msg("refunit, offset: %s %s" % (hx.get_reference_unit_B(), hx.get_offset_B()))
             try:
                 hx_conf['channels']['B']['offset'] = hx.OFFSET_B
                 print("Sensor %s channel B offset saved as %s" % (index, hx.OFFSET_B))
@@ -85,7 +85,7 @@ def tare(conf_file, index=None, channel=None):
 
             hx.set_reference_unit_A(1)
             hx.tare_A()
-            h.debug_msg("refunit, offset: %s %s" % hx.get_reference_unit_A(), hx.get_offset_A())
+            h.debug_msg("refunit, offset: %s %s" % (hx.get_reference_unit_A(), hx.get_offset_A()))
             try:
                 hx_conf['channels']['A']['offset'] = hx.OFFSET
                 print("Sensor %s channel A offset saved as %s" % (str(index), hx.OFFSET))
@@ -94,7 +94,7 @@ def tare(conf_file, index=None, channel=None):
 
             hx.set_reference_unit_B(1)
             hx.tare_B()
-            h.debug_msg("refunit, offset: %s %s" % hx.get_reference_unit_B(), hx.get_offset_B())
+            h.debug_msg("refunit, offset: %s %s" % (hx.get_reference_unit_B(), hx.get_offset_B()))
             try:
                 hx_conf['channels']['B']['offset'] = hx.OFFSET_B
                 print("Sensor %s channel B offset saved as %s" % (str(index), hx.OFFSET_B))
