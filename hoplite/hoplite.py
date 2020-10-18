@@ -14,9 +14,9 @@ from hx711 import HX711
 import threading
 from .restapi import RestApi
 
-class Hoplite(debug=False):
+class Hoplite():
     
-    def __init__(self):
+    def __init__(self, debug=False):
         self.debug_msg("init start")
         # keg data dictionary
         # value is list( volume in liters, empty weight in kg )
