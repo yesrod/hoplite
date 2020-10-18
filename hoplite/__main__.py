@@ -6,7 +6,8 @@ import RPi.GPIO as GPIO
 from hx711 import HX711
 
 def calibrate(conf_file, index, channel, weight):
-    config = Hoplite.load_config(conf_file)
+    h = Hoplite()
+    config = h.load_config(config_file=conf_file)
     try:
         hx = h.init_hx711(config['hx'][int(index)])
     except (KeyError, ValueError):
@@ -34,7 +35,8 @@ def calibrate(conf_file, index, channel, weight):
 
 
 def tare(conf_file, index=None, channel=None):
-    config = Hoplite.load_config(conf_file)
+    h = Hoplite()
+    config = h.load_config(conf_file)
 
     # one sensor, one or both channels
     if index != None:

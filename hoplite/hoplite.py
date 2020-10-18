@@ -33,6 +33,24 @@ class Hoplite():
         # while true, run update loop
         self.updating = False
 
+        # config file location
+        self.config_file = None
+
+        # output device
+        self.device = None
+
+        # canvas for output device
+        self.draw = None
+
+        # temperature sensor output
+        # TODO: evaluate if this can be replaced by read_temp()
+        self.temp = None
+
+
+    def runtime_init(self):
+        # All the stuff needed for runtime lives here so the Hoplite class
+        # can pe imported into other things for stuff like loading configs
+        # without breaking GPIO access, etc.
         # shared memory segment for communicating with web interface
         mem = posix_ipc.SharedMemory('/hoplite', flags=posix_ipc.O_CREAT, size=65536)
         self.ShMem = mmap.mmap(mem.fd, mem.size)
@@ -45,21 +63,8 @@ class Hoplite():
         # dictionary containing current shared memory data
         self.ShData = dict()
 
-        # config file location
-        self.config_file = None
-
         # dict containing current config
         self.config = dict()
-
-        # output device
-        self.device = None
-
-        # canvas for output device
-        self.draw = None
-
-        # temperature sensor output
-        # TODO: evaluate if this can be replaced by read_temp()
-        self.temp = None
 
         # list of handles for all keg HX711's found in config
         self.hx_handles = list()
@@ -69,6 +74,7 @@ class Hoplite():
 
         # REST API class
         self.api = RestApi(self)
+
 
     def debug_msg(self, message):
         if self.debug:
@@ -491,6 +497,7 @@ class Hoplite():
 
 
     def main(self, config_file='config.json', api_listen=None):
+        self.runtime_init()
         self.debug_msg("debug enabled")
         self.config_file = config_file
         self.config = self.load_config(self.config_file)
