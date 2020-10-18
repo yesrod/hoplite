@@ -14,9 +14,10 @@ from hx711 import HX711
 import threading
 from .restapi import RestApi
 
-class Hoplite():
+class Hoplite(debug=False):
     
     def __init__(self):
+        self.debug_msg("init start")
         # keg data dictionary
         # value is list( volume in liters, empty weight in kg )
         self.keg_data = {
@@ -28,7 +29,7 @@ class Hoplite():
         }
 
         # debug flag
-        self.debug = False
+        self.debug = debug
 
         # while true, run update loop
         self.updating = False
@@ -46,11 +47,14 @@ class Hoplite():
         # TODO: evaluate if this can be replaced by read_temp()
         self.temp = None
 
+        self.debug_msg("init end")
+
 
     def runtime_init(self):
         # All the stuff needed for runtime lives here so the Hoplite class
         # can pe imported into other things for stuff like loading configs
         # without breaking GPIO access, etc.
+        self.debug_msg("runtime init start")
         # shared memory segment for communicating with web interface
         mem = posix_ipc.SharedMemory('/hoplite', flags=posix_ipc.O_CREAT, size=65536)
         self.ShMem = mmap.mmap(mem.fd, mem.size)
@@ -74,6 +78,8 @@ class Hoplite():
 
         # REST API class
         self.api = RestApi(self)
+
+        self.debug_msg("runtime init end")
 
 
     def debug_msg(self, message):
@@ -118,6 +124,7 @@ class Hoplite():
 
     
     def init_hx711(self, hx_conf):
+        self.debug_msg("init hx711 start")
         dout = hx_conf['dout']
         pd_sck = hx_conf['pd_sck']
 
@@ -150,6 +157,7 @@ class Hoplite():
         else:
             hx.set_reference_unit_B(1)
 
+        self.debug_msg("init hx711 end")
         return hx
 
     
@@ -178,6 +186,7 @@ class Hoplite():
 
     
     def load_config(self, config_file="config.json"):
+        self.debug_msg("load config start")
         try: 
             save = open(config_file, "r")
             config = json.load(save)
@@ -189,6 +198,7 @@ class Hoplite():
             print("Config at %s has syntax issues, cannot load" % config_file)
             config = None
         self.debug_msg(config)
+        self.debug_msg("load config end")
         return config
 
     
