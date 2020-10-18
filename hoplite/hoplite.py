@@ -132,21 +132,17 @@ class Hoplite():
         hx.set_reading_format("MSB", "MSB")
         hx.reset()
 
-        if refunit_A: 
+        if refunit_A is not None and offset_A is not None: 
             hx.set_reference_unit_A(refunit_A)
-            if offset_A:
-                hx.set_offset_A(offset_A)
-            else:
-                hx.tare_A()
-                self.debug_msg("channel A offset: %s" % hx.OFFSET)
+            hx.set_offset_A(offset_A)
+        else:
+            hx.set_reference_unit_A(1)
 
-        if refunit_B: 
+        if refunit_B is not None and offset_B is not None: 
             hx.set_reference_unit_B(refunit_B)
-            if offset_B:
-                hx.set_offset_B(offset_B)
-            else:
-                hx.tare_B()
-                self.debug_msg("channel B offset: %s" % hx.OFFSET_B)
+            hx.set_offset_B(offset_B)
+        else:
+            hx.set_reference_unit_B(1)
 
         return hx
 

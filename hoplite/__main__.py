@@ -3,6 +3,7 @@ from .hoplite import Hoplite
 import argparse
 import sys
 import RPi.GPIO as GPIO
+from hx711 import HX711
 
 def calibrate(conf_file, index, channel, weight):
     h = Hoplite()
@@ -37,62 +38,48 @@ def tare(conf_file, index=None, channel=None):
     h = Hoplite()
     config = h.load_config(conf_file)
 
-    # one sensor, one channel
-    if index != None and channel != None:
+    # one sensor, one or both channels
+    if index != None:
         try:
             hx_conf = config['hx'][int(index)]
-            hx = h.init_hx711(hx_conf)
+            dout = hx_conf['dout']
+            pd_sck = hx_conf['pd_sck']
+            hx = HX711(dout, pd_sck)
+            hx.set_reading_format("MSB", "MSB")
+            hx.reset()
         except (KeyError, IndexError):
-            print("Sensor %s not found!" % ( index ))
+            print("Sensor at index %s not found!" % ( index ))
             sys.exit()
 
-        if channel == 'A':
+        if channel == 'A' or channel == None:
+            hx.set_reference_unit_A(1)
             hx.tare_A()
             try:
                 hx_conf['channels']['A']['offset'] = hx.OFFSET
                 print("Sensor %s channel A offset saved as %s" % (index, hx.OFFSET))
             except KeyError:
                 print("Sensor %s channel %s not found!" % ( index, channel ))
-
-        elif channel == 'B':
+        elif channel == 'B' or channel == None:
+            hx.set_reference_unit_B(1)
             hx.tare_B()
             try:
                 hx_conf['channels']['B']['offset'] = hx.OFFSET_B
                 print("Sensor %s channel B offset saved as %s" % (index, hx.OFFSET_B))
             except KeyError:
                 print("Sensor %s channel %s not found!" % ( index, channel ))
-
         else:
             print("Sensor %s channel %s not found!" % ( index, channel ))
-
-
-    # one sensor, all channels
-    elif index != None and channel == None:
-        try:
-            hx_conf = config['hx'][int(index)]
-            hx = h.init_hx711(hx_conf)
-        except (KeyError, IndexError):
-            print("Sensor %s not found!" % ( index ))
-            sys.exit()
-
-        hx.tare_A()
-        try:
-            hx_conf['channels']['A']['offset'] = hx.OFFSET
-            print("Sensor %s channel A offset saved as %s" % (index, hx.OFFSET))
-        except KeyError:
-            pass
-
-        hx.tare_B()
-        try:
-            hx_conf['channels']['B']['offset'] = hx.OFFSET_B
-            print("Sensor %s channel B offset saved as %s" % (index, hx.OFFSET_B))
-        except KeyError:
-            pass
 
     # all sensors, all channels
     else:
         for index, hx_conf in enumerate(config['hx']):
-            hx = h.init_hx711(hx_conf)
+            dout = hx_conf['dout']
+            pd_sck = hx_conf['pd_sck']
+            hx = HX711(dout, pd_sck)
+            hx.set_reading_format("MSB", "MSB")
+            hx.reset()
+
+            hx.set_reference_unit_A(1)
             hx.tare_A()
             try:
                 hx_conf['channels']['A']['offset'] = hx.OFFSET
@@ -100,6 +87,7 @@ def tare(conf_file, index=None, channel=None):
             except KeyError:
                 pass
 
+            hx.set_reference_unit_B(1)
             hx.tare_B()
             try:
                 hx_conf['channels']['B']['offset'] = hx.OFFSET_B
@@ -161,4 +149,3 @@ def __main__():
 
 if __name__ == "__main__":
     __main__()
-
