@@ -17,7 +17,7 @@ setup(
     description='HOPLITE: A system for monitoring kegerator levels and temperatures',
     #    py_modules=['Hoplite', 'hoplite-web'],
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
-    python_requires=">=3.5"
+    python_requires=">=3.5",
     install_requires=[
         'Rpi.GPIO', 'numpy', 'luma.lcd>=2.0.0', 'hx711', 'posix_ipc', 'remi', 'flask'],
     package_dir={'hoplite': 'hoplite/'},
