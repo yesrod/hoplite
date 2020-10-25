@@ -74,7 +74,7 @@ class Web(App):
 
         w_mode = self.ShData['config'].get('weight_mode', 'as_kg_gross')
 
-        for line in self.KegLines:
+        for line in self.kegs:
             for index, hx_conf in enumerate(self.ShData['config']['hx']):
                 for subindex, channel in enumerate(['A', 'B']):
                     # skip co2
@@ -92,12 +92,11 @@ class Web(App):
                         name = hx_conf['channels'][channel]['name']
                         fill_pct = self.get_keg_fill_percent(w, cap, tare)
 
-                        line[subindex][0].set_text(name)
-                        line[subindex][
-                            1].set_size(240 * fill_pct, 30)
-                        line[subindex][1].style[
+                        line[0].set_text(name)
+                        line[1].set_size(240 * fill_pct, 30)
+                        line[1].style[
                             'fill'] = utils.fill_bar_color(fill_pct)
-                        line[subindex][2].set_text(utils.format_weight(
+                        line[2].set_text(utils.format_weight(
                             w, w_mode, tare=(tare * 1000), cap=(cap * 1000)))
                     except (KeyError, IndexError):
                         pass
@@ -185,7 +184,7 @@ class Web(App):
         self.dialog.add_field_with_label(
             'weight_options', 'Display Keg Weight', weight_options)
 
-        for line in self.KegLines:
+        for line in self.kegs:
             for index, hx_conf in enumerate(self.ShData['config']['hx']):
 
                 # channel A settings
@@ -260,7 +259,7 @@ class Web(App):
     def main(self):
         self.shmem_read(5)
 
-        self.KegLines = list()
+        self.kegs = list()
         self.settings_up = False
 
         # root object
@@ -306,9 +305,7 @@ class Web(App):
         for index, hx_conf in enumerate(self.ShData['config']['hx']):
 
             hx_weight = self.ShData['data']['weight'][index]
-            self.KegLines.insert(index, list())
-            self.KegLines[index].insert(0, None)
-            self.KegLines[index].insert(1, None)
+            self.kegs.insert(index, None)
 
             # keg information
             for subindex, channel in enumerate(['A', 'B']):
@@ -344,12 +341,8 @@ class Web(App):
                         keg_w, w_mode, tare=(keg_tare * 1000), cap=(keg_cap * 1000)), 
                         width=100, height=30)
 
-                    try:
-                        self.KegLines[index].insert(
-                            subindex, [keg_label, keg_bar_rect, keg_weight])
-                    except KeyError:
-                        self.KegLines.insert(
-                            index, [keg_label, keg_bar_rect, keg_weight])
+                    self.kegs.insert(
+                        index, [keg_label, keg_bar_rect, keg_weight])
 
                     table_row = gui.TableRow(height=30)
                     for item in [keg_label, keg_bar, keg_weight]:
