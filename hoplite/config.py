@@ -17,6 +17,7 @@ class Config():
             config = None
         utils.debug_msg(self, config)
         self.config = config
+        self.debug = debug
         utils.debug_msg(self, "load config end")
 
 
