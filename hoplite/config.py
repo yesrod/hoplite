@@ -3,6 +3,7 @@ import hoplite.utils as utils
 
 class Config():
     def __init__(self, config_file="config.json", debug=False):
+        self.debug = debug
         utils.debug_msg(self, "load config start")
         self.config_file = config_file
         try: 
@@ -17,7 +18,6 @@ class Config():
             config = None
         utils.debug_msg(self, config)
         self.config = config
-        self.debug = debug
         utils.debug_msg(self, "load config end")
 
 
