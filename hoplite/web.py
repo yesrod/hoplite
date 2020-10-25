@@ -92,12 +92,12 @@ class Web(App):
                         name = hx_conf['channels'][channel]['name']
                         fill_pct = self.get_keg_fill_percent(w, cap, tare)
 
-                        self.KegLines[index][subindex][0].set_text(name)
-                        self.KegLines[index][subindex][
+                        line[subindex][0].set_text(name)
+                        line[subindex][
                             1].set_size(240 * fill_pct, 30)
-                        self.KegLines[index][subindex][1].style[
+                        line[subindex][1].style[
                             'fill'] = utils.fill_bar_color(fill_pct)
-                        self.KegLines[index][subindex][2].set_text(utils.format_weight(
+                        line[subindex][2].set_text(utils.format_weight(
                             w, w_mode, tare=(tare * 1000), cap=(cap * 1000)))
                     except (KeyError, IndexError):
                         pass
