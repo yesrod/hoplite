@@ -69,11 +69,7 @@ def validate_request():
 
 # add a channel
 def add_channel(index, channel, data):
-    if channel == 'A':
-        chan_index = 0
-    elif channel == 'B':
-        chan_index = 1
-    else:
+    if channel != 'A' and channel != 'B':
         return error(400, 'No such channel %s at index %s' % ( channel, index ) )
 
     required_keys = ('name', 'size', 'tare', 'volume')
@@ -178,6 +174,7 @@ class RestApi():
 
     # dumps everything
     # TODO: Remove me later, only here for troubleshooting purposes
+    @staticmethod
     @app.route('/v1/shdata', methods=['GET'])
     def get_shdata():
         global instance
@@ -185,7 +182,8 @@ class RestApi():
 
 
     # dumps the entire config
-    # TODO: Remove me later, only here for troubleshooting purposes
+    # TODO: Remove me later, only here for troubleshooting 
+    @staticmethod
     @app.route('/v1/config', methods=['GET'])
     def get_config():
         global instance
@@ -194,6 +192,7 @@ class RestApi():
 
     # dumps all data
     # TODO: Remove me later, only here for troubleshooting purposes
+    @staticmethod
     @app.route('/v1/data', methods=['GET'])
     def get_data():
         global instance
@@ -201,6 +200,7 @@ class RestApi():
 
 
     # get current temperature
+    @staticmethod
     @app.route('/v1/temp', methods=['GET'])
     def get_temp():
         global instance
@@ -208,6 +208,7 @@ class RestApi():
 
 
     # handle weight display mode
+    @staticmethod
     @app.route('/v1/weight_mode', methods=['GET'])
     def get_weight_mode():
         global instance
@@ -215,6 +216,7 @@ class RestApi():
 
 
     # set weight display mode
+    @staticmethod
     @app.route('/v1/weight_mode', methods=['PUT'])
     def set_weight_mode():
         data = validate_request()
@@ -237,6 +239,7 @@ class RestApi():
 
     # root element for api v1
     # not much here past /v1/hx really
+    @staticmethod
     @app.route('/v1', methods=['GET'])
     def get_root():
         global instance
@@ -246,6 +249,7 @@ class RestApi():
 
 
     # handle keg specific data, per channel, per index, and overall
+    @staticmethod
     @app.route('/v1/hx/<index>/<channel>/<action>', methods=['GET'])
     @app.route('/v1/hx/<index>/<channel>', methods=['GET'])
     @app.route('/v1/hx/<index>', methods=['GET'])
@@ -341,6 +345,7 @@ class RestApi():
             return error(400, 'Malformed request: index=%s channel=%s action=%s' % ( index, channel, action ) )
 
 
+    @staticmethod
     @app.route('/v1/hx/<index>/<channel>/<action>', methods=['PUT'])
     @app.route('/v1/hx/<index>/<channel>', methods=['PUT', 'POST', 'DELETE'])
     @app.route('/v1/hx/<index>', methods=['DELETE'])
@@ -435,24 +440,28 @@ class RestApi():
 
 
     # custom 400, JSON format
+    @staticmethod
     @app.errorhandler(400)
     def bad_request(e):
         return error(400, str(e))
 
 
     # custom 404, JSON format
+    @staticmethod
     @app.errorhandler(404)
     def page_not_found(e):
         return error(404, str(e))
 
 
     # custom 405, JSON format
+    @staticmethod
     @app.errorhandler(405)
     def method_not_allowed(e):
         return error(405, str(e))
 
 
     # custom 500, JSON format
+    @staticmethod
     @app.errorhandler(500)
     def internal_error(e):
         return error(500, str(e))
