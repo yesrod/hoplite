@@ -325,7 +325,7 @@ class Web(App):
                 if keg_name != None:
                     keg_label = gui.Label(keg_name, width=100, height=30)
 
-                    keg_bar = gui.Svg(240, 30)
+                    keg_bar = gui.Svg()
                     keg_w = hx_weight[subindex]
                     keg_cap = hx_conf['channels'][channel]['volume']
                     keg_tare = hx_conf['channels'][channel]['tare']
