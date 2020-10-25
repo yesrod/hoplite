@@ -75,6 +75,8 @@ class Web(App):
         w_mode = self.ShData['config'].get('weight_mode', 'as_kg_gross')
 
         for line in self.kegs:
+            if line == None:
+                continue
             for index, hx_conf in enumerate(self.ShData['config']['hx']):
                 for subindex, channel in enumerate(['A', 'B']):
                     # skip co2
