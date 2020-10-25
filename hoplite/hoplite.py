@@ -80,7 +80,7 @@ class Hoplite():
             self.display = Display(self, self.config['display'])
         except KeyError:
             utils.debug_msg(self, "Display not found in config, using default st7735")
-            self.device = Display(self, 'st7735')
+            self.display = Display(self, 'st7735')
 
         utils.debug_msg(self, "runtime init end")
 
