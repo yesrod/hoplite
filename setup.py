@@ -13,7 +13,7 @@ else:
 
 setup(
     name='hoplite',
-    version='1.3.0',
+    version='1.3.1',
     description='HOPLITE: A system for monitoring kegerator levels and temperatures',
     #    py_modules=['Hoplite', 'hoplite-web'],
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
