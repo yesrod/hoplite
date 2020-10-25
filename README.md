@@ -128,7 +128,3 @@ To start on boot, install the files as above, then
 systemctl enable hoplite
 systemctl enable hoplite-web
 ```
-
-TODO:
------
-See [To-do list](https://github.com/yesrod/hoplite/wiki/Todo)
