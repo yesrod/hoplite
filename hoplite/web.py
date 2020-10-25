@@ -29,7 +29,7 @@ class Web(App):
             resource_package, resource_path)
 
         static_file_path = {
-            'settings_16.png': static_path
+            'static': static_path
         }
 
 
@@ -297,7 +297,7 @@ class Web(App):
         first_row.append(table_item)
 
         # settings button
-        self.settings_button = gui.Image('/res/settings_16.png', width=16)
+        self.settings_button = gui.Image('/static:settings_16.png', width=16)
         self.settings_button.set_on_click_listener(self.show_settings_menu)
         self.settings_button.style['padding-bottom'] = '1.6em'
         table_item = gui.TableItem()
