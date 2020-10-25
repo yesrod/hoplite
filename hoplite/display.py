@@ -21,6 +21,10 @@ class Display():
 
         self.font = ImageFont.truetype('%s/font/OpenSans-Regular.ttf' % static_path, 16)
 
+        if self.display == None:
+            utils.debug_msg(self, "Display not found, using default of st7735")
+            self.display = 'st7735'
+
         try:
             parser = cmdline.create_parser(description='HOPLITE display args')
             conf = cmdline.load_config('%s/conf/%s.conf' % (static_path, display))
