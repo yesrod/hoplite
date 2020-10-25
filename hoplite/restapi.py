@@ -237,6 +237,32 @@ class RestApi():
                 return response(False, 200, {'weight_mode': weight_mode}, 'weight_mode successfully updated' )
 
 
+    # get display model
+    @staticmethod
+    @app.route('/v1/display', methods=['GET'])
+    def get_display():
+        global instance
+        return response(False, 200, {'weight_mode': instance.ShData['config']['display']})
+
+
+    # set display model
+    @staticmethod
+    @app.route('/v1/display', methods=['PUT'])
+    def set_display():
+        data = validate_request()
+        if data == None:
+            return error(400, 'Bad Request - invalid JSON')
+        else:
+            try:
+                display = data['display']
+            except KeyError:
+                instance.debug_msg(traceback.format_exc())
+                return error(400, 'Bad Request - no display in request')
+            instance.ShData['config']['display'] = display
+            instance.shmem_write()
+            return response(False, 200, {'display': display}, 'display successfully updated' )
+
+
     # root element for api v1
     # not much here past /v1/hx really
     @staticmethod
