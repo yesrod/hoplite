@@ -33,6 +33,7 @@ class Config():
     def build_config(self):
         config = dict()
         config['weight_mode'] = 'as_kg_gross'
+        config['display'] = 'st7735'
         config['hx'] = list()
         return config
 
