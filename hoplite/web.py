@@ -126,7 +126,7 @@ class Web(App):
         keg_size_list = list(self.h.keg_data)
         keg_size_list.append('custom')
 
-        keg_box = gui.Widget()
+        keg_box = gui.Container()
 
         box_name = gui.Label('Sensor ' + str(index) + ' Channel ' + channel)
         keg_box.append(box_name)
