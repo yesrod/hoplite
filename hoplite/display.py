@@ -75,7 +75,7 @@ class Display():
         return "gray"
 
 
-    def render(self, weight, hx_conf, mode):
+    def render(self, weight, mode, hx_conf):
         try:
             kegA = weight[0]
             kegA_name = hx_conf['channels']['A']['name'][0:13]
