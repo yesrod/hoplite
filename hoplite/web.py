@@ -28,7 +28,12 @@ class Web(App):
         static_path = pkg_resources.resource_filename(
             resource_package, resource_path)
 
-        super(Web, self).__init__(*args, static_file_path=static_path)
+        static_file_path = {
+            'settings_16.png': static_path
+        }
+
+
+        super(Web, self).__init__(*args, static_file_path=static_file_path)
 
 
     def shmem_read(self, timeout=None):
