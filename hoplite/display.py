@@ -1,14 +1,19 @@
 from luma.core import cmdline, error
 from luma.core.render import canvas
 from PIL import ImageFont
+import sys
 
 import luma.emulator.device
 import pkg_resources
 
+import hoplite.utils as utils
+
 class Display():
 
-    def __init__(self, display):
+    def __init__(self, hoplite, display, debug=False):
         self.display = display
+        self.debug = debug
+        self.h = hoplite
 
         resource_package = __name__
         resource_path = ''
@@ -17,7 +22,7 @@ class Display():
         self.font = ImageFont.truetype('%s/font/OpenSans-Regular.ttf' % static_path, 16)
 
         try:
-            parser = cmdline.create_parser(description='FITHINATOR display args')
+            parser = cmdline.create_parser(description='HOPLITE display args')
             conf = cmdline.load_config('%s/conf/%s.conf' % (static_path, display))
             args = parser.parse_args(conf)
         except FileNotFoundError:
@@ -56,7 +61,7 @@ class Display():
 
         self.draw.rectangle([x,y, x+20,self.device.height-20], outline=outline, fill="black")
         self.draw.rectangle([x+1,fill_height, x+19,max_y], outline=fill, fill=fill)
-        self.debug_msg("%s: %s" % (fill_percent, fill)) 
+        utils.debug_msg(self, "%s: %s" % (fill_percent, fill)) 
 
 
     def fill_bar_color(self, percent):
@@ -70,7 +75,7 @@ class Display():
         return "gray"
 
 
-    def render_st7735(self, weight, hx_conf):
+    def render(self, weight, hx_conf, mode):
         try:
             kegA = weight[0]
             kegA_name = hx_conf['channels']['A']['name'][0:13]
@@ -115,28 +120,28 @@ class Display():
             return
 
         with canvas(self.device) as self.draw:
-            self.debug_msg("%s: %s/%s  %s: %s/%s" % ( kegA_name, kegA, kegA_max, 
+            utils.debug_msg(self, "%s: %s/%s  %s: %s/%s" % ( kegA_name, kegA, kegA_max, 
                                              kegB_name, kegB, kegB_max ))
-            self.debug_msg("min: %s %s" % ( kegA_min, kegB_min ))
+            utils.debug_msg(self, "min: %s %s" % ( kegA_min, kegB_min ))
             self.text_header(0, "HOPLITE", fill="red")
 
-            self.debug_msg("temp: %s" % self.as_degF(self.temp))
-            self.text_align_center(30, 0, self.as_degF(self.temp), fill="blue")
+            utils.debug_msg(self, "temp: %s" % utils.as_degF(self.h.temp))
+            self.text_align_center(30, 0, utils.as_degF(self.h.temp), fill="blue")
             try:
-                self.debug_msg("CO2: "+str(self.co2_w[0])+"%") #TODO: Handle multiple CO2 sources
-                self.text_align_center(130, 0, "CO2: "+str(self.co2_w[0])+"%", fill="blue")
+                utils.debug_msg(self, "CO2: "+str(self.h.co2_w[0])+"%") #TODO: Handle multiple CO2 sources
+                self.text_align_center(130, 0, "CO2: "+str(self.h.co2_w[0])+"%", fill="blue")
             except IndexError:
-                self.debug_msg("CO2: N/A") #TODO: Handle multiple CO2 sources
+                utils.debug_msg(self, "CO2: N/A") #TODO: Handle multiple CO2 sources
                 self.text_align_center(130, 0, "CO2: N/A", fill="blue")
 
             if kegA_name:
                 self.text_align_center(40, 15, kegA_name)
                 self.fill_bar(30, 35, kegA_min, kegA_max, kegA)
                 self.text_align_center(40, self.device.height-10,
-                                       self.format_weight(kegA, tare=kegA_min, cap=kegA_cap))
+                                       utils.format_weight(kegA, mode, tare=kegA_min, cap=kegA_cap))
 
             if kegB_name:
                 self.text_align_center(120, 15, kegB_name)
                 self.fill_bar(110, 35, kegB_min, kegB_max, kegB)
                 self.text_align_center(120, self.device.height-10,
-                                       self.format_weight(kegB, tare=kegB_min, cap=kegB_cap))
+                                       utils.format_weight(kegB, mode, tare=kegB_min, cap=kegB_cap))

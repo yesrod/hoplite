@@ -13,13 +13,15 @@ from hx711 import HX711
 
 import threading
 from .restapi import RestApi
+from .display import Display
+import hoplite.utils as utils
 
 class Hoplite():
     
     def __init__(self, debug=False):
         # debug flag - this should be first
         self.debug = debug
-        self.debug_msg("init start")
+        utils.debug_msg(self, "init start")
         
         # keg data dictionary
         # value is list( volume in liters, empty weight in kg )
@@ -37,24 +39,18 @@ class Hoplite():
         # config file location
         self.config_file = None
 
-        # output device
-        self.device = None
-
-        # canvas for output device
-        self.draw = None
-
         # temperature sensor output
         # TODO: evaluate if this can be replaced by read_temp()
         self.temp = None
 
-        self.debug_msg("init end")
+        utils.debug_msg(self, "init end")
 
 
     def runtime_init(self):
         # All the stuff needed for runtime lives here so the Hoplite class
         # can pe imported into other things for stuff like loading configs
         # without breaking GPIO access, etc.
-        self.debug_msg("runtime init start")
+        utils.debug_msg(self, "runtime init start")
         # shared memory segment for communicating with web interface
         mem = posix_ipc.SharedMemory('/hoplite', flags=posix_ipc.O_CREAT, size=65536)
         self.ShMem = mmap.mmap(mem.fd, mem.size)
@@ -79,12 +75,14 @@ class Hoplite():
         # REST API class
         self.api = RestApi(self)
 
-        self.debug_msg("runtime init end")
+        # output display
+        try:
+            self.display = Display(self, self.config['display'])
+        except KeyError:
+            utils.debug_msg(self, "Display not found in config, using default st7735")
+            self.device = Display(self, 'st7735')
 
-
-    def debug_msg(self, message):
-        if self.debug:
-            print("%s::%s: %s" % (self.__class__.__name__, sys._getframe(1).f_code.co_name, message))
+        utils.debug_msg(self, "runtime init end")
 
 
     def shmem_read(self, timeout=None):
@@ -116,15 +114,8 @@ class Hoplite():
         self.ShMem.flush()
 
 
-    def init_st7735(self):
-        serial = spi(port=0, device=0, gpio_DC=23, gpio_RST=24)
-        device = st7735(serial, gpio_LIGHT=18, active_low=False)
-        device.backlight(True)
-        return device
-
-    
     def init_hx711(self, hx_conf):
-        self.debug_msg("init hx711 start")
+        utils.debug_msg(self, "init hx711 start")
         dout = hx_conf['dout']
         pd_sck = hx_conf['pd_sck']
 
@@ -157,7 +148,7 @@ class Hoplite():
         else:
             hx.set_reference_unit_B(1)
 
-        self.debug_msg("init hx711 end")
+        utils.debug_msg(self, "init hx711 end")
         return hx
 
     
@@ -186,7 +177,7 @@ class Hoplite():
 
     
     def load_config(self, config_file="config.json"):
-        self.debug_msg("load config start")
+        utils.debug_msg(self, "load config start")
         try: 
             save = open(config_file, "r")
             config = json.load(save)
@@ -197,8 +188,8 @@ class Hoplite():
         except ValueError:
             print("Config at %s has syntax issues, cannot load" % config_file)
             config = None
-        self.debug_msg(config)
-        self.debug_msg("load config end")
+        utils.debug_msg(self, config)
+        utils.debug_msg(self, "load config end")
         return config
 
     
@@ -218,165 +209,11 @@ class Hoplite():
         return config
 
     
-    def text_header(self, y, message, fill="white"):
-        W = self.device.width
-        w, h = self.draw.textsize(message)
-        self.draw.text(((W-w)/2, y), message, fill=fill)
-
-    
-    def text_align_center(self, x, y, message, fill="white"):
-        w, h = self.draw.textsize(message)
-        self.draw.text((x-(w/2), y), message, fill=fill)
-
-    
-    def fill_bar(self, x, y, min_w, max_w, w, outline="white", fill=None):
-        net_w = max(w - min_w, 0)
-        max_net_w = max_w - min_w
-        fill_percent = float(net_w) / float(max_net_w)
-        max_y = self.device.height - 21
-        min_y = y+1
-        max_bar = max_y - min_y
-        fill_height = max(min_y, min_y + (max_bar - (max_bar * fill_percent)))
-
-        if fill == None:
-            fill = self.fill_bar_color(fill_percent)
-
-        self.draw.rectangle([x,y, x+20,self.device.height-20], outline=outline, fill="black")
-        self.draw.rectangle([x+1,fill_height, x+19,max_y], outline=fill, fill=fill)
-        self.debug_msg("%s: %s" % (fill_percent, fill)) 
-
-
-    def fill_bar_color(self, percent):
-        if percent > 0.5:
-            return "green"
-        if 0.5 > percent > 0.2:
-            return "yellow"
-        if 0.2 > percent:
-            return "red"
-        # default in case something breaks
-        return "gray"
-
-
-    def as_kg(self, val):
-        return "%s kg" % "{0:.2f}".format(val / 1000.0)
-
-
-    def as_pint(self, val):
-        return '%s pt.' % int(val / 473)
-
-
-    def format_weight(self, val, tare=None, mode=None, cap=None):
-        if mode == None:
-            try:
-                mode = self.config['weight_mode']
-            except ( KeyError, ValueError ):
-                mode = 'as_kg_gross'
-                self.debug_msg('using default weight mode %s' % mode)
-
-        if mode == 'as_kg_gross':
-            return self.as_kg(val)
-
-        elif mode == 'as_kg_net':
-            if tare == None:
-                raise ValueError('tare must not be None when using as_kg_net')
-            else:
-                return self.as_kg(val - tare)
-
-        elif mode == 'as_pint':
-            if tare == None:
-                raise ValueError('tare must not be None when using as_pint')
-            else:
-                return self.as_pint(val - tare)
-
-        elif mode == 'as_pct':
-            if tare == None:
-                raise ValueError('tare must not be None when using as_pct')
-            elif max == None:
-                raise ValueError('max must not be None when using as_pct')
-            else:
-                return "%s%%" % int(((val - tare) / cap) * 100)
-
-        else:
-            raise ValueError('bad mode %s' % mode)
-
-
     def read_weight(self, hx):
         hx.reset()
         kegA = self.hx711_read_chA(hx)
         kegB = self.hx711_read_chB(hx)
         return ( kegA, kegB )
-
-
-    def render_st7735(self, weight, hx_conf):
-        try:
-            kegA = weight[0]
-            kegA_name = hx_conf['channels']['A']['name'][0:13]
-            kegA_min = hx_conf['channels']['A']['tare'] * 1000
-            kegA_cap = hx_conf['channels']['A']['volume'] * 1000
-            kegA_max = kegA_min + kegA_cap
-        except (ValueError, KeyError):
-            # no channel A data
-            kegA = 0
-            kegA_name = None
-            kegA_min = 0
-            kegA_cap = 0
-            kegA_max = 0
-
-        try:
-            if hx_conf['channels']['A']['co2'] == True:
-                kegA_name = None
-        except KeyError:
-            pass
-
-        try:
-            kegB = weight[1]
-            kegB_name = hx_conf['channels']['B']['name'][0:13]
-            kegB_min = hx_conf['channels']['B']['tare'] * 1000
-            kegB_cap = hx_conf['channels']['B']['volume'] * 1000
-            kegB_max = kegB_min + kegB_cap
-        except (ValueError, KeyError):
-            # no channel B data
-            kegB = 0
-            kegB_name = None
-            kegB_min = 0
-            kegB_cap = 0
-            kegB_max = 0
-
-        try:
-            if hx_conf['channels']['B']['co2'] == True:
-                kegB_name = None
-        except KeyError:
-            pass
-
-        if kegA_name == None and kegB_name == None:
-            return
-
-        with canvas(self.device) as self.draw:
-            self.debug_msg("%s: %s/%s  %s: %s/%s" % ( kegA_name, kegA, kegA_max, 
-                                             kegB_name, kegB, kegB_max ))
-            self.debug_msg("min: %s %s" % ( kegA_min, kegB_min ))
-            self.text_header(0, "HOPLITE", fill="red")
-
-            self.debug_msg("temp: %s" % self.as_degF(self.temp))
-            self.text_align_center(30, 0, self.as_degF(self.temp), fill="blue")
-            try:
-                self.debug_msg("CO2: "+str(self.co2_w[0])+"%") #TODO: Handle multiple CO2 sources
-                self.text_align_center(130, 0, "CO2: "+str(self.co2_w[0])+"%", fill="blue")
-            except IndexError:
-                self.debug_msg("CO2: N/A") #TODO: Handle multiple CO2 sources
-                self.text_align_center(130, 0, "CO2: N/A", fill="blue")
-
-            if kegA_name:
-                self.text_align_center(40, 15, kegA_name)
-                self.fill_bar(30, 35, kegA_min, kegA_max, kegA)
-                self.text_align_center(40, self.device.height-10,
-                                       self.format_weight(kegA, tare=kegA_min, cap=kegA_cap))
-
-            if kegB_name:
-                self.text_align_center(120, 15, kegB_name)
-                self.fill_bar(110, 35, kegB_min, kegB_max, kegB)
-                self.text_align_center(120, self.device.height-10,
-                                       self.format_weight(kegB, tare=kegB_min, cap=kegB_cap))
 
 
     def read_temp(self):
@@ -400,7 +237,7 @@ class Hoplite():
                     local_w = self.hx711_read_chA(self.hx_handles[index])
                     local_max = hx_conf['channels']['A']['volume'] * 1000
                     local_tare = hx_conf['channels']['A']['tare'] * 1000
-                    self.debug_msg("%s, %s, %s" % (local_w, local_max, local_tare))
+                    utils.debug_msg(self, "%s, %s, %s" % (local_w, local_max, local_tare))
                     local_net_w = max((local_w - local_tare), 0) 
                     local_pct = local_net_w / float(local_max)
                     co2.append(int(local_pct * 100))
@@ -411,7 +248,7 @@ class Hoplite():
                     local_w = self.hx711_read_chB(self.hx_handles[index])
                     local_max = hx_conf['channels']['B']['volume'] * 1000
                     local_tare = hx_conf['channels']['B']['tare'] * 1000
-                    self.debug_msg("%s, %s, %s" % (local_w, local_max, local_tare))
+                    utils.debug_msg(self, "%s, %s, %s" % (local_w, local_max, local_tare))
                     local_net_w = max((local_w - local_tare), 0)    
                     local_pct = local_net_w / float(local_max)
                     co2.append(int(local_pct * 100))
@@ -420,31 +257,21 @@ class Hoplite():
         return co2
 
 
-    def as_degC(self, temp):
-        return u'%s\u00b0C' % '{0:.1f}'.format(float(temp) / 1000.0)
-
-
-    def as_degF(self, temp):
-        real_c = float(temp) / 1000.0
-        deg_f = real_c * (9.0/5.0) + 32.0
-        return u'%s\u00b0F' % '{0:.1f}'.format(deg_f)
-
-
     def cleanup(self, signum=None, frame=None):
-        self.debug_msg("begin cleanup")
+        utils.debug_msg(self, "begin cleanup")
         self.save_config(self.config, self.config_file)
-        self.debug_msg("config saved")
+        utils.debug_msg(self, "config saved")
         for index, hx in enumerate(self.hx_handles):
             try:
-                self.debug_msg("power down %s" % index)
+                utils.debug_msg(self, "power down %s" % index)
                 hx.power_down()
             except RuntimeError:
-                self.debug_msg("%s already powered down" % index)
+                utils.debug_msg(self, "%s already powered down" % index)
                 # GPIO already cleaned up
                 pass
-        self.debug_msg("gpio cleanup")
+        utils.debug_msg(self, "gpio cleanup")
         GPIO.cleanup()
-        self.debug_msg("shmem cleanup")
+        utils.debug_msg(self, "shmem cleanup")
         try:
             self.ShMem.close()
             posix_ipc.unlink_shared_memory('/hoplite')
@@ -452,9 +279,9 @@ class Hoplite():
             self.ShLock.unlink()
         except posix_ipc.ExistentialError:
             # shmem already cleaned up
-            self.debug_msg("shmem already cleaned up")
+            utils.debug_msg(self, "shmem already cleaned up")
             pass
-        self.debug_msg("cleanup complete")
+        utils.debug_msg(self, "cleanup complete")
 
 
     def setup_all_kegs(self):
@@ -470,21 +297,26 @@ class Hoplite():
         while self.updating:
             for index, hx in enumerate(self.hx_handles):
                 if not self.updating: break
-                self.debug_msg("index %s" % index)
+                utils.debug_msg(self, "index %s" % index)
                 self.temp = self.read_temp()
                 self.co2_w = self.read_co2()
-                self.debug_msg("temp: %s co2: %s" % (self.temp, self.co2_w))
+                utils.debug_msg(self, "temp: %s co2: %s" % (self.temp, self.co2_w))
                 weight = None
 
                 if len(self.hx_handles) <= 0:
-                    self.debug_msg("no sensors currently configured")
+                    utils.debug_msg(self, "no sensors currently configured")
                 else:
                     try:
+                        mode = self.config['weight_mode']
+                    except KeyError:
+                        utils.debug_msg(self, "weight_mode not in config, using as_kg_gross")
+                        mode = 'as_kg_gross'
+                    try:
                         weight = self.read_weight(self.hx_handles[index])
-                        self.render_st7735(weight, self.config['hx'][index])
+                        self.display.render(weight, mode, self.config['hx'][index])
                     except IndexError:
-                        self.debug_msg(traceback.format_exc())
-                        self.debug_msg("index %s not present or removed during access" % index)
+                        utils.debug_msg(self, traceback.format_exc())
+                        utils.debug_msg(self, "index %s not present or removed during access" % index)
 
                 self.shmem_read()
                 try:
@@ -496,19 +328,19 @@ class Hoplite():
                 self.ShData['data']['co2'] = self.co2_w
 
                 if self.ShData['config'] != self.config:
-                    self.debug_msg('config changed, save and update')
+                    utils.debug_msg(self, 'config changed, save and update')
                     self.config = self.ShData['config']
                     self.save_config(self.config, self.config_file)
                     self.setup_all_kegs()
                 self.shmem_write()
             time.sleep(0.1)
 
-        self.debug_msg("updates stopped")
+        utils.debug_msg(self, "updates stopped")
 
 
     def main(self, config_file='config.json', api_listen=None):
         self.runtime_init()
-        self.debug_msg("debug enabled")
+        utils.debug_msg(self, "debug enabled")
         self.config_file = config_file
         self.config = self.load_config(self.config_file)
         if self.config == None:
@@ -519,17 +351,16 @@ class Hoplite():
         # add weight mode if absent
         if not 'weight_mode' in self.config:
             self.config['weight_mode'] = 'as_kg_gross'
-            self.debug_msg('adding weight_mode = %s to config' % self.config['weight_mode'])
+            utils.debug_msg(self, 'adding weight_mode = %s to config' % self.config['weight_mode'])
 
         self.ShData['data'] = dict()
         self.ShData['data']['weight'] = list()
         self.ShData['config'] = self.config
         self.shmem_write()
 
-        self.device = self.init_st7735()
         self.setup_all_kegs()
 
-        self.debug_msg('api listener: %s' % api_listen)
+        utils.debug_msg(self, 'api listener: %s' % api_listen)
         if api_listen != None:
             api_listen_split = api_listen.split(':')
             if len(api_listen_split) == 2:
@@ -559,7 +390,7 @@ class Hoplite():
             while self.updating:
                 time.sleep(1)
         except (KeyboardInterrupt, SystemExit, RuntimeError):
-            self.debug_msg("stop updating")
+            utils.debug_msg(self, "stop updating")
             self.updating = False
             self.update_process.join(30)
             self.cleanup()
