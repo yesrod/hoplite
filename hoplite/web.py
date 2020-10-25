@@ -32,7 +32,6 @@ class Web(App):
             'static': static_path
         }
 
-
         super(Web, self).__init__(*args, static_file_path=static_file_path)
 
 
@@ -111,7 +110,7 @@ class Web(App):
         t = utils.as_degF(self.ShData['data'].get('temp', 0))
         co2_list = self.ShData['data'].get('co2', '???')
         co2 = co2_list[0] #TODO: Handle multiple CO2 sources
-        self.temp.set_text("%s<br />CO2:%s%%" % (t, co2))
+        self.temp.set_text("%s\nCO2:%s%%" % (t, co2))
 
 
     def close(self):
@@ -284,6 +283,7 @@ class Web(App):
         co2 = co2_list[0] #TODO: Handle multiple CO2 sources
         self.temp = gui.Label("%s<br />CO2:%s%%" % (t, co2))
         self.temp.style['padding-bottom'] = '1em'
+        self.temp.style['white-space'] = 'pre'
         table_item = gui.TableItem()
         table_item.append(self.temp)
         first_row.append(table_item)
@@ -329,7 +329,7 @@ class Web(App):
                 if keg_name != None:
                     keg_label = gui.Label(keg_name, width=100, height=30)
 
-                    keg_bar = gui.Svg()
+                    keg_bar = gui.Svg(width=240, height=30)
                     keg_w = hx_weight[subindex]
                     keg_cap = hx_conf['channels'][channel]['volume']
                     keg_tare = hx_conf['channels'][channel]['tare']
