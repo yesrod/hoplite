@@ -10,9 +10,8 @@ import hoplite.utils as utils
 
 class Display():
 
-    def __init__(self, hoplite, display, debug=False):
+    def __init__(self, hoplite, display):
         self.display = display
-        self.debug = debug
         self.h = hoplite
 
         resource_package = __name__
@@ -61,7 +60,7 @@ class Display():
 
         self.draw.rectangle([x,y, x+20,self.device.height-20], outline=outline, fill="black")
         self.draw.rectangle([x+1,fill_height, x+19,max_y], outline=fill, fill=fill)
-        utils.debug_msg(self, "%s: %s" % (fill_percent, fill)) 
+        utils.debug_msg(self.h, "%s: %s" % (fill_percent, fill)) 
 
 
     def fill_bar_color(self, percent):
@@ -120,18 +119,18 @@ class Display():
             return
 
         with canvas(self.device) as self.draw:
-            utils.debug_msg(self, "%s: %s/%s  %s: %s/%s" % ( kegA_name, kegA, kegA_max, 
+            utils.debug_msg(self.h, "%s: %s/%s  %s: %s/%s" % ( kegA_name, kegA, kegA_max, 
                                              kegB_name, kegB, kegB_max ))
-            utils.debug_msg(self, "min: %s %s" % ( kegA_min, kegB_min ))
+            utils.debug_msg(self.h, "min: %s %s" % ( kegA_min, kegB_min ))
             self.text_header(0, "HOPLITE", fill="red")
 
-            utils.debug_msg(self, "temp: %s" % utils.as_degF(self.h.temp))
+            utils.debug_msg(self.h, "temp: %s" % utils.as_degF(self.h.temp))
             self.text_align_center(30, 0, utils.as_degF(self.h.temp), fill="blue")
             try:
-                utils.debug_msg(self, "CO2: "+str(self.h.co2_w[0])+"%") #TODO: Handle multiple CO2 sources
+                utils.debug_msg(self.h, "CO2: "+str(self.h.co2_w[0])+"%") #TODO: Handle multiple CO2 sources
                 self.text_align_center(130, 0, "CO2: "+str(self.h.co2_w[0])+"%", fill="blue")
             except IndexError:
-                utils.debug_msg(self, "CO2: N/A") #TODO: Handle multiple CO2 sources
+                utils.debug_msg(self.h, "CO2: N/A") #TODO: Handle multiple CO2 sources
                 self.text_align_center(130, 0, "CO2: N/A", fill="blue")
 
             if kegA_name:
