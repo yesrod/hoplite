@@ -22,7 +22,7 @@ def as_pint(val):
     return '%s pt.' % int(val / 473)
 
 
-def format_weight(val, mode, tare=None, cap=None, debug=False):
+def format_weight(val, mode, tare=None, cap=None):
     if mode == None:
         mode = 'as_kg_gross'
 
@@ -51,3 +51,14 @@ def format_weight(val, mode, tare=None, cap=None, debug=False):
 
     else:
         raise ValueError('bad mode %s' % mode)
+
+
+def fill_bar_color(percent):
+    if percent > 0.5:
+        return "green"
+    if 0.5 > percent > 0.2:
+        return "yellow"
+    if 0.2 > percent:
+        return "red"
+    # default in case something breaks
+    return "gray"

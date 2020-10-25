@@ -9,19 +9,10 @@ import posix_ipc
 import pkg_resources
 
 from .hoplite import Hoplite
+import hoplite.utils as utils
 
 
 class Web(App):
-
-    global h
-
-    global ShMem
-    global ShLock
-    global ShData
-
-    global KegLines
-
-    global settings_up
 
     def __init__(self, *args):
         self.h = Hoplite()
@@ -105,13 +96,13 @@ class Web(App):
                         self.KegLines[index][subindex][
                             1].set_size(240 * fill_pct, 30)
                         self.KegLines[index][subindex][1].style[
-                            'fill'] = self.h.fill_bar_color(fill_pct)
-                        self.KegLines[index][subindex][2].set_text(self.h.format_weight(
-                            w, (tare * 1000),  mode=w_mode, cap=(cap * 1000)))
+                            'fill'] = utils.fill_bar_color(fill_pct)
+                        self.KegLines[index][subindex][2].set_text(utils.format_weight(
+                            w, w_mode, tare=(tare * 1000), cap=(cap * 1000)))
                     except (KeyError, IndexError):
                         pass
 
-        t = self.h.as_degF(self.ShData['data'].get('temp', 0))
+        t = utils.as_degF(self.ShData['data'].get('temp', 0))
         co2_list = self.ShData['data'].get('co2', '???')
         co2 = co2_list[0] #TODO: Handle multiple CO2 sources
         self.temp.set_text("%s<br />CO2:%s%%" % (t, co2))
@@ -282,7 +273,7 @@ class Web(App):
         first_row = gui.TableRow(height=60)
 
         # temperature
-        t = self.h.as_degF(self.ShData['data'].get('temp', 0))
+        t = utils.as_degF(self.ShData['data'].get('temp', 0))
         co2_list = self.ShData['data'].get('co2', '???')
         co2 = co2_list[0] #TODO: Handle multiple CO2 sources
         self.temp = gui.Label("%s<br />CO2:%s%%" % (t, co2))
@@ -342,15 +333,15 @@ class Web(App):
                         keg_w, keg_cap, keg_tare)
                     keg_bar_rect = gui.SvgRectangle(0, 0, 240 * keg_fill_pct, 30)
                     keg_bar_rect.style[
-                        'fill'] = self.h.fill_bar_color(keg_fill_pct)
+                        'fill'] = utils.fill_bar_color(keg_fill_pct)
                     keg_bar_outline = gui.SvgRectangle(0, 0, 240, 30)
                     keg_bar_outline.style['fill'] = 'rgb(0,0,0)'
                     keg_bar_outline.style['fill-opacity'] = '0'
                     keg_bar.append(keg_bar_rect)
                     keg_bar.append(keg_bar_outline)
 
-                    keg_weight = gui.Label(self.h.format_weight(
-                        keg_w, (keg_tare * 1000), mode=w_mode, cap=(keg_cap * 1000)), 
+                    keg_weight = gui.Label(utils.format_weight(
+                        keg_w, w_mode, tare=(keg_tare * 1000), cap=(keg_cap * 1000)), 
                         width=100, height=30)
 
                     try:

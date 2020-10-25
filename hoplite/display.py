@@ -57,22 +57,11 @@ class Display():
         fill_height = max(min_y, min_y + (max_bar - (max_bar * fill_percent)))
 
         if fill == None:
-            fill = self.fill_bar_color(fill_percent)
+            fill = utils.fill_bar_color(fill_percent)
 
         self.draw.rectangle([x,y, x+20,self.device.height-20], outline=outline, fill="black")
         self.draw.rectangle([x+1,fill_height, x+19,max_y], outline=fill, fill=fill)
         utils.debug_msg(self, "%s: %s" % (fill_percent, fill)) 
-
-
-    def fill_bar_color(self, percent):
-        if percent > 0.5:
-            return "green"
-        if 0.5 > percent > 0.2:
-            return "yellow"
-        if 0.2 > percent:
-            return "red"
-        # default in case something breaks
-        return "gray"
 
 
     def render(self, weight, mode, hx_conf):
