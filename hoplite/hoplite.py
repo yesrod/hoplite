@@ -65,7 +65,7 @@ class Hoplite():
         self.ShData = dict()
 
         # dict containing current config
-        self.config = Config(self.config_file)
+        self.config = Config(self.config_file, debug=self.debug)
 
         # list of handles for all keg HX711's found in config
         self.hx_handles = list()
