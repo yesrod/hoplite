@@ -14,6 +14,7 @@ from hx711 import HX711
 import threading
 from .restapi import RestApi
 from .display import Display
+from .config import Config
 import hoplite.utils as utils
 
 class Hoplite():
@@ -64,7 +65,7 @@ class Hoplite():
         self.ShData = dict()
 
         # dict containing current config
-        self.config = dict()
+        self.config = Config(self.config_file)
 
         # list of handles for all keg HX711's found in config
         self.hx_handles = list()
@@ -77,7 +78,7 @@ class Hoplite():
 
         # output display
         try:
-            self.display = Display(self, self.config['display'])
+            self.display = Display(self, self.config.get('display'))
         except KeyError:
             utils.debug_msg(self, "Display not found in config, using default st7735")
             self.display = Display(self, 'st7735')
@@ -176,37 +177,6 @@ class Hoplite():
         return raw_w / float(real_w)
 
     
-    def load_config(self, config_file="config.json"):
-        utils.debug_msg(self, "load config start")
-        try: 
-            save = open(config_file, "r")
-            config = json.load(save)
-            save.close()
-        except IOError:
-            print("No config found at %s, using defaults" % config_file)
-            config = self.build_config()
-        except ValueError:
-            print("Config at %s has syntax issues, cannot load" % config_file)
-            config = None
-        utils.debug_msg(self, config)
-        utils.debug_msg(self, "load config end")
-        return config
-
-    
-    def save_config(self, config, config_file="config.json"):
-        try:
-            save = open(config_file, "w")
-            json.dump(config, save, indent=2)
-            save.close()
-        except IOError as e:
-            print("Could not save config: %s" % e.strerror)
-
-    
-    def build_config(self):
-        config = dict()
-        config['weight_mode'] = 'as_kg_gross'
-        config['hx'] = list()
-        return config
 
     
     def read_weight(self, hx):
@@ -231,7 +201,7 @@ class Hoplite():
 
     def read_co2(self):
         co2 = list()
-        for index, hx_conf in enumerate(self.config['hx']):
+        for index, hx_conf in enumerate(self.config.get('hx')):
             try:
                 if hx_conf['channels']['A']['co2'] == True:
                     local_w = self.hx711_read_chA(self.hx_handles[index])
@@ -259,7 +229,7 @@ class Hoplite():
 
     def cleanup(self, signum=None, frame=None):
         utils.debug_msg(self, "begin cleanup")
-        self.save_config(self.config, self.config_file)
+        self.config.save_config()
         utils.debug_msg(self, "config saved")
         for index, hx in enumerate(self.hx_handles):
             try:
@@ -287,7 +257,7 @@ class Hoplite():
     def setup_all_kegs(self):
         self.hx_handles = list()
         # grab each keg definition from the config
-        for index, hx_conf in enumerate(self.config['hx']):
+        for index, hx_conf in enumerate(self.config.get('hx')):
             hx = self.init_hx711(hx_conf)
             self.hx_handles.insert(index, hx)
 
@@ -307,13 +277,13 @@ class Hoplite():
                     utils.debug_msg(self, "no sensors currently configured")
                 else:
                     try:
-                        mode = self.config['weight_mode']
+                        mode = self.config.get('weight_mode')
                     except KeyError:
                         utils.debug_msg(self, "weight_mode not in config, using as_kg_gross")
                         mode = 'as_kg_gross'
                     try:
                         weight = self.read_weight(self.hx_handles[index])
-                        self.display.render(weight, mode, self.config['hx'][index])
+                        self.display.render(weight, mode, self.config.get('hx')[index])
                     except IndexError:
                         utils.debug_msg(self, traceback.format_exc())
                         utils.debug_msg(self, "index %s not present or removed during access" % index)
@@ -327,10 +297,10 @@ class Hoplite():
                 self.ShData['data']['temp'] = self.temp
                 self.ShData['data']['co2'] = self.co2_w
 
-                if self.ShData['config'] != self.config:
+                if self.ShData['config'] != self.config.config:
                     utils.debug_msg(self, 'config changed, save and update')
-                    self.config = self.ShData['config']
-                    self.save_config(self.config, self.config_file)
+                    self.config.config = self.ShData['config']
+                    self.config.save_config()
                     self.setup_all_kegs()
                 self.shmem_write()
             time.sleep(0.1)
@@ -339,23 +309,17 @@ class Hoplite():
 
 
     def main(self, config_file='config.json', api_listen=None):
-        self.runtime_init()
-        utils.debug_msg(self, "debug enabled")
         self.config_file = config_file
-        self.config = self.load_config(self.config_file)
-        if self.config == None:
+        self.runtime_init()
+        if self.config.config == None:
             print("No valid config, bailing out")
             sys.exit()
 
-        # compatibility fixes
-        # add weight mode if absent
-        if not 'weight_mode' in self.config:
-            self.config['weight_mode'] = 'as_kg_gross'
-            utils.debug_msg(self, 'adding weight_mode = %s to config' % self.config['weight_mode'])
+        utils.debug_msg(self, "debug enabled")
 
         self.ShData['data'] = dict()
         self.ShData['data']['weight'] = list()
-        self.ShData['config'] = self.config
+        self.ShData['config'] = self.config.config
         self.shmem_write()
 
         self.setup_all_kegs()
