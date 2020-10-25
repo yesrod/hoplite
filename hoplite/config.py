@@ -2,7 +2,7 @@ import json
 import hoplite.utils as utils
 
 class Config():
-    def init(self, config_file="config.json"):
+    def __init__(self, config_file="config.json"):
         utils.debug_msg(self, "load config start")
         self.config_file = config_file
         try: 
