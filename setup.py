@@ -22,6 +22,9 @@ setup(
         'Rpi.GPIO', 'numpy', 'luma.lcd>=2.0.0', 'hx711', 'posix_ipc', 'remi', 'flask'],
     package_dir={'hoplite': 'hoplite/'},
     package_data={  # Optional
-        'hoplite': ['static/example-config.json', 'static/settings_16.png'],
+        'hoplite': ['static/example-config.json', 
+                    'static/settings_16.png',
+                    'conf/*',
+                    'font/*'],
     },
 )
