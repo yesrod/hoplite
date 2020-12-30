@@ -28,7 +28,7 @@ class Web(App):
         self.api_url = "http://127.0.0.1:5000/v1/"
         self.api_data = {}
         self.api_last_updated = 1
-        self.api_update_interval = 30
+        self.api_update_interval = 5
 
         resource_package = __name__
         resource_path = '/static'
