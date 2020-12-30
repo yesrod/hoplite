@@ -7,6 +7,7 @@ import json
 import mmap
 import posix_ipc
 import pkg_resources
+import requests
 
 from .hoplite import Hoplite
 import hoplite.utils as utils
@@ -16,12 +17,16 @@ class Web(App):
 
     def __init__(self, *args):
         self.h = Hoplite()
+        self.debug = True
 
         mem = posix_ipc.SharedMemory('/hoplite', flags=posix_ipc.O_CREAT)
         self.ShMem = mmap.mmap(mem.fd, mem.size)
         mem.close_fd()
 
         self.ShLock = posix_ipc.Semaphore('/hoplite', flags=posix_ipc.O_CREAT)
+
+        self.api_url = "http://127.0.0.1:5000/v1/"
+        self.api_data = {}
 
         resource_package = __name__
         resource_path = '/static'
@@ -33,6 +38,12 @@ class Web(App):
         }
 
         super(Web, self).__init__(*args, static_file_path=static_file_path)
+
+
+    def api_read(self):
+        response = requests.get(self.api_url)
+        self.api_data = response.json()
+        utils.debug_msg(self, "api_data: %s" % self.api_data)
 
 
     def shmem_read(self, timeout=None):
