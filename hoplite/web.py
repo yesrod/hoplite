@@ -47,6 +47,7 @@ class Web(App):
         if since_last_update > self.api_update_interval or force:
             response = requests.get(self.api_url)
             self.api_data = response.json()['data']['v1']
+            self.api_last_updated = int(time.time())
             utils.debug_msg(self, "api_data: %s" % self.api_data)
         else:
             utils.debug_msg(self, "not updating, last update %is ago" % since_last_update)
