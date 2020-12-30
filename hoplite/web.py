@@ -42,8 +42,14 @@ class Web(App):
 
     def api_read(self):
         response = requests.get(self.api_url)
-        self.api_data = response.json()
+        self.api_data = response.json()['data']['v1']
         utils.debug_msg(self, "api_data: %s" % self.api_data)
+
+
+    def api_write(self, endpoint, data):
+        dest_url = self.api_url + endpoint
+        response = requests.post(dest_url, data = data)
+        utils.debug_msg(self, "response: %s" % response)
 
 
     def shmem_read(self, timeout=None):
@@ -86,6 +92,7 @@ class Web(App):
 
     def idle(self):
         self.shmem_read(5)
+        self.api_read()
 
         w_mode = self.ShData['config'].get('weight_mode', 'as_kg_gross')
 
@@ -275,6 +282,7 @@ class Web(App):
 
     def main(self):
         self.shmem_read(5)
+        self.api_read()
 
         self.kegs = list()
         self.settings_up = False
