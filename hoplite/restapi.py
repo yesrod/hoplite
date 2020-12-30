@@ -209,7 +209,7 @@ class RestApi():
         return response(False, 200, {'temp': instance.temp})
 
 
-    # handle weight display mode
+    # get weight display mode
     @staticmethod
     @app.route('/v1/weight_mode', methods=['GET'])
     def get_weight_mode():
@@ -244,7 +244,7 @@ class RestApi():
     @app.route('/v1/display', methods=['GET'])
     def get_display():
         global instance
-        return response(False, 200, {'weight_mode': instance.ShData['config']['display']})
+        return response(False, 200, {'display': instance.ShData['config']['display']})
 
 
     # set display model
@@ -273,6 +273,9 @@ class RestApi():
         global instance
         root = dict()
         root['hx_list'] = get_all_hx_with_weight()
+        root['display'] = instance.ShData['config']['display']
+        root['weight_mode'] = instance.ShData['config']['weight_mode']
+        root['temp'] = instance.temp
         return response(False, 200, {'v1': root})
 
 
