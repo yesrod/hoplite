@@ -21,7 +21,7 @@ class Config():
         utils.debug_msg(self, "checking for required values")
         required = {'display': 'st7735', 'weight_mode': 'as_kg_gross'}
         for r in required.keys():
-            if not r in self.config.keys:
+            if not r in self.config.keys():
                 utils.debug_msg(self, "adding default: %s %s" % (r, required[r]))
                 self.config[r] = required[r]
         utils.debug_msg(self, "load config end")
