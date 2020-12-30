@@ -19,7 +19,14 @@ setup(
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
     python_requires=">=3.5",
     install_requires=[
-        'Rpi.GPIO', 'numpy', 'luma.lcd>=2.0.0', 'hx711', 'posix_ipc', 'remi>=2019.11', 'flask'],
+        'Rpi.GPIO', 
+        'numpy', 
+        'luma.lcd>=2.0.0', 
+        'hx711', 
+        'posix_ipc', 
+        'remi>=2019.11', 
+        'flask', 
+        'requests'],
     package_dir={'hoplite': 'hoplite/'},
     package_data={  # Optional
         'hoplite': ['static/example-config.json', 
