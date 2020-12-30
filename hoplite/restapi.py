@@ -6,6 +6,8 @@ app = Flask(__name__)
 app.url_map.strict_slashes = False
 instance = None
 
+import hoplite.utils as utils
+
 
 def error(code, message):
     return response(True, code, None, message)
@@ -23,20 +25,20 @@ def response(error, code, data, message=None):
 
 # enumerate HX711 channels
 def add_weight_to_hx(index, hx):
-    instance.debug_msg("enumerate channels")
+    utils.debug_msg(instance,"enumerate channels")
     chan = ('A', 'B')
     for chan_index, channel in enumerate(chan):
-        instance.debug_msg("update weight index %s chan %s" % (index, channel))
+        utils.debug_msg(instance,"update weight index %s chan %s" % (index, channel))
         try:
             hx['channels'][channel]['weight'] = instance.ShData['data']['weight'][int(index)][chan_index]
         except ( IndexError, KeyError, ValueError ):
-            instance.debug_msg(traceback.format_exc())
-            instance.debug_msg("index %s chan %s weight fail" % (index, channel))
+            utils.debug_msg(instance,traceback.format_exc())
+            utils.debug_msg(instance,"index %s chan %s weight fail" % (index, channel))
             try:
                 hx['channels'][channel]['weight'] = -1
             except ( IndexError, KeyError, ValueError ):
-                instance.debug_msg(traceback.format_exc())
-                instance.debug_msg("index %s chan %s doesn't exist" % (index, channel))
+                utils.debug_msg(instance,traceback.format_exc())
+                utils.debug_msg(instance,"index %s chan %s doesn't exist" % (index, channel))
     return hx
 
 
@@ -44,14 +46,14 @@ def add_weight_to_hx(index, hx):
 def get_all_hx_with_weight():
     hxs = list()
     try:
-        instance.debug_msg("get keg config")
+        utils.debug_msg(instance,"get keg config")
         hxs_config = instance.ShData['config']['hx']
-        instance.debug_msg("enumerate hx")
+        utils.debug_msg(instance,"enumerate hx")
         for index, hx in enumerate(hxs_config):
-            instance.debug_msg("hx %s" % index)
+            utils.debug_msg(instance,"hx %s" % index)
             hxs.insert(index, add_weight_to_hx(index, hx))
     except ( IndexError, KeyError, ValueError ):
-        instance.debug_msg(traceback.format_exc())
+        utils.debug_msg(instance,traceback.format_exc())
     return hxs
 
 
@@ -59,10 +61,10 @@ def get_all_hx_with_weight():
 def validate_request():
     try:
         data = request.json
-        instance.debug_msg(data)
+        utils.debug_msg(instance,data)
     except BadRequest:
-        instance.debug_msg(traceback.format_exc())
-        instance.debug_msg("request is not valid JSON: %s" % request.get_data())
+        utils.debug_msg(instance,traceback.format_exc())
+        utils.debug_msg(instance,"request is not valid JSON: %s" % request.get_data())
         data = None
     return data
 
@@ -89,7 +91,7 @@ def add_channel(index, channel, data):
         instance.shmem_write()
         return response(False, 200, {channel: submission}, '%s successfully created or updated' % channel)
     except IndexError:
-        instance.debug_msg(traceback.format_exc())
+        utils.debug_msg(instance,traceback.format_exc())
         return error(400, 'No existing index %s' % index)
 
 
@@ -124,7 +126,7 @@ def add_index(data):
             new_index['channels'][channel] = submission
 
     except AttributeError:
-        instance.debug_msg(traceback.format_exc())
+        utils.debug_msg(instance,traceback.format_exc())
         return error(400, 'channels must be a JSON object containing one or more channels also represented as JSON objects')
 
     instance.ShData['config']['hx'].append(new_index)
@@ -141,10 +143,10 @@ def delete_channel(index, channel):
         instance.shmem_write()
         return response(False, 200, {channel: deleted_data}, '%s successfully deleted' % channel)
     except KeyError:
-        instance.debug_msg(traceback.format_exc())
+        utils.debug_msg(instance,traceback.format_exc())
         return error(400, 'No existing channel %s' % channel)
     except IndexError:
-        instance.debug_msg(traceback.format_exc())
+        utils.debug_msg(instance,traceback.format_exc())
         return error(400, 'No existing index %s' % index)
 
 
@@ -156,7 +158,7 @@ def delete_index(index):
         instance.shmem_write()
         return response(False, 200, {index: deleted_data}, '%s successfully deleted' % index)
     except IndexError:
-        instance.debug_msg(traceback.format_exc())
+        utils.debug_msg(instance,traceback.format_exc())
         return error(400, 'No existing index %s' % index)
 
 
@@ -226,7 +228,7 @@ class RestApi():
             try:
                 weight_mode = data['weight_mode']
             except KeyError:
-                instance.debug_msg(traceback.format_exc())
+                utils.debug_msg(instance,traceback.format_exc())
                 return error(400, 'Bad Request - no weight_mode in request')
             valid_modes = ('as_kg_gross', 'as_kg_net', 'as_pint', 'as_pct')
             if not weight_mode in valid_modes:
@@ -256,7 +258,7 @@ class RestApi():
             try:
                 display = data['display']
             except KeyError:
-                instance.debug_msg(traceback.format_exc())
+                utils.debug_msg(instance,traceback.format_exc())
                 return error(400, 'Bad Request - no display in request')
             instance.ShData['config']['display'] = display
             instance.shmem_write()
@@ -290,14 +292,14 @@ class RestApi():
         # /v1/hx/<index>
         elif index != None and channel == None and action == None:
             try:
-                instance.debug_msg("hx %s" % index)
+                utils.debug_msg(instance,"hx %s" % index)
                 hx = instance.ShData['config']['hx'][int(index)]
                 hx = add_weight_to_hx(index, hx)
 
                 message = response(False, 200, {'hx': hx} )
 
             except ( IndexError, KeyError, ValueError ):
-                instance.debug_msg(traceback.format_exc())
+                utils.debug_msg(instance,traceback.format_exc())
                 message = error(400, 'No such index %s' % index )
 
             return message
@@ -320,14 +322,14 @@ class RestApi():
                     try:
                         chan_data['weight'] = instance.ShData['data']['weight'][int(index)][chan_index]
                     except ( IndexError, KeyError, ValueError ):
-                        instance.debug_msg(traceback.format_exc())
+                        utils.debug_msg(instance,traceback.format_exc())
                         chan_data['weight'] = -1
                     message = response(False, 200, {'channel': chan_data} )
                 else:
                     message = response(False, 200, {channel: instance.ShData['config']['hx'][int(index)][channel]})
 
             except ( IndexError, KeyError, ValueError ):
-                instance.debug_msg(traceback.format_exc())
+                utils.debug_msg(instance,traceback.format_exc())
                 message = error(400, 'No such channel %s at index %s' % ( channel, index ) )
 
             return message
@@ -355,14 +357,14 @@ class RestApi():
                     try:
                         message = response(False, '200', {'name': chan_config['co2']})
                     except KeyError:
-                        instance.debug_msg(traceback.format_exc())
+                        utils.debug_msg(instance,traceback.format_exc())
                         message = response(False, '200', {'name': False})
 
                 else:
                     message = error(400, '%s undefined for channel %s at index %s' % ( action, channel, index ) )
 
             except ( IndexError, KeyError, ValueError ):
-                instance.debug_msg(traceback.format_exc())
+                utils.debug_msg(instance,traceback.format_exc())
                 message = error(400, 'No such channel %s at index %s' % ( channel, index ) )
 
             return message
@@ -378,7 +380,7 @@ class RestApi():
     @app.route('/v1/hx/', methods=['POST'])
     def set_keg(index=None, channel=None, action=None):
         data = validate_request()
-        instance.debug_msg(data)
+        utils.debug_msg(instance,data)
         if data == None and request.method != 'DELETE':
             return error(400, 'Bad Request - invalid JSON')
         # /v1/hx/
@@ -403,7 +405,7 @@ class RestApi():
                 try:
                     instance.ShData['config']['hx'][int(index)]['channels'][channel] = data[channel]
                 except ( IndexError, KeyError, ValueError ):
-                    instance.debug_msg(traceback.format_exc())
+                    utils.debug_msg(instance,traceback.format_exc())
                     return error(400, 'No %s at index %s' % ( channel, index ) )
                 return response(False, 200, {channel: data[channel]}, '%s successfully updated' % action)
             elif request.method == 'POST' and chan_index != None:
@@ -416,7 +418,7 @@ class RestApi():
                     instance.shmem_write()
                     return response(False, 200, {channel: deleted_data}, '%s successfully deleted' % channel)
                 except KeyError:
-                    instance.debug_msg(traceback.format_exc())
+                    utils.debug_msg(instance,traceback.format_exc())
                     return error(400, 'No existing channel %s' % channel)
 
             else:
@@ -449,14 +451,14 @@ class RestApi():
                         instance.shmem_write()
                         message = response(False, 200, {action: data[action]}, '%s successfully updated' % action)
                     except KeyError:
-                        instance.debug_msg(traceback.format_exc())
+                        utils.debug_msg(instance,traceback.format_exc())
                         message = error(400, 'Bad Request - no %s in request' % action)
 
                 else:
                     message = error(400, '%s undefined for channel %s at index %s' % ( action, channel, index ) )
 
             except ( IndexError, KeyError, ValueError ):
-                instance.debug_msg(traceback.format_exc())
+                utils.debug_msg(instance,traceback.format_exc())
                 message = error(400, 'No such channel %s at index %s' % ( channel, index ) )
 
             return message
