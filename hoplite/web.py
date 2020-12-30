@@ -115,7 +115,12 @@ class Web(App):
                     # handle co2
                     try:
                         if hx_conf['channels'][channel]['co2'] == True:
-                            self.co2_list.append(hx_conf['channels'][channel]['weight'])
+                            local_w = hx_conf['channels'][channel]['weight']
+                            local_max = hx_conf['channels'][channel]['volume'] * 1000
+                            local_tare = hx_conf['channels'][channel]['tare'] * 1000
+                            local_net_w = max((local_w - local_tare), 0) 
+                            local_pct = local_net_w / float(local_max)
+                            self.co2_list.append(int(local_pct * 100))
                             continue
                     except KeyError:
                         pass
@@ -342,7 +347,12 @@ class Web(App):
                     keg_name = None
                 try:
                     if hx_conf['channels'][channel]['co2'] == True:
-                        self.co2_list.append(hx_conf['channels'][channel]['weight'])
+                        local_w = hx_conf['channels'][channel]['weight']
+                        local_max = hx_conf['channels'][channel]['volume'] * 1000
+                        local_tare = hx_conf['channels'][channel]['tare'] * 1000
+                        local_net_w = max((local_w - local_tare), 0) 
+                        local_pct = local_net_w / float(local_max)
+                        self.co2_list.append(int(local_pct * 100))
                         continue
                 except KeyError:
                     pass
