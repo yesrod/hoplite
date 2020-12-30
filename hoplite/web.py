@@ -30,6 +30,8 @@ class Web(App):
         self.api_last_updated = 1
         self.api_update_interval = 5
 
+        self.co2_list = []
+
         resource_package = __name__
         resource_path = '/static'
         static_path = pkg_resources.resource_filename(
@@ -101,23 +103,26 @@ class Web(App):
         self.shmem_read(5)
         self.api_read()
 
-        w_mode = self.ShData['config'].get('weight_mode', 'as_kg_gross')
+        w_mode = self.api_data.get('weight_mode', 'as_kg_gross')
+
+        self.co2_list = []
 
         for line in self.kegs:
             if line == None:
                 continue
-            for index, hx_conf in enumerate(self.ShData['config']['hx']):
-                for subindex, channel in enumerate(['A', 'B']):
-                    # skip co2
+            for hx_conf in self.api_data['hx_list']:
+                for channel in ['A', 'B']:
+                    # handle co2
                     try:
                         if hx_conf['channels'][channel]['co2'] == True:
+                            self.co2_list.append(hx_conf['channels'][channel]['weight'])
                             continue
                     except KeyError:
                         pass
 
                     # channel update
                     try:
-                        w = self.ShData['data']['weight'][index][subindex]
+                        w = hx_conf['channels'][channel]['weight']
                         cap = hx_conf['channels'][channel]['volume']
                         tare = hx_conf['channels'][channel]['tare']
                         name = hx_conf['channels'][channel]['name']
@@ -132,9 +137,11 @@ class Web(App):
                     except (KeyError, IndexError):
                         pass
 
-        t = utils.as_degF(self.ShData['data'].get('temp', 0))
-        co2_list = self.ShData['data'].get('co2', '???')
-        co2 = co2_list[0] #TODO: Handle multiple CO2 sources
+        t = utils.as_degF(self.api_data.get('temp', 0))
+        try:
+            co2 = self.co2_list[0] #TODO: Handle multiple CO2 sources
+        except IndexError:
+            co2 = "???"
         self.temp.set_text("%s\nCO2:%s%%" % (t, co2))
 
 
@@ -209,28 +216,17 @@ class Web(App):
         weight_options_list = ['as_kg_gross', 'as_kg_net', 'as_pint', 'as_pct']
         weight_options = gui.DropDown.new_from_list(weight_options_list)
         try:
-            weight_options.select_by_value(self.ShData['config']['weight_mode'])
+            weight_options.select_by_value(self.api_data['weight_mode'])
         except (KeyError, IndexError):
             pass
         self.dialog.add_field_with_label(
             'weight_options', 'Display Keg Weight', weight_options)
 
-        for line in self.kegs:
-            for index, hx_conf in enumerate(self.ShData['config']['hx']):
-
-                # channel A settings
+        for index, hx_conf in enumerate(self.api_data['hx_list']):
+            for channel in ('A', 'B'):
                 try:
-                    keg_box = self.build_keg_settings(hx_conf, index, 'A')
-                    self.dialog.add_field(str(index) + 'A_box', keg_box)
-
-                except (KeyError, IndexError):
-                    pass
-
-                # channel B settings
-                try:
-                    keg_box = self.build_keg_settings(hx_conf, index, 'B')
-                    self.dialog.add_field(str(index) + 'B_box', keg_box)
-
+                    keg_box = self.build_keg_settings(hx_conf, index, channel)
+                    self.dialog.add_field(str(index) + channel + '_box', keg_box)
                 except (KeyError, IndexError):
                     pass
 
@@ -293,6 +289,7 @@ class Web(App):
 
         self.kegs = list()
         self.settings_up = False
+        self.co2_list = []
 
         # root object
         self.container = gui.Table(width=480)
@@ -304,10 +301,8 @@ class Web(App):
         first_row = gui.TableRow(height=60)
 
         # temperature
-        t = utils.as_degF(self.ShData['data'].get('temp', 0))
-        co2_list = self.ShData['data'].get('co2', '???')
-        co2 = co2_list[0] #TODO: Handle multiple CO2 sources
-        self.temp = gui.Label("%s<br />CO2:%s%%" % (t, co2))
+        t = utils.as_degF(self.api_data.get('temp', 0))
+        self.temp = gui.Label("%s<br />CO2:%s%%" % (t, '???'))
         self.temp.style['padding-bottom'] = '1em'
         self.temp.style['white-space'] = 'pre'
         table_item = gui.TableItem()
@@ -332,22 +327,22 @@ class Web(App):
 
         self.container.append(first_row)
 
-        w_mode = self.ShData['config'].get('weight_mode', 'as_kg_gross')
+        w_mode = self.api_data.get('weight_mode', 'as_kg_gross')
 
         # iterate through HX sensors
-        for index, hx_conf in enumerate(self.ShData['config']['hx']):
+        for index, hx_conf in enumerate(self.api_data['hx_list']):
 
-            hx_weight = self.ShData['data']['weight'][index]
             self.kegs.insert(index, None)
 
             # keg information
-            for subindex, channel in enumerate(['A', 'B']):
+            for channel in ['A', 'B']:
                 try:
                     keg_name = hx_conf['channels'][channel].get('name', None)
                 except KeyError:
                     keg_name = None
                 try:
                     if hx_conf['channels'][channel]['co2'] == True:
+                        self.co2_list.append(hx_conf['channels'][channel]['weight'])
                         continue
                 except KeyError:
                     pass
@@ -356,7 +351,7 @@ class Web(App):
                     keg_label = gui.Label(keg_name, width=100, height=30)
 
                     keg_bar = gui.Svg(width=240, height=30)
-                    keg_w = hx_weight[subindex]
+                    keg_w = hx_conf['channels'][channel]['weight']
                     keg_cap = hx_conf['channels'][channel]['volume']
                     keg_tare = hx_conf['channels'][channel]['tare']
                     keg_fill_pct = self.get_keg_fill_percent(
@@ -384,6 +379,12 @@ class Web(App):
                         table_row.append(table_item)
 
                     self.container.append(table_row)
+
+        try:
+            co2 = self.co2_list[0] #TODO: Handle multiple CO2 sources
+        except IndexError:
+            co2 = "???"
+        self.temp.set_text("%s\nCO2:%s%%" % (t, co2))
 
         # return of the root widget
         return self.container
