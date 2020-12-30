@@ -27,6 +27,8 @@ class Web(App):
 
         self.api_url = "http://127.0.0.1:5000/v1/"
         self.api_data = {}
+        self.api_last_updated = 1
+        self.api_update_interval = 30
 
         resource_package = __name__
         resource_path = '/static'
@@ -40,10 +42,14 @@ class Web(App):
         super(Web, self).__init__(*args, static_file_path=static_file_path)
 
 
-    def api_read(self):
-        response = requests.get(self.api_url)
-        self.api_data = response.json()['data']['v1']
-        utils.debug_msg(self, "api_data: %s" % self.api_data)
+    def api_read(self, force = False):
+        since_last_update = int(time.time()) - self.api_last_updated
+        if since_last_update > self.api_update_interval or force:
+            response = requests.get(self.api_url)
+            self.api_data = response.json()['data']['v1']
+            utils.debug_msg(self, "api_data: %s" % self.api_data)
+        else:
+            utils.debug_msg(self, "not updating, last update %is ago" % since_last_update)
 
 
     def api_write(self, endpoint, data):
