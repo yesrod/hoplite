@@ -73,7 +73,6 @@ class Web(App):
 
 
     def idle(self):
-        self.shmem_read(5)
         self.api_read()
 
         w_mode = self.api_data.get('weight_mode', 'as_kg_gross')
@@ -270,7 +269,6 @@ class Web(App):
 
 
     def main(self):
-        self.shmem_read(5)
         self.api_read()
 
         self.kegs = list()
