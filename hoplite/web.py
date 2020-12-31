@@ -5,7 +5,6 @@ import sys
 import time
 import json
 import mmap
-import posix_ipc
 import pkg_resources
 import requests
 
@@ -18,12 +17,6 @@ class Web(App):
     def __init__(self, *args):
         self.h = Hoplite()
         self.debug = True
-
-        mem = posix_ipc.SharedMemory('/hoplite', flags=posix_ipc.O_CREAT)
-        self.ShMem = mmap.mmap(mem.fd, mem.size)
-        mem.close_fd()
-
-        self.ShLock = posix_ipc.Semaphore('/hoplite', flags=posix_ipc.O_CREAT)
 
         self.api_url = "http://127.0.0.1:5000/v1/"
         self.api_data = {}
@@ -69,36 +62,6 @@ class Web(App):
             utils.debug_msg(self, "response: %s" % response.json())
             utils.debug_msg(self, dest_url)
             utils.debug_msg(self, json.dumps(data))
-
-
-    def shmem_read(self, timeout=None):
-        map_data = b''
-        self.ShLock.acquire(timeout)
-        self.ShMem.seek(0, 0)
-        while True:
-                line = self.ShMem.readline()
-                if line == b'':
-                    break
-                map_data += line.rstrip(b'\0')
-        self.ShMem.seek(0, 0)
-        self.ShLock.release()
-        self.ShData = json.loads(map_data.decode())
-
-
-    def shmem_write(self, timeout=None):
-        self.ShLock.acquire(timeout)
-        self.shmem_clear()
-        self.ShMem.write(json.dumps(self.ShData, indent=2).encode())
-        self.ShMem.flush()
-        self.ShLock.release()
-
-
-    def shmem_clear(self):
-        zero_fill = b'\0' * (self.ShMem.size())
-        self.ShMem.seek(0, 0)
-        self.ShMem.write(zero_fill)
-        self.ShMem.seek(0, 0)
-        self.ShMem.flush()
 
 
     def get_keg_fill_percent(self, w, cap, tare):
@@ -161,11 +124,6 @@ class Web(App):
 
 
     def close(self):
-        self.ShMem.close()
-        posix_ipc.unlink_shared_memory('/hoplite')
-        self.ShLock.release()
-        self.ShLock.unlink()
-
         super(Web, self).close()
 
 
@@ -216,7 +174,7 @@ class Web(App):
 
         keg_box.append(custom, 'custom')
 
-        co2_box = gui.HBox()
+        co2_box = gui.HBox(width='20%')
         co2_label = gui.Label('CO2')
         co2_box.append(co2_label, 0)
         co2_check = gui.CheckBox('CO2', co2)
