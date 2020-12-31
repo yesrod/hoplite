@@ -216,7 +216,11 @@ class Web(App):
 
         keg_box.append(custom, 'custom')
 
-        co2_box = gui.CheckBoxLabel('CO2', co2)
+        co2_box = gui.HBox()
+        co2_label = gui.Label('CO2')
+        co2_box.append(co2_label, 0)
+        co2_check = gui.CheckBox('CO2', co2)
+        co2_box.append(co2_check, 1)
         keg_box.append(co2_box, 'co2_box')
 
         return keg_box
