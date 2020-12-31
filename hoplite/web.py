@@ -213,7 +213,7 @@ class Web(App):
             for channel in ('A', 'B'):
                 try:
                     keg_box = self.build_keg_settings(channel, index, hx_conf)
-                    self.add_keg_dialog.add_field(str(index) + channel + '_box', keg_box)
+                    self.dialog.add_field(str(index) + channel + '_box', keg_box)
                 except (KeyError, IndexError):
                     pass
 
@@ -248,7 +248,7 @@ class Web(App):
         
         for channel in ('A', 'B'):
             keg_box = self.build_keg_settings(channel)
-            self.dialog.add_field(channel + '_box', keg_box)
+            self.add_keg_dialog.add_field(channel + '_box', keg_box)
 
         self.add_keg_dialog.set_on_cancel_dialog_listener(self.cancel_add_keg)
         self.add_keg_dialog.set_on_confirm_dialog_listener(self.apply_add_keg)
