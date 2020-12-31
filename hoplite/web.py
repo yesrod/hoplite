@@ -185,6 +185,10 @@ class Web(App):
             custom_tare.set_value(str(tare))
             co2_check.set_value(co2)
 
+            del_keg_button = gui.Button('Delete Keg', width=100, height=30, style={'margin': '3px'} )
+            del_keg_button.set_on_click_listener(self.show_del_keg_confirm)
+            keg_box.append(del_keg_button, 'del_keg')
+
         return keg_box
 
 
@@ -253,6 +257,10 @@ class Web(App):
         self.add_keg_dialog.set_on_cancel_dialog_listener(self.cancel_add_keg)
         self.add_keg_dialog.set_on_confirm_dialog_listener(self.apply_add_keg)
         self.add_keg_dialog.show(self)
+
+
+    def show_del_keg_confirm(self, widget):
+        pass
 
 
     def cancel_settings(self, widget):
