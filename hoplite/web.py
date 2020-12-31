@@ -59,16 +59,16 @@ class Web(App):
         headers = {'Content-Type': 'application/json'}
         dest_url = self.api_url + endpoint
         if mode == 'POST':
-            response = requests.post(dest_url, data = data, headers = headers)
+            response = requests.post(dest_url, data = json.dumps(data), headers = headers)
         elif mode == 'PUT':
-            response = requests.put(dest_url, data = data, headers = headers)
+            response = requests.put(dest_url, data = json.dumps(data), headers = headers)
         else:
             utils.debug_msg(self, "ERROR: bad HTTP mode")
             return
         if response.status_code != "200":
             utils.debug_msg(self, "response: %s" % response.json())
             utils.debug_msg(self, dest_url)
-            utils.debug_msg(self, data)
+            utils.debug_msg(self, json.dumps(data))
 
 
     def shmem_read(self, timeout=None):
