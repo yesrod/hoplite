@@ -174,6 +174,7 @@ class Web(App):
         tare = hx_conf['channels'][channel]['tare']
         name = hx_conf['channels'][channel]['name']
         size_name = hx_conf['channels'][channel]['size']
+        co2 = hx_conf['channels'][channel]['co2']
 
         keg_size_list = list(self.h.keg_data)
         keg_size_list.append('custom')
@@ -214,6 +215,9 @@ class Web(App):
         custom.append(custom_tare, 3)
 
         keg_box.append(custom, 'custom')
+
+        co2_box = gui.CheckBoxLabel('CO2', co2)
+        keg_box.append(co2_box, 'co2_box')
 
         return keg_box
 
@@ -261,6 +265,7 @@ class Web(App):
 
         new_name = keg_box.children['name'].children['val'].get_value()
         new_size = keg_box.children['size'].children['val'].get_value()
+        new_co2 = keg_box.children['co2_box'].get_value()
 
         if new_size == 'custom':
             custom = keg_box.children['custom']
@@ -274,6 +279,7 @@ class Web(App):
         new_conf['size'] = new_size
         new_conf['volume'] = vol
         new_conf['tare'] = tare
+        new_conf['co2'] = new_co2
         return new_conf
 
 
@@ -294,6 +300,7 @@ class Web(App):
                     hx_conf['channels'][channel]['size'] = new_conf['size']
                     hx_conf['channels'][channel]['volume'] = new_conf['volume']
                     hx_conf['channels'][channel]['tare'] = new_conf['tare']
+                    hx_conf['channels'][channel]['co2'] = new_conf['co2']
                     endpoint = 'hx/%s/%s/' % (str(index), channel)
                     self.api_write('POST', endpoint, hx_conf['channels'][channel])
                 except (KeyError, IndexError):
