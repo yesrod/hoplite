@@ -56,11 +56,12 @@ class Web(App):
 
 
     def api_write(self, mode, endpoint, data):
+        headers = {'Content-Type': 'application/json'}
         dest_url = self.api_url + endpoint
         if mode == 'POST':
-            response = requests.post(dest_url, data = data)
+            response = requests.post(dest_url, data = data, headers = headers)
         elif mode == 'PUT':
-            response = requests.put(dest_url, data = data)
+            response = requests.put(dest_url, data = data, headers = headers)
         else:
             utils.debug_msg(self, "ERROR: bad HTTP mode")
             return
