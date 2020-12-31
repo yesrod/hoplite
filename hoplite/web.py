@@ -66,6 +66,7 @@ class Web(App):
             return
         if response.status_code != "200":
             utils.debug_msg(self, "response: %s" % response.json())
+            utils.debug_msg(self, dest_url)
             utils.debug_msg(self, data)
 
 
@@ -282,7 +283,7 @@ class Web(App):
         TempData = self.api_data
 
         weight_mode = self.dialog.get_field('weight_options').get_value()
-        self.api_write('POST', 'weight_mode', '{ "weight_mode": "%s" }' % weight_mode)
+        self.api_write('PUT', 'weight_mode', '{ "weight_mode": "%s" }' % weight_mode)
 
         for index, hx_conf in enumerate(TempData['hx_list']):
             for channel in ('A', 'B'):
