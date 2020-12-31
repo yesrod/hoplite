@@ -217,9 +217,9 @@ class Web(App):
                 except (KeyError, IndexError):
                     pass
 
-        add_keg_button = gui.Button('Add Keg')
+        add_keg_button = gui.Button('Add Keg', width=100, height=30, style={'margin': '3px'} )
         add_keg_button.set_on_click_listener(self.show_add_keg_menu)
-        self.dialog.add_child('add_keg', add_keg_button)
+        self.dialog.children['buttons_container'].add_child('add_keg', add_keg_button)
 
         self.dialog.set_on_cancel_dialog_listener(self.cancel_settings)
         self.dialog.set_on_confirm_dialog_listener(self.apply_settings)
@@ -232,7 +232,7 @@ class Web(App):
         else:
             self.add_keg_up = True
 
-        self.add_keg_dialog = gui.GenericDialog(title='Settings',
+        self.add_keg_dialog = gui.GenericDialog(title='Add Kegs',
                                                 width='500px')
         hx_pins = gui.HBox()
         pd_sck = gui.TextInput(single_line=True, height='1.5em')
