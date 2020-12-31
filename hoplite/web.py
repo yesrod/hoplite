@@ -295,7 +295,7 @@ class Web(App):
                     hx_conf['channels'][channel]['volume'] = new_conf['volume']
                     hx_conf['channels'][channel]['tare'] = new_conf['tare']
                     endpoint = 'hx/%s/%s/' % (str(index), channel)
-                    self.api_write('PUT', endpoint, hx_conf)
+                    self.api_write('POST', endpoint, hx_conf)
                 except (KeyError, IndexError):
                     pass
 
