@@ -283,7 +283,7 @@ class Web(App):
         TempData = self.api_data
 
         weight_mode = self.dialog.get_field('weight_options').get_value()
-        self.api_write('PUT', 'weight_mode', '{ "weight_mode": "%s" }' % weight_mode)
+        self.api_write('PUT', 'weight_mode', {'weight_mode': weight_mode})
 
         for index, hx_conf in enumerate(TempData['hx_list']):
             for channel in ('A', 'B'):
@@ -293,10 +293,10 @@ class Web(App):
                     hx_conf['channels'][channel]['size'] = new_conf['size']
                     hx_conf['channels'][channel]['volume'] = new_conf['volume']
                     hx_conf['channels'][channel]['tare'] = new_conf['tare']
+                    endpoint = 'hx/%s/%s/' % (str(index), channel)
+                    self.api_write('PUT', endpoint, hx_conf)
                 except (KeyError, IndexError):
                     pass
-                endpoint = 'hx/%s/%s/' % (str(index), channel)
-                self.api_write('PUT', endpoint, json.dumps(hx_conf))
 
 
     def main(self):
