@@ -1,4 +1,4 @@
-from .hoplite import Hoplite
+from .hoplite import Hoplite, Config, utils
 
 import argparse
 import sys
@@ -7,7 +7,8 @@ from hx711 import HX711
 
 def calibrate(conf_file, index, channel, weight):
     h = Hoplite(debug=parsed_args.debug)
-    config = h.load_config(config_file=conf_file)
+    c = Config(conf_file, debug=parsed_args.debug)
+    config = c.config
     try:
         hx = h.init_hx711(config['hx'][int(index)])
     except (KeyError, ValueError):
@@ -29,14 +30,15 @@ def calibrate(conf_file, index, channel, weight):
         print("Calibration unit %s, saved to config" % cal)
     except KeyError:
         print("Sensor %s channel %s not found!" % (index, channel))
-    h.save_config(config, conf_file)
+    c.save_config()
     GPIO.cleanup()
     sys.exit()
 
 
 def tare(conf_file, index=None, channel=None):
     h = Hoplite(debug=parsed_args.debug)
-    config = h.load_config(conf_file)
+    c = Config(conf_file, debug=parsed_args.debug)
+    config = c.config
 
     # one sensor, one or both channels
     if index != None:
@@ -44,7 +46,7 @@ def tare(conf_file, index=None, channel=None):
             hx_conf = config['hx'][int(index)]
             dout = hx_conf['dout']
             pd_sck = hx_conf['pd_sck']
-            h.debug_msg("dout, pd_sck: %s %s" % (dout, pd_sck))
+            utils.debug_msg(h, "dout, pd_sck: %s %s" % (dout, pd_sck))
             hx = HX711(dout, pd_sck)
             hx.set_reading_format("MSB", "MSB")
             hx.reset()
@@ -55,7 +57,7 @@ def tare(conf_file, index=None, channel=None):
         if channel == 'A' or channel == None:
             hx.set_reference_unit_A(1)
             hx.tare_A()
-            h.debug_msg("refunit, offset: %s %s" % (hx.get_reference_unit_A(), hx.get_offset_A()))
+            utils.debug_msg(h, "refunit, offset: %s %s" % (hx.get_reference_unit_A(), hx.get_offset_A()))
             try:
                 hx_conf['channels']['A']['offset'] = hx.OFFSET
                 print("Sensor %s channel A offset saved as %s" % (index, hx.OFFSET))
@@ -64,7 +66,7 @@ def tare(conf_file, index=None, channel=None):
         elif channel == 'B' or channel == None:
             hx.set_reference_unit_B(1)
             hx.tare_B()
-            hx.debug_msg("refunit, offset: %s %s" % (hx.get_reference_unit_B(), hx.get_offset_B()))
+            utils.debug_msg(h, "refunit, offset: %s %s" % (hx.get_reference_unit_B(), hx.get_offset_B()))
             try:
                 hx_conf['channels']['B']['offset'] = hx.OFFSET_B
                 print("Sensor %s channel B offset saved as %s" % (index, hx.OFFSET_B))
@@ -79,13 +81,13 @@ def tare(conf_file, index=None, channel=None):
             dout = hx_conf['dout']
             pd_sck = hx_conf['pd_sck']
             hx = HX711(dout, pd_sck)
-            h.debug_msg("dout, pd_sck: %s %s" % (dout, pd_sck))
+            utils.debug_msg(h, "dout, pd_sck: %s %s" % (dout, pd_sck))
             hx.set_reading_format("MSB", "MSB")
             hx.reset()
 
             hx.set_reference_unit_A(1)
             hx.tare_A()
-            h.debug_msg("refunit, offset: %s %s" % (hx.get_reference_unit_A(), hx.get_offset_A()))
+            utils.debug_msg(h, "refunit, offset: %s %s" % (hx.get_reference_unit_A(), hx.get_offset_A()))
             try:
                 hx_conf['channels']['A']['offset'] = hx.OFFSET
                 print("Sensor %s channel A offset saved as %s" % (str(index), hx.OFFSET))
@@ -94,14 +96,14 @@ def tare(conf_file, index=None, channel=None):
 
             hx.set_reference_unit_B(1)
             hx.tare_B()
-            h.debug_msg("refunit, offset: %s %s" % (hx.get_reference_unit_B(), hx.get_offset_B()))
+            utils.debug_msg(h, "refunit, offset: %s %s" % (hx.get_reference_unit_B(), hx.get_offset_B()))
             try:
                 hx_conf['channels']['B']['offset'] = hx.OFFSET_B
                 print("Sensor %s channel B offset saved as %s" % (str(index), hx.OFFSET_B))
             except KeyError:
                 pass
 
-    h.save_config(config, conf_file)
+    c.save_config()
     GPIO.cleanup()
     sys.exit()
 
