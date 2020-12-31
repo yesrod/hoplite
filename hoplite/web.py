@@ -241,7 +241,7 @@ class Web(App):
         self.add_keg_dialog = gui.GenericDialog(title='Add/Edit Kegs',
                                                 width='500px')
 
-        index_list = [str(x) for x in list(range(1,len(hx_conf))) + ['new']]
+        index_list = [str(x) for x in list(range(0,len(hx_conf))) + ['new']]
         index_box = gui.HBox()
         index_menu = gui.DropDown.new_from_list(index_list)
         index_label = gui.Label('Sensor Index')
