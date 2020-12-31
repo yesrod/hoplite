@@ -178,7 +178,7 @@ class Web(App):
             size_name = hx_conf['channels'][channel]['size']
             co2 = hx_conf['channels'][channel]['co2']
 
-            box_name.set_text('Sensor' + str(index) + 'Channel ' + channel)
+            box_name.set_text('Sensor ' + str(index) + ' Channel ' + channel)
             keg_name_val.set_value(name)
             keg_size_val.select_by_value(size_name)
             custom_vol.set_value(str(cap))
@@ -219,6 +219,7 @@ class Web(App):
 
         add_keg_button = gui.Button('Add Keg')
         add_keg_button.set_on_click_listener(self.show_add_keg_menu)
+        self.dialog.add_child('add_keg', add_keg_button)
 
         self.dialog.set_on_cancel_dialog_listener(self.cancel_settings)
         self.dialog.set_on_confirm_dialog_listener(self.apply_settings)
@@ -252,7 +253,6 @@ class Web(App):
         self.add_keg_dialog.set_on_cancel_dialog_listener(self.cancel_add_keg)
         self.add_keg_dialog.set_on_confirm_dialog_listener(self.apply_add_keg)
         self.add_keg_dialog.show(self)
-
 
 
     def cancel_settings(self, widget):
