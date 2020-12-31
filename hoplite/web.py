@@ -126,27 +126,20 @@ class Web(App):
         super(Web, self).close()
 
 
-    def build_keg_settings(self, hx_conf, index, channel):
-        cap = hx_conf['channels'][channel]['volume']
-        tare = hx_conf['channels'][channel]['tare']
-        name = hx_conf['channels'][channel]['name']
-        size_name = hx_conf['channels'][channel]['size']
-        co2 = hx_conf['channels'][channel]['co2']
-
+    def build_keg_settings(self, channel, index = None, hx_conf = None):
         keg_size_list = list(self.h.keg_data)
         keg_size_list.append('custom')
 
         keg_box_style = {'border': '2px solid lightgrey', 'border-radius': '5px'}
         keg_box = gui.Container(style=keg_box_style)
 
-        box_name = gui.Label('Sensor ' + str(index) + ' Channel ' + channel)
+        box_name = gui.Label('Channel ' + channel)
         keg_box.append(box_name)
 
         keg_name = gui.HBox()
         keg_name_lbl = gui.Label('Keg Name', width='20%')
         keg_name.append(keg_name_lbl, 'lbl')
         keg_name_val = gui.TextInput(single_line=True, height='1.5em')
-        keg_name_val.set_value(name)
         keg_name.append(keg_name_val, 'val')
         keg_box.append(keg_name, 'name')
 
@@ -154,7 +147,6 @@ class Web(App):
         keg_size_lbl = gui.Label('Keg Size', width='20%')
         keg_size.append(keg_size_lbl, 'lbl')
         keg_size_val = gui.DropDown.new_from_list(keg_size_list)
-        keg_size_val.select_by_value(size_name)
         keg_size.append(keg_size_val, 'val')
         keg_box.append(keg_size, 'size')
 
@@ -163,13 +155,11 @@ class Web(App):
         custom.append(vol_lbl, 0)
         custom_vol = gui.TextInput(
             single_line=True, height='1.5em', width='30%')
-        custom_vol.set_value(str(cap))
         custom.append(custom_vol, 1)
         tare_lbl = gui.Label('Empty Weight (kg)', width='30%')
         custom.append(tare_lbl, 2)
         custom_tare = gui.TextInput(
             single_line=True, height='1.5em', width='20%')
-        custom_tare.set_value(str(tare))
         custom.append(custom_tare, 3)
 
         keg_box.append(custom, 'custom')
@@ -177,9 +167,23 @@ class Web(App):
         co2_box = gui.HBox(width='20%')
         co2_label = gui.Label('CO2')
         co2_box.append(co2_label, 0)
-        co2_check = gui.CheckBox('CO2', co2)
+        co2_check = gui.CheckBox('CO2', False)
         co2_box.append(co2_check, 1)
         keg_box.append(co2_box, 'co2_box')
+
+        if hx_conf != None and index != None:
+            cap = hx_conf['channels'][channel]['volume']
+            tare = hx_conf['channels'][channel]['tare']
+            name = hx_conf['channels'][channel]['name']
+            size_name = hx_conf['channels'][channel]['size']
+            co2 = hx_conf['channels'][channel]['co2']
+
+            box_name.set_text('Sensor' + str(index) + 'Channel ' + channel)
+            keg_name_val.set_value(name)
+            keg_size_val.select_by_value(size_name)
+            custom_vol.set_value(str(cap))
+            custom_tare.set_value(str(tare))
+            co2_check.set_value(co2)
 
         return keg_box
 
@@ -208,18 +212,55 @@ class Web(App):
         for index, hx_conf in enumerate(self.api_data['hx_list']):
             for channel in ('A', 'B'):
                 try:
-                    keg_box = self.build_keg_settings(hx_conf, index, channel)
+                    keg_box = self.build_keg_settings(channel, index, hx_conf)
                     self.dialog.add_field(str(index) + channel + '_box', keg_box)
                 except (KeyError, IndexError):
                     pass
+
+        add_keg_button = gui.Button('Add Keg')
+        add_keg_button.set_on_click_listener(self.show_add_keg_menu)
 
         self.dialog.set_on_cancel_dialog_listener(self.cancel_settings)
         self.dialog.set_on_confirm_dialog_listener(self.apply_settings)
         self.dialog.show(self)
 
 
+    def show_add_keg_menu(self, widget):
+        if self.add_keg_up == True:
+            return
+        else:
+            self.add_keg_up = True
+
+        self.add_keg_dialog = gui.GenericDialog(title='Settings',
+                                                width='500px')
+        hx_pins = gui.HBox()
+        pd_sck = gui.TextInput(single_line=True, height='1.5em')
+        pd_label = gui.Label('pd_sck Pin Number')
+        hx_pins.append(pd_label, 0)
+        hx_pins.append(pd_sck, 1)
+        d_out = gui.TextInput(single_line=True, height='1.5em')
+        d_label = gui.Label('d_out Pin Number')
+        hx_pins.append(d_label, 2)
+        hx_pins.append(d_out, 3)
+
+        self.add_keg_dialog.add_field('hx_pins', hx_pins)
+        
+        for channel in ('A', 'B'):
+            keg_box = self.build_keg_settings(channel)
+            self.dialog.add_field(channel + '_box', keg_box)
+
+        self.add_keg_dialog.set_on_cancel_dialog_listener(self.cancel_add_keg)
+        self.add_keg_dialog.set_on_confirm_dialog_listener(self.apply_add_keg)
+        self.add_keg_dialog.show(self)
+
+
+
     def cancel_settings(self, widget):
         self.settings_up = False
+
+
+    def cancel_add_keg(self, widget):
+        self.add_keg_up = False
 
 
     def get_keg_settings(self, index, channel):
@@ -269,11 +310,16 @@ class Web(App):
                     pass
 
 
+    def apply_add_keg(self, widget):
+        self.add_keg_up = False
+
+
     def main(self):
         self.api_read()
 
         self.kegs = list()
         self.settings_up = False
+        self.add_keg_up = False
         self.co2_list = []
 
         # root object
