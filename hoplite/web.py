@@ -214,6 +214,8 @@ class Web(App):
         else:
             self.settings_up = True
 
+        self.api_read(force=True)
+
         self.dialog = gui.GenericDialog(title='Settings',
                                         width='500px')
 
@@ -268,12 +270,13 @@ class Web(App):
     def apply_settings(self, widget):
         self.settings_up = False
 
-        TempData = self.ShData
+        self.api_read(force=True)
+        TempData = self.api_data
 
         weight_mode = self.dialog.get_field('weight_options').get_value()
-        TempData['config']['weight_mode'] = weight_mode
+        self.api_write('weight_mode', '{ "weight_mode": "%s" }' % weight_mode)
 
-        for index, hx_conf in enumerate(TempData['config']['hx']):
+        for index, hx_conf in enumerate(TempData['hx_list']):
             for channel in ('A', 'B'):
                 try:
                     new_conf = self.get_keg_settings(index, channel)
@@ -283,9 +286,8 @@ class Web(App):
                     hx_conf['channels'][channel]['tare'] = new_conf['tare']
                 except (KeyError, IndexError):
                     pass
-
-        self.ShData = TempData
-        self.shmem_write(5)
+                endpoint = 'hx/%s/%s/' % (str(index), channel)
+                self.api_write(endpoint, json.dumps(hx_conf))
 
 
     def main(self):
