@@ -213,7 +213,7 @@ class Web(App):
             for channel in ('A', 'B'):
                 try:
                     keg_box = self.build_keg_settings(channel, index, hx_conf)
-                    self.dialog.add_field(str(index) + channel + '_box', keg_box)
+                    self.add_keg_dialog.add_field(str(index) + channel + '_box', keg_box)
                 except (KeyError, IndexError):
                     pass
 
@@ -236,11 +236,11 @@ class Web(App):
                                                 width='500px')
         hx_pins = gui.HBox()
         pd_sck = gui.TextInput(single_line=True, height='1.5em')
-        pd_label = gui.Label('pd_sck Pin Number')
+        pd_label = gui.Label('pd_sck')
         hx_pins.append(pd_label, 0)
         hx_pins.append(pd_sck, 1)
         d_out = gui.TextInput(single_line=True, height='1.5em')
-        d_label = gui.Label('d_out Pin Number')
+        d_label = gui.Label('d_out')
         hx_pins.append(d_label, 2)
         hx_pins.append(d_out, 3)
 
