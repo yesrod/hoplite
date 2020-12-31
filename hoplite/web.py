@@ -136,7 +136,8 @@ class Web(App):
         keg_size_list = list(self.h.keg_data)
         keg_size_list.append('custom')
 
-        keg_box = gui.Container(border='2px solid lightgrey', border_radius='5px')
+        keg_box_style = {'border': '2px solid lightgrey', 'border-radius': '5px'}
+        keg_box = gui.Container(style=keg_box_style)
 
         box_name = gui.Label('Sensor ' + str(index) + ' Channel ' + channel)
         keg_box.append(box_name)
