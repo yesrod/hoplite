@@ -236,8 +236,18 @@ class Web(App):
         else:
             self.add_keg_up = True
 
-        self.add_keg_dialog = gui.GenericDialog(title='Add Kegs',
+        hx_conf = self.api_data['hx_list']
+
+        self.add_keg_dialog = gui.GenericDialog(title='Add/Edit Kegs',
                                                 width='500px')
+
+        index_list = gui.HBox()
+        index_menu = gui.DropDown.new_from_list(list(range(1,len(hx_conf))) + ['new'])
+        index_label = gui.Label('Sensor Index')
+        index_list.append(index_label, 0)
+        index_list.append(index_menu, 1)
+        self.add_keg_dialog.add_field('index_list', index_list)
+
         hx_pins = gui.HBox()
         pd_sck = gui.TextInput(single_line=True, height='1.5em')
         pd_label = gui.Label('pd_sck')
