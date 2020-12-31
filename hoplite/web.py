@@ -244,6 +244,7 @@ class Web(App):
         index_list = [str(x) for x in list(range(0,len(hx_conf))) + ['new']]
         index_box = gui.HBox()
         index_menu = gui.DropDown.new_from_list(index_list)
+        index_menu.set_on_change_listener(self.fill_add_keg)
         index_label = gui.Label('Sensor Index')
         index_box.append(index_label, 0)
         index_box.append(index_menu, 1)
@@ -268,6 +269,12 @@ class Web(App):
         self.add_keg_dialog.set_on_cancel_dialog_listener(self.cancel_add_keg)
         self.add_keg_dialog.set_on_confirm_dialog_listener(self.apply_add_keg)
         self.add_keg_dialog.show(self)
+
+
+    def fill_add_keg(self, widget):
+        index_menu = self.add_keg_dialog.children['index_box'][1]
+        utils.debug_msg(self, "index_menu: %s" % index_menu)
+        pass
 
 
     def show_del_keg_confirm(self, widget):
