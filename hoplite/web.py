@@ -55,10 +55,18 @@ class Web(App):
             utils.debug_msg(self, "not updating, last update %is ago" % since_last_update)
 
 
-    def api_write(self, endpoint, data):
+    def api_write(self, mode, endpoint, data):
         dest_url = self.api_url + endpoint
-        response = requests.post(dest_url, data = data)
-        utils.debug_msg(self, "response: %s" % response)
+        if mode == 'POST':
+            response = requests.post(dest_url, data = data)
+        elif mode == 'PUT':
+            response = requests.put(dest_url, data = data)
+        else:
+            utils.debug_msg(self, "ERROR: bad HTTP mode")
+            return
+        if response.status_code != "200":
+            utils.debug_msg(self, "response: %s" % response.json())
+            utils.debug_msg(self, data)
 
 
     def shmem_read(self, timeout=None):
@@ -274,7 +282,7 @@ class Web(App):
         TempData = self.api_data
 
         weight_mode = self.dialog.get_field('weight_options').get_value()
-        self.api_write('weight_mode', '{ "weight_mode": "%s" }' % weight_mode)
+        self.api_write('POST', 'weight_mode', '{ "weight_mode": "%s" }' % weight_mode)
 
         for index, hx_conf in enumerate(TempData['hx_list']):
             for channel in ('A', 'B'):
@@ -287,7 +295,7 @@ class Web(App):
                 except (KeyError, IndexError):
                     pass
                 endpoint = 'hx/%s/%s/' % (str(index), channel)
-                self.api_write(endpoint, json.dumps(hx_conf))
+                self.api_write('PUT', endpoint, json.dumps(hx_conf))
 
 
     def main(self):
