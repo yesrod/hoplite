@@ -322,9 +322,6 @@ class Web(App):
     def apply_settings(self, widget):
         self.settings_up = False
 
-        self.api_read(force=True)
-        TempData = self.api_data
-
         weight_mode = self.dialog.get_field('weight_options').get_value()
         self.api_write('PUT', 'weight_mode', {'weight_mode': weight_mode})
 
