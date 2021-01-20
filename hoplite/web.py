@@ -281,7 +281,24 @@ class Web(App):
     def fill_add_keg(self, widget):
         index_menu = self.add_keg_dialog.children['index_box'][1]
         utils.debug_msg(self, "index_menu: %s" % index_menu)
-        pass
+
+        if index_menu == 'new':
+            pass
+        else:
+            hx_conf = self.api_data['hx_list'][index_menu]
+            for channel in ('A', 'B'):
+                try:
+                    new_conf = {}
+                    new_conf['volume'] = hx_conf['channels'][channel]['volume']
+                    new_conf['tare'] = hx_conf['channels'][channel]['tare']
+                    new_conf['name'] = hx_conf['channels'][channel]['name']
+                    new_conf['size'] = hx_conf['channels'][channel]['size']
+                    new_conf['co2'] = hx_conf['channels'][channel]['co2']
+
+                    self.set_keg_gui_data(index_menu, channel, new_conf)
+
+                except (KeyError, IndexError):
+                    pass
 
 
     def show_del_keg_confirm(self, widget):
@@ -296,7 +313,7 @@ class Web(App):
         self.add_keg_up = False
 
 
-    def get_keg_settings(self, index, channel):
+    def get_keg_gui_data(self, index, channel):
         keg_box = self.dialog.get_field(str(index) + channel + '_box')
 
         new_name = keg_box.children['name'].children['val'].get_value()
@@ -319,6 +336,22 @@ class Web(App):
         return new_conf
 
 
+    def set_keg_gui_data(self, index, channel, new_conf):
+        keg_box = self.dialog.get_field(str(index) + channel + '_box')
+
+        keg_box.children['name'].children['val'].set_value(new_conf['name'])
+        keg_box.children['size'].children['val'].set_value(new_conf['size'])
+        keg_box.children['co2_box'].set_value(new_conf['co2'])
+
+        if new_conf['size'] == 'custom':
+            custom = keg_box.children['custom']
+            custom.children['1'].set_value(float(new_conf['volume']))
+            custom.children['3'].set_value(float(new_conf['tare']))
+        else:
+            custom.children['1'].set_value(float(self.h.keg_data[new_conf['volume']][0]))
+            custom.children['3'].set_value(float(self.h.keg_data[new_conf['tare']][1]))
+
+
     def apply_settings(self, widget):
         self.settings_up = False
 
@@ -335,7 +368,7 @@ class Web(App):
         for index, hx_conf in enumerate(TempData['hx_list']):
             for channel in ('A', 'B'):
                 try:
-                    new_conf = self.get_keg_settings(index, channel)
+                    new_conf = self.get_keg_gui_data(index, channel)
                     hx_conf['channels'][channel]['name'] = new_conf['name']
                     hx_conf['channels'][channel]['size'] = new_conf['size']
                     hx_conf['channels'][channel]['volume'] = new_conf['volume']
