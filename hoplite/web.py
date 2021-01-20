@@ -228,7 +228,7 @@ class Web(App):
                 except (KeyError, IndexError):
                     pass
 
-        add_keg_button = gui.Button('Add Keg', width=100, height=30, style={'margin': '3px'} )
+        add_keg_button = gui.Button('Add/Edit Keg', width=100, height=30, style={'margin': '3px'} )
         add_keg_button.set_on_click_listener(self.show_add_keg_menu)
         self.dialog.children['buttons_container'].add_child('add_keg', add_keg_button)
 
