@@ -278,10 +278,12 @@ class Web(App):
         self.add_keg_dialog.show(self)
 
 
-    def fill_add_keg(self, widget, index):
-        if index == 'new':
+    def fill_add_keg(self, widget, index_menu):
+        if index_menu == 'new':
+            # TODO: Clear all keg add/edit GUI fields
             pass
         else:
+            index = int(index_menu)
             hx_conf = self.api_data['hx_list'][index]
             for channel in ('A', 'B'):
                 try:
