@@ -295,7 +295,7 @@ class Web(App):
                     new_conf['name'] = hx_conf['channels'][channel]['name']
                     new_conf['size'] = hx_conf['channels'][channel]['size']
                     new_conf['co2'] = hx_conf['channels'][channel]['co2']
-                    self.set_keg_gui_data(self.add_keg_dialog, index, channel, new_conf)
+                    self.set_keg_gui_data(self.add_keg_dialog, channel + '_box', new_conf)
 
                 except (KeyError, IndexError):
                     pass
@@ -313,8 +313,8 @@ class Web(App):
         self.add_keg_up = False
 
 
-    def get_keg_gui_data(self, dialog, index, channel):
-        keg_box = dialog.get_field(str(index) + channel + '_box')
+    def get_keg_gui_data(self, dialog, keg_box_id):
+        keg_box = dialog.get_field(keg_box_id)
 
         new_name = keg_box.children['name'].children['val'].get_value()
         new_size = keg_box.children['size'].children['val'].get_value()
@@ -336,10 +336,10 @@ class Web(App):
         return new_conf
 
 
-    def set_keg_gui_data(self, dialog, index, channel, new_conf):
+    def set_keg_gui_data(self, dialog, keg_box_id, new_conf):
         utils.debug_msg(self, "new_conf: %s" % new_conf)
-        utils.debug_msg(self, "keg_box: %s" % str(index) + channel + '_box')
-        keg_box = dialog.get_field(str(index) + channel + '_box')
+        utils.debug_msg(self, "keg_box_id: %s" % keg_box_id)
+        keg_box = dialog.get_field(keg_box_id)
 
         keg_box.children['name'].children['val'].set_value(new_conf['name'])
         keg_box.children['size'].children['val'].set_value(new_conf['size'])
@@ -369,7 +369,7 @@ class Web(App):
         for index, hx_conf in enumerate(TempData['hx_list']):
             for channel in ('A', 'B'):
                 try:
-                    new_conf = self.get_keg_gui_data(self.add_keg_dialog, index, channel)
+                    new_conf = self.get_keg_gui_data(self.add_keg_dialog, str(index) + channel + '_box')
                     hx_conf['channels'][channel]['name'] = new_conf['name']
                     hx_conf['channels'][channel]['size'] = new_conf['size']
                     hx_conf['channels'][channel]['volume'] = new_conf['volume']
