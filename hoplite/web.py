@@ -337,6 +337,8 @@ class Web(App):
 
 
     def set_keg_gui_data(self, index, channel, new_conf):
+        utils.debug_msg(self, "new_conf: %s" % new_conf)
+        utils.debug_msg(self, "keg_box: %s" % str(index) + channel + '_box')
         keg_box = self.dialog.get_field(str(index) + channel + '_box')
 
         keg_box.children['name'].children['val'].set_value(new_conf['name'])
