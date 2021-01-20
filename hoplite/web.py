@@ -278,14 +278,11 @@ class Web(App):
         self.add_keg_dialog.show(self)
 
 
-    def fill_add_keg(self, widget):
-        index_menu = self.add_keg_dialog.children['index_box'][1]
-        utils.debug_msg(self, "index_menu: %s" % index_menu)
-
-        if index_menu == 'new':
+    def fill_add_keg(self, widget, index):
+        if index == 'new':
             pass
         else:
-            hx_conf = self.api_data['hx_list'][index_menu]
+            hx_conf = self.api_data['hx_list'][index]
             for channel in ('A', 'B'):
                 try:
                     new_conf = {}
@@ -295,7 +292,7 @@ class Web(App):
                     new_conf['size'] = hx_conf['channels'][channel]['size']
                     new_conf['co2'] = hx_conf['channels'][channel]['co2']
 
-                    self.set_keg_gui_data(index_menu, channel, new_conf)
+                    self.set_keg_gui_data(index, channel, new_conf)
 
                 except (KeyError, IndexError):
                     pass
