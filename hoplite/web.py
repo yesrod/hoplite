@@ -320,12 +320,12 @@ class Web(App):
         new_co2 = keg_box.children['co2_box'].children['1'].get_value()
 
         if new_size == 'custom':
-            custom = keg_box.children['custom']
-            vol = float(custom.children['1'].get_value())
-            tare = float(custom.children['3'].get_value())
+            vol = float(keg_box.children['custom'].children['1'].get_value())
+            tare = float(keg_box.children['custom'].children['3'].get_value())
         else:
             vol = self.h.keg_data[new_size][0]
             tare = self.h.keg_data[new_size][1]
+
         new_conf = dict()
         new_conf['name'] = new_name
         new_conf['size'] = new_size
@@ -343,12 +343,11 @@ class Web(App):
         keg_box.children['co2_box'].children['1'].set_value(new_conf['co2'])
 
         if new_conf['size'] == 'custom':
-            custom = keg_box.children['custom']
-            custom.children['1'].set_value(float(new_conf['volume']))
-            custom.children['3'].set_value(float(new_conf['tare']))
+            keg_box.children['custom'].children['1'].set_value(float(new_conf['volume']))
+            keg_box.children['custom'].children['3'].set_value(float(new_conf['tare']))
         else:
-            custom.children['1'].set_value(float(self.h.keg_data[new_conf['volume']][0]))
-            custom.children['3'].set_value(float(self.h.keg_data[new_conf['tare']][1]))
+            keg_box.children['custom'].children['1'].set_value(float(self.h.keg_data[new_conf['volume']][0]))
+            keg_box.children['custom'].children['3'].set_value(float(self.h.keg_data[new_conf['tare']][1]))
 
 
     def apply_settings(self, widget):
