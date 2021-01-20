@@ -328,6 +328,13 @@ class Web(App):
         weight_mode = self.dialog.get_field('weight_options').get_value()
         self.api_write('PUT', 'weight_mode', {'weight_mode': weight_mode})
 
+
+    def apply_add_keg(self, widget):
+        self.add_keg_up = False
+        
+        self.api_read(force=True)
+        TempData = self.api_data
+
         for index, hx_conf in enumerate(TempData['hx_list']):
             for channel in ('A', 'B'):
                 try:
@@ -341,10 +348,6 @@ class Web(App):
                     self.api_write('POST', endpoint, hx_conf['channels'][channel])
                 except (KeyError, IndexError):
                     pass
-
-
-    def apply_add_keg(self, widget):
-        self.add_keg_up = False
 
 
     def main(self):
