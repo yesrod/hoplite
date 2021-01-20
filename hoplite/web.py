@@ -207,7 +207,7 @@ class Web(App):
 
         self.api_read(force=True)
 
-        self.dialog = gui.GenericDialog(title='Settings',
+        self.settings_dialog = gui.GenericDialog(title='Settings',
                                         width='500px')
 
         # weight display options
@@ -217,24 +217,24 @@ class Web(App):
             weight_options.select_by_value(self.api_data['weight_mode'])
         except (KeyError, IndexError):
             pass
-        self.dialog.add_field_with_label(
+        self.settings_dialog.add_field_with_label(
             'weight_options', 'Display Keg Weight', weight_options)
 
         for index, hx_conf in enumerate(self.api_data['hx_list']):
             for channel in ('A', 'B'):
                 try:
                     keg_box = self.build_keg_settings(channel, index, hx_conf, readonly=True)
-                    self.dialog.add_field(str(index) + channel + '_box', keg_box)
+                    self.settings_dialog.add_field(str(index) + channel + '_box', keg_box)
                 except (KeyError, IndexError):
                     pass
 
         add_keg_button = gui.Button('Add/Edit Keg', width=100, height=30, style={'margin': '3px'} )
         add_keg_button.set_on_click_listener(self.show_add_keg_menu)
-        self.dialog.children['buttons_container'].add_child('add_keg', add_keg_button)
+        self.settings_dialog.children['buttons_container'].add_child('add_keg', add_keg_button)
 
-        self.dialog.set_on_cancel_dialog_listener(self.cancel_settings)
-        self.dialog.set_on_confirm_dialog_listener(self.apply_settings)
-        self.dialog.show(self)
+        self.settings_dialog.set_on_cancel_dialog_listener(self.cancel_settings)
+        self.settings_dialog.set_on_confirm_dialog_listener(self.apply_settings)
+        self.settings_dialog.show(self)
 
 
     def show_add_keg_menu(self, widget):
@@ -295,7 +295,7 @@ class Web(App):
                     new_conf['name'] = hx_conf['channels'][channel]['name']
                     new_conf['size'] = hx_conf['channels'][channel]['size']
                     new_conf['co2'] = hx_conf['channels'][channel]['co2']
-                    self.set_keg_gui_data(index, channel, new_conf)
+                    self.set_keg_gui_data(self.add_keg_dialog, index, channel, new_conf)
 
                 except (KeyError, IndexError):
                     pass
@@ -313,8 +313,8 @@ class Web(App):
         self.add_keg_up = False
 
 
-    def get_keg_gui_data(self, index, channel):
-        keg_box = self.dialog.get_field(str(index) + channel + '_box')
+    def get_keg_gui_data(self, dialog, index, channel):
+        keg_box = dialog.get_field(str(index) + channel + '_box')
 
         new_name = keg_box.children['name'].children['val'].get_value()
         new_size = keg_box.children['size'].children['val'].get_value()
@@ -336,10 +336,10 @@ class Web(App):
         return new_conf
 
 
-    def set_keg_gui_data(self, index, channel, new_conf):
+    def set_keg_gui_data(self, dialog, index, channel, new_conf):
         utils.debug_msg(self, "new_conf: %s" % new_conf)
         utils.debug_msg(self, "keg_box: %s" % str(index) + channel + '_box')
-        keg_box = self.dialog.get_field(str(index) + channel + '_box')
+        keg_box = dialog.get_field(str(index) + channel + '_box')
 
         keg_box.children['name'].children['val'].set_value(new_conf['name'])
         keg_box.children['size'].children['val'].set_value(new_conf['size'])
@@ -356,7 +356,7 @@ class Web(App):
     def apply_settings(self, widget):
         self.settings_up = False
 
-        weight_mode = self.dialog.get_field('weight_options').get_value()
+        weight_mode = self.settings_dialog.get_field('weight_options').get_value()
         self.api_write('PUT', 'weight_mode', {'weight_mode': weight_mode})
 
 
@@ -369,7 +369,7 @@ class Web(App):
         for index, hx_conf in enumerate(TempData['hx_list']):
             for channel in ('A', 'B'):
                 try:
-                    new_conf = self.get_keg_gui_data(index, channel)
+                    new_conf = self.get_keg_gui_data(self.add_keg_dialog, index, channel)
                     hx_conf['channels'][channel]['name'] = new_conf['name']
                     hx_conf['channels'][channel]['size'] = new_conf['size']
                     hx_conf['channels'][channel]['volume'] = new_conf['volume']
