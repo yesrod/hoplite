@@ -317,7 +317,7 @@ class Web(App):
 
         new_name = keg_box.children['name'].children['val'].get_value()
         new_size = keg_box.children['size'].children['val'].get_value()
-        new_co2 = keg_box.children['co2_box'].get_value()
+        new_co2 = keg_box.children['co2_box'].children['1'].get_value()
 
         if new_size == 'custom':
             custom = keg_box.children['custom']
@@ -340,7 +340,7 @@ class Web(App):
 
         keg_box.children['name'].children['val'].set_value(new_conf['name'])
         keg_box.children['size'].children['val'].set_value(new_conf['size'])
-        keg_box.children['co2_box'].set_value(new_conf['co2'])
+        keg_box.children['co2_box'].children['1'].set_value(new_conf['co2'])
 
         if new_conf['size'] == 'custom':
             custom = keg_box.children['custom']
