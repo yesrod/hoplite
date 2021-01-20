@@ -190,11 +190,11 @@ class Web(App):
             keg_box.append(del_keg_button, 'del_keg')
 
         if readonly == True:
-            keg_name_val.attributes['readonly'] = "readonly"
-            keg_size_val.attributes['disabled'] = "disabled"
-            custom_vol.attributes['readonly'] = "readonly"
-            custom_tare.attributes['readonly'] = "readonly"
-            co2_check.set_read_only(True)
+            keg_name_val.set_enabled(False)
+            keg_size_val.set_enabled(False)
+            custom_vol.set_enabled(False)
+            custom_tare.set_enabled(False)
+            co2_check.set_enabled(False)
 
         return keg_box
 
