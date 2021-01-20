@@ -279,11 +279,13 @@ class Web(App):
 
 
     def fill_add_keg(self, widget, index_menu):
+        utils.debug_msg(self, "index_menu: %s" % index_menu)
         if index_menu == 'new':
             # TODO: Clear all keg add/edit GUI fields
             pass
         else:
             index = int(index_menu)
+            utils.debug_msg(self, "index: %s" % index)
             hx_conf = self.api_data['hx_list'][index]
             for channel in ('A', 'B'):
                 try:
@@ -293,7 +295,6 @@ class Web(App):
                     new_conf['name'] = hx_conf['channels'][channel]['name']
                     new_conf['size'] = hx_conf['channels'][channel]['size']
                     new_conf['co2'] = hx_conf['channels'][channel]['co2']
-
                     self.set_keg_gui_data(index, channel, new_conf)
 
                 except (KeyError, IndexError):
@@ -346,8 +347,8 @@ class Web(App):
             keg_box.children['custom'].children['1'].set_value(str(new_conf['volume']))
             keg_box.children['custom'].children['3'].set_value(str(new_conf['tare']))
         else:
-            keg_box.children['custom'].children['1'].set_value(str(self.h.keg_data[new_conf['volume']][0]))
-            keg_box.children['custom'].children['3'].set_value(str(self.h.keg_data[new_conf['tare']][1]))
+            keg_box.children['custom'].children['1'].set_value(str(self.h.keg_data[new_conf['size']][0]))
+            keg_box.children['custom'].children['3'].set_value(str(self.h.keg_data[new_conf['size']][1]))
 
 
     def apply_settings(self, widget):
