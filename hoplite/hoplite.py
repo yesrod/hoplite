@@ -282,7 +282,7 @@ class Hoplite():
                         utils.debug_msg(self, "weight_mode not in config, using as_kg_gross")
                         mode = 'as_kg_gross'
                     try:
-                        weight = self.read_weight(self.hx_handles[index])
+                        weight = self.read_weight(hx)
                         self.display.render(weight, mode, self.config.get('hx')[index])
                     except IndexError:
                         utils.debug_msg(self, traceback.format_exc())
