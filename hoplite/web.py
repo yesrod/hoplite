@@ -126,7 +126,7 @@ class Web(App):
         super(Web, self).close()
 
 
-    def build_keg_settings(self, channel, index = None, hx_conf = None):
+    def build_keg_settings(self, channel, index = None, hx_conf = None, readonly = False):
         keg_size_list = list(self.h.keg_data)
         keg_size_list.append('custom')
 
@@ -189,6 +189,13 @@ class Web(App):
             del_keg_button.set_on_click_listener(self.show_del_keg_confirm)
             keg_box.append(del_keg_button, 'del_keg')
 
+        if readonly == True:
+            keg_name_val.attributes['readonly'] = "readonly"
+            keg_size_val.attributes['readonly'] = "readonly"
+            custom_vol.attributes['readonly'] = "readonly"
+            custom_tare.attributes['readonly'] = "readonly"
+            co2_check.attributes['readonly'] = "readonly"
+
         return keg_box
 
 
@@ -216,7 +223,7 @@ class Web(App):
         for index, hx_conf in enumerate(self.api_data['hx_list']):
             for channel in ('A', 'B'):
                 try:
-                    keg_box = self.build_keg_settings(channel, index, hx_conf)
+                    keg_box = self.build_keg_settings(channel, index, hx_conf, readonly=True)
                     self.dialog.add_field(str(index) + channel + '_box', keg_box)
                 except (KeyError, IndexError):
                     pass
