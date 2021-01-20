@@ -369,7 +369,7 @@ class Web(App):
         for index, hx_conf in enumerate(TempData['hx_list']):
             for channel in ('A', 'B'):
                 try:
-                    new_conf = self.get_keg_gui_data(self.add_keg_dialog, str(index) + channel + '_box')
+                    new_conf = self.get_keg_gui_data(self.add_keg_dialog, channel + '_box')
                     hx_conf['channels'][channel]['name'] = new_conf['name']
                     hx_conf['channels'][channel]['size'] = new_conf['size']
                     hx_conf['channels'][channel]['volume'] = new_conf['volume']
