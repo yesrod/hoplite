@@ -343,11 +343,11 @@ class Web(App):
         keg_box.children['co2_box'].children['1'].set_value(new_conf['co2'])
 
         if new_conf['size'] == 'custom':
-            keg_box.children['custom'].children['1'].set_value(float(new_conf['volume']))
-            keg_box.children['custom'].children['3'].set_value(float(new_conf['tare']))
+            keg_box.children['custom'].children['1'].set_value(str(new_conf['volume']))
+            keg_box.children['custom'].children['3'].set_value(str(new_conf['tare']))
         else:
-            keg_box.children['custom'].children['1'].set_value(float(self.h.keg_data[new_conf['volume']][0]))
-            keg_box.children['custom'].children['3'].set_value(float(self.h.keg_data[new_conf['tare']][1]))
+            keg_box.children['custom'].children['1'].set_value(str(self.h.keg_data[new_conf['volume']][0]))
+            keg_box.children['custom'].children['3'].set_value(str(self.h.keg_data[new_conf['tare']][1]))
 
 
     def apply_settings(self, widget):
