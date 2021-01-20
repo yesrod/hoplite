@@ -16,7 +16,7 @@ class Web(App):
 
     def __init__(self, *args):
         self.h = Hoplite()
-        self.debug = True
+        self.debug = False
 
         self.api_url = "http://127.0.0.1:5000/v1/"
         self.api_data = {}
