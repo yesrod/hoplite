@@ -191,10 +191,10 @@ class Web(App):
 
         if readonly == True:
             keg_name_val.attributes['readonly'] = "readonly"
-            keg_size_val.attributes['readonly'] = "readonly"
+            keg_size_val.attributes['disabled'] = "disabled"
             custom_vol.attributes['readonly'] = "readonly"
             custom_tare.attributes['readonly'] = "readonly"
-            co2_check.attributes['readonly'] = "readonly"
+            co2_check.set_read_only(True)
 
         return keg_box
 
