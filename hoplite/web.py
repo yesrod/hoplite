@@ -262,11 +262,11 @@ class Web(App):
         pd_label = gui.Label('pd_sck')
         hx_pins.append(pd_label, 0)
         hx_pins.append(pd_sck, 1)
-        d_out = gui.TextInput(single_line=True, width = '50px', height='1.5em')
-        d_out.set_enabled(False)
-        d_label = gui.Label('d_out')
+        dout = gui.TextInput(single_line=True, width = '50px', height='1.5em')
+        dout.set_enabled(False)
+        d_label = gui.Label('dout')
         hx_pins.append(d_label, 2)
-        hx_pins.append(d_out, 3)
+        hx_pins.append(dout, 3)
         self.edit_keg_dialog.add_field('hx_pins', hx_pins)
 
         channel_box = gui.HBox()
@@ -343,7 +343,7 @@ class Web(App):
         try:
             hx_conf = self.api_data['hx_list'][index]
             self.edit_keg_dialog.get_field('hx_pins').children['1'].set_value(str(hx_conf.get('pd_sck', '')))
-            self.edit_keg_dialog.get_field('hx_pins').children['3'].set_value(str(hx_conf.get('d_out', '')))
+            self.edit_keg_dialog.get_field('hx_pins').children['3'].set_value(str(hx_conf.get('dout', '')))
 
         except (KeyError, IndexError):
             pass
