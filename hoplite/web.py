@@ -293,9 +293,9 @@ class Web(App):
 
     def edit_keg_port_handler(self, widget, port):
         hx_list = self.api_data['hx_list']
+        pd_sck = self.edit_keg_dialog.get_field('hx_pins').children['1']
+        dout = self.edit_keg_dialog.get_field('hx_pins').children['3']
         if port == 'custom':
-            pd_sck =  self.edit_keg_dialog.get_field('hx_pins').children['1']
-            dout = self.edit_keg_dialog.get_field('hx_pins').children['3']
             pd_sck.set_enabled(True)
             dout.set_enabled(True)
             custom_values = (pd_sck.get_value(), dout.get_value())
