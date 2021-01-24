@@ -342,8 +342,8 @@ class Web(App):
     def fill_port_info(self, index, channel):
         try:
             hx_conf = self.api_data['hx_list'][index]
-            self.edit_keg_dialog.get_field('hx_pins').children['1'].set_value(hx_conf.get('pd_sck', ''))
-            self.edit_keg_dialog.get_field('hx_pins').children['3'].set_value(hx_conf.get('d_out', ''))
+            self.edit_keg_dialog.get_field('hx_pins').children['1'].set_value(str(hx_conf.get('pd_sck', '')))
+            self.edit_keg_dialog.get_field('hx_pins').children['3'].set_value(str(hx_conf.get('d_out', '')))
 
         except (KeyError, IndexError):
             pass
