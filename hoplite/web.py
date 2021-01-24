@@ -284,6 +284,7 @@ class Web(App):
 
         if index != None and channel != None:
             self.fill_edit_keg(index, channel)
+            self.fill_port_info(index, channel)
 
         self.edit_keg_dialog.set_on_cancel_dialog_listener(self.cancel_edit_keg)
         self.edit_keg_dialog.children['buttons_container'].children['confirm_button'].onclick.do(self.apply_edit_keg, index, channel)
@@ -308,6 +309,7 @@ class Web(App):
         channel = self.edit_keg_dialog.get_field('channel_box').children['1'].get_value()
 
         self.fill_edit_keg(index, channel)
+        self.fill_port_info(index, channel)
 
 
     def edit_keg_channel_handler(self, widget, channel):
@@ -322,16 +324,26 @@ class Web(App):
 
     def fill_edit_keg(self, index, channel):
         try:
-            hx_list = self.api_data['hx_list'][index]['channels'][channel]
+            hx_conf = self.api_data['hx_list'][index]['channels'][channel]
             new_conf = {}
-            new_conf['volume'] = hx_list['volume']
-            new_conf['tare'] = hx_list['tare']
-            new_conf['name'] = hx_list['name']
-            new_conf['size'] = hx_list['size']
-            new_conf['co2'] = hx_list['co2']
+            new_conf['volume'] = hx_conf['volume']
+            new_conf['tare'] = hx_conf['tare']
+            new_conf['name'] = hx_conf['name']
+            new_conf['size'] = hx_conf['size']
+            new_conf['co2'] = hx_conf['co2']
             self.set_keg_gui_data(self.edit_keg_dialog, 'keg_box', new_conf)
             self.edit_keg_dialog.children['buttons_container'].children['confirm_button'].onclick.do(
                 self.apply_edit_keg, index, channel)
+
+        except (KeyError, IndexError):
+            pass
+
+
+    def fill_port_info(self, index, channel):
+        try:
+            hx_conf = self.api_data['hx_list'][index]
+            self.edit_keg_dialog.get_field('hx_pins').children['1'].set_value(hx_conf.get('pd_sck', ''))
+            self.edit_keg_dialog.get_field('hx_pins').children['3'].set_value(hx_conf.get('d_out', ''))
 
         except (KeyError, IndexError):
             pass
