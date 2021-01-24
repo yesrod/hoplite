@@ -242,7 +242,7 @@ class Web(App):
         self.edit_keg_dialog = gui.GenericDialog(title='Add/Edit Kegs',
                                                 width='500px')
 
-        port_list = [str(x) for x in utils.breakout_ports.keys() + ['new']]
+        port_list = [str(x) for x in list(utils.breakout_ports.keys()) + ['new']]
         port_box = gui.HBox()
         port_menu = gui.DropDown.new_from_list(port_list)
         port_menu.set_on_change_listener(self.edit_keg_port_handler)
