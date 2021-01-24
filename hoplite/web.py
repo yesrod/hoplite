@@ -311,8 +311,8 @@ class Web(App):
 
 
     def fill_edit_keg(self, index, channel):
-        hx_list = self.api_data['hx_list'][index]['channels'][channel]
         try:
+            hx_list = self.api_data['hx_list'][index]['channels'][channel]
             new_conf = {}
             new_conf['volume'] = hx_list['volume']
             new_conf['tare'] = hx_list['tare']
@@ -322,7 +322,6 @@ class Web(App):
             self.set_keg_gui_data(self.edit_keg_dialog, 'keg_box', new_conf)
             self.edit_keg_dialog.children['buttons_container'].children['confirm_button'].onclick.do(
                 self.apply_edit_keg, index, channel)
-
 
         except (KeyError, IndexError):
             pass
