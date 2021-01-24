@@ -182,7 +182,7 @@ class Web(App):
             keg_box.append(edit_keg_button, 'edit_keg')
 
             del_keg_button = gui.Button('Delete', width=100, height=30, style={'margin': '3px'} )
-            del_keg_button.set_on_click_listener(self.show_del_keg_confirm)
+            del_keg_button.set_on_click_listener(self.show_delete_keg_confirm)
             keg_box.append(del_keg_button, 'del_keg')
 
         if readonly == True:
