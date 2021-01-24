@@ -1,5 +1,27 @@
 import sys
 
+# Shared data
+
+# keg data dictionary
+# value is list( volume in liters, empty weight in kg )
+keg_data = {
+    'half_bbl': (58.6, 13.6),
+    'tall_qtr_bbl': (29.3, 10),
+    'short_qtr_bbl': (29.3, 10),
+    'sixth_bbl': (19.5, 7.5),
+    'corny': (18.9, 4),
+}
+
+# Breakout board port data
+# Value is list( pd_sck, dout )
+breakout_ports = {
+    '1': (6, 5),
+    '2': (13, 12),
+    '3': (27, 17),
+    '4': (25, 22),
+}
+
+# Helper functions
 def debug_msg(c, message):
     if c.debug:
         print("%s::%s: %s" % (c.__class__.__name__, sys._getframe(1).f_code.co_name, message))
@@ -70,3 +92,31 @@ def get_keg_fill_percent(w, cap, tare):
     net_w = max((w - keg_tare), 0)
     fill_percent = net_w / keg_cap
     return fill_percent
+
+
+def get_index_from_port(port, hx_list):
+    try:
+        ports = breakout_ports[port]
+    except KeyError:
+        return None
+
+    index = None
+    for conf in hx_list:
+        if conf.get('pd_sck', None) == ports[0] and conf.get('dout', None) == ports[1]:
+            index = hx_list.index(conf)
+        
+    return index
+
+
+def get_port_from_index(index, hx_list):
+    try:
+        conf = hx_list[index]
+    except IndexError:
+        return None
+
+    port = None
+    for port_key in breakout_ports.keys():
+         if conf.get('pd_sck', None) == breakout_ports[port_key][0] and conf.get('dout', None) == breakout_ports[port_key][1]:
+             port = port_key
+
+    return port

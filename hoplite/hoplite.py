@@ -23,16 +23,6 @@ class Hoplite():
         # debug flag - this should be first
         self.debug = debug
         utils.debug_msg(self, "init start")
-        
-        # keg data dictionary
-        # value is list( volume in liters, empty weight in kg )
-        self.keg_data = {
-            'half_bbl': (58.6, 13.6),
-            'tall_qtr_bbl': (29.3, 10),
-            'short_qtr_bbl': (29.3, 10),
-            'sixth_bbl': (19.5, 7.5),
-            'corny': (18.9, 4),
-        }
 
         # while true, run update loop
         self.updating = False
