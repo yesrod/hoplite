@@ -62,3 +62,11 @@ def fill_bar_color(percent):
         return "red"
     # default in case something breaks
     return "gray"
+
+
+def get_keg_fill_percent(w, cap, tare):
+    keg_cap = cap * 1000
+    keg_tare = tare * 1000
+    net_w = max((w - keg_tare), 0)
+    fill_percent = net_w / keg_cap
+    return fill_percent

@@ -176,9 +176,7 @@ class Hoplite():
         hx.set_reference_unit_B(ref)
         return raw_w / float(real_w)
 
-    
 
-    
     def read_weight(self, hx):
         hx.reset()
         kegA = self.hx711_read_chA(hx)

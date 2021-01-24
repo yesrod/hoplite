@@ -64,14 +64,6 @@ class Web(App):
             utils.debug_msg(self, json.dumps(data))
 
 
-    def get_keg_fill_percent(self, w, cap, tare):
-        keg_cap = cap * 1000
-        keg_tare = tare * 1000
-        net_w = max((w - keg_tare), 0)
-        fill_percent = net_w / keg_cap
-        return fill_percent
-
-
     def idle(self):
         self.api_read()
 
@@ -103,7 +95,7 @@ class Web(App):
                         cap = hx_conf['channels'][channel]['volume']
                         tare = hx_conf['channels'][channel]['tare']
                         name = hx_conf['channels'][channel]['name']
-                        fill_pct = self.get_keg_fill_percent(w, cap, tare)
+                        fill_pct = utils.get_keg_fill_percent(w, cap, tare)
 
                         line[0].set_text(name)
                         line[1].set_size(240 * fill_pct, 30)
@@ -457,7 +449,7 @@ class Web(App):
                     keg_w = hx_conf['channels'][channel]['weight']
                     keg_cap = hx_conf['channels'][channel]['volume']
                     keg_tare = hx_conf['channels'][channel]['tare']
-                    keg_fill_pct = self.get_keg_fill_percent(
+                    keg_fill_pct = utils.get_keg_fill_percent(
                         keg_w, keg_cap, keg_tare)
                     keg_bar_rect = gui.SvgRectangle(0, 0, 240 * keg_fill_pct, 30)
                     keg_bar_rect.style[
