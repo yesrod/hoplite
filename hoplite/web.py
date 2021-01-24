@@ -282,6 +282,9 @@ class Web(App):
         keg_box = self.build_keg_settings(channel, index)
         self.edit_keg_dialog.add_field('keg_box', keg_box)
 
+        if index != None and channel != None:
+            self.fill_edit_keg(index, channel)
+
         self.edit_keg_dialog.set_on_cancel_dialog_listener(self.cancel_edit_keg)
         self.edit_keg_dialog.children['buttons_container'].children['confirm_button'].onclick.do(self.apply_edit_keg, index, channel)
         self.edit_keg_dialog.show(self)
