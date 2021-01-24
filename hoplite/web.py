@@ -301,10 +301,9 @@ class Web(App):
             custom_values = (pd_sck.get_value(), dout.get_value())
             index = utils.get_index_from_port(port, custom_values)
         else:
+            pd_sck.set_enabled(False)
+            dout.set_enabled(False)
             index = utils.get_index_from_port(port, hx_list)
-
-        if index == None:
-            return
         
         channel = self.edit_keg_dialog.get_field('channel_box').children['1'].get_value()
 
@@ -316,27 +315,28 @@ class Web(App):
         port = self.edit_keg_dialog.get_field('port_box').children['1'].get_value()
         hx_list = self.api_data['hx_list']
         index = utils.get_index_from_port(port, hx_list)
-        if index == None:
-            return
 
         self.fill_edit_keg(index, channel)
 
 
-    def fill_edit_keg(self, index, channel):
+    def fill_edit_keg(self, index, channel, empty=False):
+        new_conf = {}
         try:
             hx_conf = self.api_data['hx_list'][index]['channels'][channel]
-            new_conf = {}
             new_conf['volume'] = hx_conf['volume']
             new_conf['tare'] = hx_conf['tare']
             new_conf['name'] = hx_conf['name']
             new_conf['size'] = hx_conf['size']
             new_conf['co2'] = hx_conf['co2']
-            self.set_keg_gui_data(self.edit_keg_dialog, 'keg_box', new_conf)
-            self.edit_keg_dialog.children['buttons_container'].children['confirm_button'].onclick.do(
-                self.apply_edit_keg, index, channel)
-
         except (KeyError, IndexError):
-            pass
+            new_conf['volume'] = ''
+            new_conf['tare'] = ''
+            new_conf['name'] = ''
+            new_conf['size'] = ''
+            new_conf['co2'] = False
+        self.set_keg_gui_data(self.edit_keg_dialog, 'keg_box', new_conf)
+        self.edit_keg_dialog.children['buttons_container'].children['confirm_button'].onclick.do(
+            self.apply_edit_keg, index, channel)
 
 
     def fill_port_info(self, index, channel):
