@@ -283,8 +283,8 @@ class Web(App):
     def edit_keg_port_handler(self, widget, port):
         hx_list = self.api_data['hx_list']
         if port == 'custom':
-            pd_sck =  self.edit_keg_dialog.children['hx_pins'].children['1']
-            dout = self.edit_keg_dialog.children['hx_pins'].children['3']
+            pd_sck =  self.edit_keg_dialog.get_field('hx_pins').children['1']
+            dout = self.edit_keg_dialog.get_field('hx_pins').children['3']
             pd_sck.set_enabled(True)
             dout.set_enabled(True)
             custom_values = (pd_sck.get_value(), dout.get_value())
@@ -295,13 +295,13 @@ class Web(App):
         if index == None:
             return
         
-        channel = self.edit_keg_dialog.children['channel_box'].children['1'].get_value()
+        channel = self.edit_keg_dialog.get_field('channel_box').children['1'].get_value()
 
         self.fill_edit_keg(index, channel)
 
 
     def edit_keg_channel_handler(self, widget, channel):
-        port = self.edit_keg_dialog.children['port_box'].children['1'].get_value()
+        port = self.edit_keg_dialog.get_field('port_box').children['1'].get_value()
         hx_list = self.api_data['hx_list']
         index = utils.get_index_from_port(port, hx_list)
         if index == None:
