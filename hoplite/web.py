@@ -239,12 +239,17 @@ class Web(App):
         else:
             self.edit_keg_up = True
 
+        hx_list = self.api_data['hx_list']
+
         self.edit_keg_dialog = gui.GenericDialog(title='Add/Edit Kegs',
                                                 width='500px')
 
         port_list = [str(x) for x in list(utils.breakout_ports.keys()) + ['new']]
         port_box = gui.HBox()
         port_menu = gui.DropDown.new_from_list(port_list)
+        if index != None:
+            port = utils.get_port_from_index(index, hx_list)
+            port_menu.set_value(port)
         port_menu.set_on_change_listener(self.edit_keg_port_handler)
         port_label = gui.Label('Port')
         port_box.append(port_label, 0)
@@ -267,6 +272,8 @@ class Web(App):
         channel_box = gui.HBox()
         channel_menu = gui.DropDown.new_from_list(('A', 'B'))
         channel_menu.set_on_change_listener(self.edit_keg_channel_handler)
+        if channel != None:
+            channel_menu.set_value(channel)
         channel_label = gui.Label('Channel')
         channel_box.append(channel_label, 0)
         channel_box.append(channel_menu, 1)
