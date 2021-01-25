@@ -456,6 +456,7 @@ class Web(App):
             hx = dict()
             hx['pd_sck'] = port_conf['pd_sck']
             hx['dout'] = port_conf['dout']
+            hx['channels'] = dict()
             hx['channels'][channel] = self.get_keg_gui_data(self.edit_keg_dialog, 'keg_box')
             endpoint = 'hx/'
             self.api_write('POST', endpoint, hx)
