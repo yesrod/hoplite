@@ -347,8 +347,9 @@ class Web(App):
             self.edit_keg_dialog.get_field('hx_pins').children['3'].set_value(str(hx_conf.get('dout', '')))
 
         except (KeyError, IndexError, TypeError):
-            self.edit_keg_dialog.get_field('hx_pins').children['1'].set_value(str(utils.breakout_ports[port][0]))
-            self.edit_keg_dialog.get_field('hx_pins').children['3'].set_value(str(utils.breakout_ports[port][1]))
+            if port != "custom":
+                self.edit_keg_dialog.get_field('hx_pins').children['1'].set_value(str(utils.breakout_ports[port][0]))
+                self.edit_keg_dialog.get_field('hx_pins').children['3'].set_value(str(utils.breakout_ports[port][1]))
 
 
     def show_delete_keg_confirm(self, widget):
