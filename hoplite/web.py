@@ -285,7 +285,7 @@ class Web(App):
 
         if index != None and channel != None:
             self.fill_edit_keg(index, channel)
-            self.fill_port_info(index, channel)
+            self.fill_port_info(index, port_menu.get_value())
 
         self.edit_keg_dialog.set_on_cancel_dialog_listener(self.cancel_edit_keg)
         self.edit_keg_dialog.children['buttons_container'].children['confirm_button'].onclick.do(self.apply_edit_keg, index, channel)
@@ -309,7 +309,7 @@ class Web(App):
         channel = self.edit_keg_dialog.get_field('channel_box').children['1'].get_value()
 
         self.fill_edit_keg(index, channel)
-        self.fill_port_info(index, channel)
+        self.fill_port_info(index, port)
 
 
     def edit_keg_channel_handler(self, widget, channel):
@@ -340,15 +340,15 @@ class Web(App):
             self.apply_edit_keg, index, channel)
 
 
-    def fill_port_info(self, index, channel):
+    def fill_port_info(self, index, port):
         try:
             hx_conf = self.api_data['hx_list'][index]
             self.edit_keg_dialog.get_field('hx_pins').children['1'].set_value(str(hx_conf.get('pd_sck', '')))
             self.edit_keg_dialog.get_field('hx_pins').children['3'].set_value(str(hx_conf.get('dout', '')))
 
         except (KeyError, IndexError, TypeError):
-            self.edit_keg_dialog.get_field('hx_pins').children['1'].set_value('')
-            self.edit_keg_dialog.get_field('hx_pins').children['3'].set_value('')
+            self.edit_keg_dialog.get_field('hx_pins').children['1'].set_value(utils.breakout_ports[port][0])
+            self.edit_keg_dialog.get_field('hx_pins').children['3'].set_value(utils.breakout_ports[port][1])
 
 
     def show_delete_keg_confirm(self, widget):
