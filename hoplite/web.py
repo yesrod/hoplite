@@ -346,8 +346,9 @@ class Web(App):
             self.edit_keg_dialog.get_field('hx_pins').children['1'].set_value(str(hx_conf.get('pd_sck', '')))
             self.edit_keg_dialog.get_field('hx_pins').children['3'].set_value(str(hx_conf.get('dout', '')))
 
-        except (KeyError, IndexError):
-            pass
+        except (KeyError, IndexError, TypeError):
+            self.edit_keg_dialog.get_field('hx_pins').children['1'].set_value('')
+            self.edit_keg_dialog.get_field('hx_pins').children['3'].set_value('')
 
 
     def show_delete_keg_confirm(self, widget):
