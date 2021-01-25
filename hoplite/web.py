@@ -402,8 +402,14 @@ class Web(App):
             keg_box.children['custom'].children['1'].set_value(str(new_conf.get('volume', '')))
             keg_box.children['custom'].children['3'].set_value(str(new_conf.get('tare', '')))
         else:
-            keg_box.children['custom'].children['1'].set_value(str(utils.keg_data[new_conf['size']][0]))
-            keg_box.children['custom'].children['3'].set_value(str(utils.keg_data[new_conf['size']][1]))
+            try:
+                pd_sck = utils.keg_data.[new_conf['size']][0]
+                dout = utils.keg_data[new_conf['size']][1]
+            except KeyError:
+                pd_sck = ''
+                dout = ''
+            keg_box.children['custom'].children['1'].set_value(str(pd_sck))
+            keg_box.children['custom'].children['3'].set_value(str(dout))
 
 
     def apply_settings(self, widget):
