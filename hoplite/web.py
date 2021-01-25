@@ -118,14 +118,14 @@ class Web(App):
         super(Web, self).close()
 
 
-    def build_keg_settings(self, channel, index = None, hx_conf = None, readonly = False):
+    def build_keg_settings(self, index = None, channel = None, hx_conf = None, readonly = False, edit = False):
         keg_size_list = list(utils.keg_data)
         keg_size_list.append('custom')
 
         keg_box_style = {'border': '2px solid lightgrey', 'border-radius': '5px'}
         keg_box = gui.Container(style=keg_box_style)
 
-        box_name = gui.Label('Channel ' + channel)
+        box_name = gui.Label('Channel')
         keg_box.append(box_name)
 
         keg_name = gui.HBox()
@@ -163,7 +163,7 @@ class Web(App):
         co2_box.append(co2_check, 1)
         keg_box.append(co2_box, 'co2_box')
 
-        if hx_conf != None and index != None:
+        if hx_conf != None and index != None and channel != None:
             cap = hx_conf['channels'][channel]['volume']
             tare = hx_conf['channels'][channel]['tare']
             name = hx_conf['channels'][channel]['name']
@@ -177,6 +177,7 @@ class Web(App):
             custom_tare.set_value(str(tare))
             co2_check.set_value(co2)
 
+        if edit != False:
             edit_keg_button = gui.Button('Edit', width=100, height=30, style={'margin': '3px'} )
             edit_keg_button.onclick.do(self.show_edit_keg, index, channel)
             keg_box.append(edit_keg_button, 'edit_keg')
@@ -219,7 +220,7 @@ class Web(App):
         for index, hx_conf in enumerate(self.api_data['hx_list']):
             for channel in ('A', 'B'):
                 try:
-                    keg_box = self.build_keg_settings(channel, index, hx_conf, readonly=True)
+                    keg_box = self.build_keg_settings(index, channel, hx_conf, readonly=True, edit=True)
                     self.settings_dialog.add_field(str(index) + channel + '_box', keg_box)
                 except (KeyError, IndexError):
                     pass
@@ -279,7 +280,7 @@ class Web(App):
         channel_box.append(channel_menu, 1)
         self.edit_keg_dialog.add_field('channel_box', channel_box)
 
-        keg_box = self.build_keg_settings(channel, index)
+        keg_box = self.build_keg_settings(index, channel)
         self.edit_keg_dialog.add_field('keg_box', keg_box)
 
         if index != None and channel != None:
@@ -328,7 +329,7 @@ class Web(App):
             new_conf['name'] = hx_conf['name']
             new_conf['size'] = hx_conf['size']
             new_conf['co2'] = hx_conf['co2']
-        except (KeyError, IndexError):
+        except (KeyError, IndexError, TypeError):
             new_conf['volume'] = ''
             new_conf['tare'] = ''
             new_conf['name'] = ''
