@@ -403,7 +403,7 @@ class Web(App):
             keg_box.children['custom'].children['3'].set_value(str(new_conf.get('tare', '')))
         else:
             try:
-                pd_sck = utils.keg_data.[new_conf['size']][0]
+                pd_sck = utils.keg_data[new_conf['size']][0]
                 dout = utils.keg_data[new_conf['size']][1]
             except KeyError:
                 pd_sck = ''
