@@ -394,13 +394,13 @@ class Web(App):
         utils.debug_msg(self, "keg_box_id: %s" % keg_box_id)
         keg_box = dialog.get_field(keg_box_id)
 
-        keg_box.children['name'].children['val'].set_value(new_conf['name'])
-        keg_box.children['size'].children['val'].set_value(new_conf['size'])
-        keg_box.children['co2_box'].children['1'].set_value(new_conf['co2'])
+        keg_box.children['name'].children['val'].set_value(new_conf.get('name', ''))
+        keg_box.children['size'].children['val'].set_value(new_conf.get('size', ''))
+        keg_box.children['co2_box'].children['1'].set_value(new_conf.get('co2', False))
 
         if new_conf['size'] == 'custom':
-            keg_box.children['custom'].children['1'].set_value(str(new_conf['volume']))
-            keg_box.children['custom'].children['3'].set_value(str(new_conf['tare']))
+            keg_box.children['custom'].children['1'].set_value(str(new_conf.get('volume', '')))
+            keg_box.children['custom'].children['3'].set_value(str(new_conf.get('tare', '')))
         else:
             keg_box.children['custom'].children['1'].set_value(str(utils.keg_data[new_conf['size']][0]))
             keg_box.children['custom'].children['3'].set_value(str(utils.keg_data[new_conf['size']][1]))
