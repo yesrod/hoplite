@@ -288,7 +288,7 @@ class Web(App):
             self.fill_port_info(index, port_menu.get_value())
 
         self.edit_keg_dialog.set_on_cancel_dialog_listener(self.cancel_edit_keg)
-        self.edit_keg_dialog.children['buttons_container'].children['confirm_button'].onclick.do(self.apply_edit_keg, index, channel)
+        self.edit_keg_dialog.set_on_confirm_dialog_listener(self.apply_edit_keg)
         self.edit_keg_dialog.show(self)
 
 
@@ -336,8 +336,7 @@ class Web(App):
             new_conf['size'] = ''
             new_conf['co2'] = False
         self.set_keg_gui_data(self.edit_keg_dialog, 'keg_box', new_conf)
-        self.edit_keg_dialog.children['buttons_container'].children['confirm_button'].onclick.do(
-            self.apply_edit_keg, index, channel)
+        self.edit_keg_dialog.set_on_confirm_dialog_listener(self.apply_edit_keg)
 
 
     def fill_port_info(self, index, port):
@@ -369,12 +368,9 @@ class Web(App):
 
 
     def get_keg_gui_data(self, dialog, keg_box_id):
-        keg_box = dialog.get_field(keg_box_id)
+        keg_box = dialog.get_field(keg_box_id)        
 
-        new_name = keg_box.children['name'].children['val'].get_value()
         new_size = keg_box.children['size'].children['val'].get_value()
-        new_co2 = keg_box.children['co2_box'].children['1'].get_value()
-
         if new_size == 'custom':
             vol = float(keg_box.children['custom'].children['1'].get_value())
             tare = float(keg_box.children['custom'].children['3'].get_value())
@@ -383,11 +379,20 @@ class Web(App):
             tare = utils.keg_data[new_size][1]
 
         new_conf = dict()
-        new_conf['name'] = new_name
+        new_conf['name'] = keg_box.children['name'].children['val'].get_value()
         new_conf['size'] = new_size
+        new_conf['co2'] = keg_box.children['co2_box'].children['1'].get_value()
         new_conf['volume'] = vol
         new_conf['tare'] = tare
-        new_conf['co2'] = new_co2
+        return new_conf
+
+
+    def get_port_data(self, dialog):
+        new_conf = dict()
+        new_conf['port'] = dialog.get_field('port_box').get_value()
+        new_conf['pd_sck'] = dialog.get_field('hx_pins').children['1'].get_value()
+        new_conf['dout'] = dialog.get_field('hx_pins').children['3'].get_value()
+        new_conf['channel'] = dialog.get_field('channel_box').children['1'].get_value()
         return new_conf
 
 
@@ -421,25 +426,31 @@ class Web(App):
         self.api_write('PUT', 'weight_mode', {'weight_mode': weight_mode})
 
 
-    def apply_edit_keg(self, widget, index, channel):
+    def apply_edit_keg(self, widget):
         self.edit_keg_up = False
         
         self.api_read(force=True)
-        TempData = self.api_data
+        hx_list = self.api_data['hx_list']
 
-        hx_conf = TempData['hx_list'][index]['channels'][channel]
+        port_conf = self.get_port_data(self.edit_keg_dialog)
+        port = port_conf['port']
+        index = utils.get_index_from_port(port, hx_list)
+        channel = port_conf['channel']
 
-        try:
+        if index != None:
+            for attribute in ('pd_sck', 'dout'):
+                endpoint = 'hx/%s/%s' % (str(index), attribute)
+                self.api_write('PUT', endpoint, {attribute: port_conf[attribute]})
+
+            chan = hx_list[index]['channels'][channel]
             new_conf = self.get_keg_gui_data(self.edit_keg_dialog, 'keg_box')
-            hx_conf['name'] = new_conf['name']
-            hx_conf['size'] = new_conf['size']
-            hx_conf['volume'] = new_conf['volume']
-            hx_conf['tare'] = new_conf['tare']
-            hx_conf['co2'] = new_conf['co2']
+            chan['name'] = new_conf['name']
+            chan['size'] = new_conf['size']
+            chan['volume'] = new_conf['volume']
+            chan['tare'] = new_conf['tare']
+            chan['co2'] = new_conf['co2']
             endpoint = 'hx/%s/%s/' % (str(index), channel)
-            self.api_write('POST', endpoint, hx_conf['channels'][channel])
-        except (KeyError, IndexError):
-            pass
+            self.api_write('POST', endpoint, chan)
 
 
     def confirm_delete_keg(self, widget):
