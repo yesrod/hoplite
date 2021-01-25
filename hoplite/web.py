@@ -430,7 +430,7 @@ class Web(App):
         hx_conf = TempData['hx_list'][index]['channels'][channel]
 
         try:
-            new_conf = self.get_keg_gui_data(self.edit_keg_dialog, channel + '_box')
+            new_conf = self.get_keg_gui_data(self.edit_keg_dialog, 'keg_box')
             hx_conf['name'] = new_conf['name']
             hx_conf['size'] = new_conf['size']
             hx_conf['volume'] = new_conf['volume']
