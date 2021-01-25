@@ -389,7 +389,7 @@ class Web(App):
 
     def get_port_data(self, dialog):
         new_conf = dict()
-        new_conf['port'] = dialog.get_field('port_box').get_value()
+        new_conf['port'] = dialog.get_field('port_box').children['1'].get_value()
         new_conf['pd_sck'] = dialog.get_field('hx_pins').children['1'].get_value()
         new_conf['dout'] = dialog.get_field('hx_pins').children['3'].get_value()
         new_conf['channel'] = dialog.get_field('channel_box').children['1'].get_value()
