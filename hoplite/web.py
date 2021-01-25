@@ -451,6 +451,14 @@ class Web(App):
             chan['co2'] = new_conf['co2']
             endpoint = 'hx/%s/%s/' % (str(index), channel)
             self.api_write('POST', endpoint, chan)
+        
+        else:
+            hx = dict()
+            hx['pd_sck'] = port_conf['pd_sck']
+            hx['dout'] = port_conf['dout']
+            hx['channels'][channel] = self.get_keg_gui_data(self.edit_keg_dialog, 'keg_box')
+            endpoint = 'hx/'
+            self.api_write('POST', endpoint, hx)
 
 
     def confirm_delete_keg(self, widget):
