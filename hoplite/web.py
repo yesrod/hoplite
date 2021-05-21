@@ -60,44 +60,9 @@ class Web(App):
     def idle(self):
         self.api_read()
 
-        w_mode = self.api_data.get('weight_mode', 'as_kg_gross')
-
         self.co2_list = []
 
-        for line in self.kegs:
-            if line == None:
-                continue
-            for hx_conf in self.api_data['hx_list']:
-                for channel in ['A', 'B']:
-                    # handle co2
-                    try:
-                        if hx_conf['channels'][channel]['co2'] == True:
-                            local_w = hx_conf['channels'][channel]['weight']
-                            local_max = hx_conf['channels'][channel]['volume'] * 1000
-                            local_tare = hx_conf['channels'][channel]['tare'] * 1000
-                            local_net_w = max((local_w - local_tare), 0) 
-                            local_pct = local_net_w / float(local_max)
-                            self.co2_list.append(int(local_pct * 100))
-                            continue
-                    except KeyError:
-                        pass
-
-                    # channel update
-                    try:
-                        w = hx_conf['channels'][channel]['weight']
-                        cap = hx_conf['channels'][channel]['volume']
-                        tare = hx_conf['channels'][channel]['tare']
-                        name = hx_conf['channels'][channel]['name']
-                        fill_pct = utils.get_keg_fill_percent(w, cap, tare)
-
-                        line[0].set_text(name)
-                        line[1].set_size(240 * fill_pct, 30)
-                        line[1].style[
-                            'fill'] = utils.fill_bar_color(fill_pct)
-                        line[2].set_text(utils.format_weight(
-                            w, w_mode, tare=(tare * 1000), cap=(cap * 1000)))
-                    except (KeyError, IndexError):
-                        pass
+        self.keg_table = self.build_keg_table()
 
         t = utils.as_degF(self.api_data.get('temp', 0))
         try:
@@ -459,6 +424,69 @@ class Web(App):
         pass
 
 
+    def build_keg_table(self):
+        new_table = gui.Table(width=480)
+        new_table.style['margin'] = 'auto'
+        new_table.style['text-align'] = 'center'
+        new_table.style['padding'] = '2em'
+
+        w_mode = self.api_data.get('weight_mode', 'as_kg_gross')
+
+        # iterate through HX sensors
+        for index, hx_conf in enumerate(self.api_data['hx_list']):
+
+            # keg information
+            for channel in ['A', 'B']:
+                try:
+                    keg_name = hx_conf['channels'][channel].get('name', None)
+                except KeyError:
+                    keg_name = None
+                try:
+                    if hx_conf['channels'][channel]['co2'] == True:
+                        local_w = hx_conf['channels'][channel]['weight']
+                        local_max = hx_conf['channels'][channel]['volume'] * 1000
+                        local_tare = hx_conf['channels'][channel]['tare'] * 1000
+                        local_net_w = max((local_w - local_tare), 0)
+                        local_pct = local_net_w / float(local_max)
+                        self.co2_list.append(int(local_pct * 100))
+                        continue
+                except KeyError:
+                    pass
+
+                if keg_name != None:
+                    utils.debug_msg(self, hx_conf['channels'][channel])
+                    keg_label = gui.Label(keg_name, width=100, height=30)
+
+                    keg_bar = gui.Svg(width=240, height=30)
+                    keg_w = hx_conf['channels'][channel]['weight']
+                    keg_cap = hx_conf['channels'][channel]['volume']
+                    keg_tare = hx_conf['channels'][channel]['tare']
+                    keg_fill_pct = utils.get_keg_fill_percent(
+                        keg_w, keg_cap, keg_tare)
+                    keg_bar_rect = gui.SvgRectangle(0, 0, 240 * keg_fill_pct, 30)
+                    keg_bar_rect.style[
+                        'fill'] = utils.fill_bar_color(keg_fill_pct)
+                    keg_bar_outline = gui.SvgRectangle(0, 0, 240, 30)
+                    keg_bar_outline.style['fill'] = 'rgb(0,0,0)'
+                    keg_bar_outline.style['fill-opacity'] = '0'
+                    keg_bar.append(keg_bar_rect)
+                    keg_bar.append(keg_bar_outline)
+
+                    keg_weight = gui.Label(utils.format_weight(
+                        keg_w, w_mode, tare=(keg_tare * 1000), cap=(keg_cap * 1000)),
+                        width=100, height=30)
+
+                    table_row = gui.TableRow(height=30)
+                    for item in [keg_label, keg_bar, keg_weight]:
+                        table_item = gui.TableItem()
+                        table_item.append(item)
+                        table_row.append(table_item)
+
+                    new_table.append(table_row)
+
+        return new_table
+
+
     def main(self, args):
         self.debug = args["debug"]
 
@@ -468,17 +496,27 @@ class Web(App):
         self.api_update_interval = 5
         self.api_read()
 
-        self.kegs = list()
         self.settings_up = False
         self.edit_keg_up = False
         self.delete_keg_up = False
         self.co2_list = []
 
         # root object
-        self.container = gui.Table(width=480)
+        self.container = gui.VBox(width=480)
         self.container.style['margin'] = 'auto'
         self.container.style['text-align'] = 'center'
-        self.container.style['padding'] = '2em'
+
+        # header
+        self.header = gui.Table(width=480)
+        self.header.style['margin'] = 'auto'
+        self.header.style['text-align'] = 'center'
+        self.header.style['padding'] = '2em'
+
+        # keg table
+        self.keg_table = gui.Table(width=480)
+        self.keg_table.style['margin'] = 'auto'
+        self.keg_table.style['text-align'] = 'center'
+        self.keg_table.style['padding'] = '2em'
 
         # first row
         first_row = gui.TableRow(height=60)
@@ -508,65 +546,12 @@ class Web(App):
         table_item.append(self.settings_button)
         first_row.append(table_item)
 
-        self.container.append(first_row)
+        self.header.append(first_row)
+        self.container.append(self.header)
 
-        w_mode = self.api_data.get('weight_mode', 'as_kg_gross')
+        self.keg_table = self.build_keg_table()
 
-        # iterate through HX sensors
-        for index, hx_conf in enumerate(self.api_data['hx_list']):
-
-            self.kegs.insert(index, None)
-
-            # keg information
-            for channel in ['A', 'B']:
-                try:
-                    keg_name = hx_conf['channels'][channel].get('name', None)
-                except KeyError:
-                    keg_name = None
-                try:
-                    if hx_conf['channels'][channel]['co2'] == True:
-                        local_w = hx_conf['channels'][channel]['weight']
-                        local_max = hx_conf['channels'][channel]['volume'] * 1000
-                        local_tare = hx_conf['channels'][channel]['tare'] * 1000
-                        local_net_w = max((local_w - local_tare), 0) 
-                        local_pct = local_net_w / float(local_max)
-                        self.co2_list.append(int(local_pct * 100))
-                        continue
-                except KeyError:
-                    pass
-
-                if keg_name != None:
-                    keg_label = gui.Label(keg_name, width=100, height=30)
-
-                    keg_bar = gui.Svg(width=240, height=30)
-                    keg_w = hx_conf['channels'][channel]['weight']
-                    keg_cap = hx_conf['channels'][channel]['volume']
-                    keg_tare = hx_conf['channels'][channel]['tare']
-                    keg_fill_pct = utils.get_keg_fill_percent(
-                        keg_w, keg_cap, keg_tare)
-                    keg_bar_rect = gui.SvgRectangle(0, 0, 240 * keg_fill_pct, 30)
-                    keg_bar_rect.style[
-                        'fill'] = utils.fill_bar_color(keg_fill_pct)
-                    keg_bar_outline = gui.SvgRectangle(0, 0, 240, 30)
-                    keg_bar_outline.style['fill'] = 'rgb(0,0,0)'
-                    keg_bar_outline.style['fill-opacity'] = '0'
-                    keg_bar.append(keg_bar_rect)
-                    keg_bar.append(keg_bar_outline)
-
-                    keg_weight = gui.Label(utils.format_weight(
-                        keg_w, w_mode, tare=(keg_tare * 1000), cap=(keg_cap * 1000)), 
-                        width=100, height=30)
-
-                    self.kegs.insert(
-                        index, [keg_label, keg_bar_rect, keg_weight])
-
-                    table_row = gui.TableRow(height=30)
-                    for item in [keg_label, keg_bar, keg_weight]:
-                        table_item = gui.TableItem()
-                        table_item.append(item)
-                        table_row.append(table_item)
-
-                    self.container.append(table_row)
+        self.container.append(self.keg_table)
 
         try:
             co2 = self.co2_list[0] #TODO: Handle multiple CO2 sources
