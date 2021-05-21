@@ -183,7 +183,7 @@ class Web(App):
                 except (KeyError, IndexError):
                     pass
 
-        add_keg_button = gui.Button('Add Keg', width=100, height=30, style={'margin': '3px'} )
+        add_keg_button = gui.Button('Add/Edit Keg', width=100, height=30, style={'margin': '3px'} )
         add_keg_button.set_on_click_listener(self.show_edit_keg)
         self.settings_dialog.children['buttons_container'].add_child('add_keg', add_keg_button)
 
@@ -326,9 +326,11 @@ class Web(App):
 
 
     def get_keg_gui_data(self, dialog, keg_box_id):
-        keg_box = dialog.get_field(keg_box_id)        
+        keg_box = dialog.get_field(keg_box_id)
+        utils.debug_msg(self, "keg_box: %s" % keg_box) 
 
-        new_size = keg_box.children['size'].children['val'].get_value()
+        new_size = keg_box.children['size'].children['val'].get_value() # this takes forever sometimes to actually select, need to investigate
+        utils.debug_msg(self, "new_size: %s" % new_size)
         if new_size == 'custom':
             vol = float(keg_box.children['custom'].children['1'].get_value())
             tare = float(keg_box.children['custom'].children['3'].get_value())
@@ -342,6 +344,7 @@ class Web(App):
         new_conf['co2'] = keg_box.children['co2_box'].children['1'].get_value()
         new_conf['volume'] = vol
         new_conf['tare'] = tare
+        utils.debug_msg(self, "new_conf: %s" % new_conf)
         return new_conf
 
 
@@ -400,7 +403,10 @@ class Web(App):
                 endpoint = 'hx/%s/%s' % (str(index), attribute)
                 self.api_write('PUT', endpoint, {attribute: port_conf[attribute]})
 
-            chan = hx_list[index]['channels'][channel]
+            try:
+                chan = hx_list[index]['channels'][channel]
+            except KeyError:
+                chan = {}
             new_conf = self.get_keg_gui_data(self.edit_keg_dialog, 'keg_box')
             chan['name'] = new_conf['name']
             chan['size'] = new_conf['size']
@@ -418,6 +424,8 @@ class Web(App):
             hx['channels'][channel] = self.get_keg_gui_data(self.edit_keg_dialog, 'keg_box')
             endpoint = 'hx/'
             self.api_write('POST', endpoint, hx)
+
+        self.api_read(force=True)
 
 
     def confirm_delete_keg(self, widget):
