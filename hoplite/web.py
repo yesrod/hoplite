@@ -7,6 +7,7 @@ import json
 import mmap
 import pkg_resources
 import requests
+import argparse
 
 from .hoplite import Hoplite
 import hoplite.utils as utils
@@ -16,14 +17,6 @@ class Web(App):
 
     def __init__(self, *args):
         self.h = Hoplite()
-        self.debug = False
-
-        self.api_url = "http://127.0.0.1:5000/v1/"
-        self.api_data = {}
-        self.api_last_updated = 1
-        self.api_update_interval = 5
-
-        self.co2_list = []
 
         resource_package = __name__
         resource_path = '/static'
@@ -466,7 +459,13 @@ class Web(App):
         pass
 
 
-    def main(self):
+    def main(self, args):
+        self.debug = args["debug"]
+
+        self.api_url = "http://127.0.0.1:5000/v1/"
+        self.api_data = {}
+        self.api_last_updated = 1
+        self.api_update_interval = 5
         self.api_read()
 
         self.kegs = list()
@@ -580,6 +579,15 @@ class Web(App):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="HOPLITE: A kegerator monitoring script for RasPi")
+    parser.add_argument('--debug',
+                    action='store_true',
+                    help='Enable debugging messages')
+    parsed_args = parser.parse_args()
+
+    userdata_dict = {}
+    userdata_dict["debug"] = parsed_args.debug
+
     start(Web, address="0.0.0.0", port=80,
           standalone=False, update_interval=0.5,
-          title='HOPLITE')
+          title='HOPLITE', userdata=(userdata_dict,))
