@@ -107,8 +107,8 @@ class Hoplite():
 
     def init_hx711(self, hx_conf):
         utils.debug_msg(self, "init hx711 start")
-        dout = hx_conf['dout']
-        pd_sck = hx_conf['pd_sck']
+        dout = int(hx_conf['dout'])
+        pd_sck = int(hx_conf['pd_sck'])
 
         try:
             offset_A = hx_conf['channels']['A']['offset']
