@@ -128,13 +128,21 @@ class Hoplite():
         hx.reset()
 
         if refunit_A is not None and offset_A is not None: 
-            hx.set_reference_unit_A(refunit_A)
+            try:
+                hx.set_reference_unit_A(refunit_A)
+            except ValueError:
+                print("Bad channel A reference unit %s, using 1" % refunit_A)
+                hx.set_reference_unit_A(1)
             hx.set_offset_A(offset_A)
         else:
             hx.set_reference_unit_A(1)
 
         if refunit_B is not None and offset_B is not None: 
-            hx.set_reference_unit_B(refunit_B)
+            try:
+                hx.set_reference_unit_B(refunit_B)
+            except ValueError:
+                print("Bad channel B reference unit %s, using 1" % refunit_B)
+                hx.set_reference_unit_B(1)
             hx.set_offset_B(offset_B)
         else:
             hx.set_reference_unit_B(1)
