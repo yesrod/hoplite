@@ -150,6 +150,15 @@ class Hoplite():
         utils.debug_msg(self, "init hx711 end")
         return hx
 
+
+    def hx711_read_ch(self, hx, channel):
+        if channel == 'A':
+            return int(hx.get_weight_A(5))
+        elif channel == 'B':
+            return int(hx.get_weight_B(5))
+        else:
+            return None
+
     
     def hx711_read_chA(self, hx):
         return int(hx.get_weight_A(5))
@@ -198,28 +207,18 @@ class Hoplite():
     def read_co2(self):
         co2 = list()
         for index, hx_conf in enumerate(self.config.get('hx')):
-            try:
-                if hx_conf['channels']['A']['co2'] == True:
-                    local_w = self.hx711_read_chA(self.hx_handles[index])
-                    local_max = hx_conf['channels']['A']['volume'] * 1000
-                    local_tare = hx_conf['channels']['A']['tare'] * 1000
-                    utils.debug_msg(self, "%s, %s, %s" % (local_w, local_max, local_tare))
-                    local_net_w = max((local_w - local_tare), 0) 
-                    local_pct = local_net_w / float(local_max)
-                    co2.append(int(local_pct * 100))
-            except KeyError:
-                pass
-            try:
-                if hx_conf['channels']['B']['co2'] == True:
-                    local_w = self.hx711_read_chB(self.hx_handles[index])
-                    local_max = hx_conf['channels']['B']['volume'] * 1000
-                    local_tare = hx_conf['channels']['B']['tare'] * 1000
-                    utils.debug_msg(self, "%s, %s, %s" % (local_w, local_max, local_tare))
-                    local_net_w = max((local_w - local_tare), 0)    
-                    local_pct = local_net_w / float(local_max)
-                    co2.append(int(local_pct * 100))
-            except KeyError:
-                pass
+            for channel in ['A', 'B']:
+                try:
+                    if hx_conf['channels'][channel]['co2'] == True:
+                        local_w = self.hx711_read_ch(self.hx_handles[index], channel)
+                        local_max = hx_conf['channels'][channel]['volume'] * 1000
+                        local_tare = hx_conf['channels'][channel]['tare'] * 1000
+                        utils.debug_msg(self, "channel %s: %s, %s, %s" % (channel, local_w, local_max, local_tare))
+                        local_net_w = max((local_w - local_tare), 0)
+                        local_pct = local_net_w / float(local_max)
+                        co2.append(int(local_pct * 100))
+                except KeyError:
+                    pass
         return co2
 
 
