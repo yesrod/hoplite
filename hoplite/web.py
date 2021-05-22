@@ -57,6 +57,15 @@ class Web(App):
             utils.debug_msg(self, json.dumps(data))
 
 
+    def api_delete(self, endpoint):
+        headers = {'Content-Type': 'application/json'}
+        dest_url = self.api_url + endpoint
+        response = requests.delete(dest_url, headers = headers)
+        if response.status_code != "200":
+            utils.debug_msg(self, "response: %s" % response.json())
+            utils.debug_msg(self, dest_url)
+
+
     def idle(self):
         utils.debug_msg(self, "idle start")
 
@@ -78,9 +87,6 @@ class Web(App):
 
 
     def build_keg_settings(self, index = None, channel = None, hx_conf = None, readonly = False, edit = False):
-        keg_size_list = list(utils.keg_data)
-        keg_size_list.append('custom')
-
         keg_box_style = {'border': '2px solid lightgrey', 'border-radius': '5px'}
         keg_box = gui.Container(style=keg_box_style)
 
@@ -94,10 +100,15 @@ class Web(App):
         keg_name.append(keg_name_val, 'val')
         keg_box.append(keg_name, 'name')
 
+        keg_size_list = list(utils.keg_data)
+        keg_size_list.append('custom')
+        keg_size_list.insert(0, '')
+
         keg_size = gui.HBox()
         keg_size_lbl = gui.Label('Keg Size', width='20%')
         keg_size.append(keg_size_lbl, 'lbl')
         keg_size_val = gui.DropDown.new_from_list(keg_size_list)
+        keg_size_val.set_value('')
         keg_size.append(keg_size_val, 'val')
         keg_box.append(keg_size, 'size')
 
@@ -142,7 +153,7 @@ class Web(App):
             keg_box.append(edit_keg_button, 'edit_keg')
 
             del_keg_button = gui.Button('Delete', width=100, height=30, style={'margin': '3px'} )
-            del_keg_button.set_on_click_listener(self.show_delete_keg_confirm)
+            del_keg_button.onclick.do(self.show_delete_keg_confirm, index, channel)
             keg_box.append(del_keg_button, 'del_keg')
 
         if readonly == True:
@@ -310,8 +321,25 @@ class Web(App):
                 self.edit_keg_dialog.get_field('hx_pins').children['3'].set_value(str(utils.breakout_ports[port][1]))
 
 
-    def show_delete_keg_confirm(self, widget):
-        pass
+    def show_delete_keg_confirm(self, widget, index, channel):
+        if self.delete_keg_up == True:
+            return
+        else:
+            self.delete_keg_up = True
+
+        self.delete_keg_dialog = gui.GenericDialog(title='DELETE Keg?', width=100)
+        warning_label = gui.Label("Are you sure you want to delete keg at index %s channel %s?" % (index, channel))
+        self.delete_keg_dialog.append(warning_label)
+        self.delete_keg_dialog.set_on_cancel_dialog_listener(self.cancel_delete_keg)
+        self.delete_keg_dialog.children['buttons_container'].children['confirm_button'].onclick.do(self.delete_keg, index, channel)
+        self.delete_keg_dialog.show(self)
+
+
+    def delete_keg(self, widget, index, channel):
+        self.delete_keg_up = False
+        self.delete_keg_dialog.hide()
+        endpoint = 'hx/%s/%s/' % (str(index), channel)
+        self.api_delete(endpoint)
 
 
     def cancel_settings(self, widget):
