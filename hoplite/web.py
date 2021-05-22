@@ -58,18 +58,19 @@ class Web(App):
 
 
     def idle(self):
+        utils.debug_msg(self, "idle start")
+
         self.api_read()
-
         self.co2_list = []
-
-        self.keg_table = self.build_keg_table()
-
+        self.container.children['keg_table'] = self.build_keg_table()
         t = utils.as_degF(self.api_data.get('temp', 0))
         try:
             co2 = self.co2_list[0] #TODO: Handle multiple CO2 sources
         except IndexError:
             co2 = "???"
         self.temp.set_text("%s\nCO2:%s%%" % (t, co2))
+
+        utils.debug_msg(self, "idle end")
 
 
     def close(self):
@@ -559,7 +560,7 @@ class Web(App):
 
         self.keg_table = self.build_keg_table()
 
-        self.container.append(self.keg_table)
+        self.container.append(self.keg_table, 'keg_table')
 
         try:
             co2 = self.co2_list[0] #TODO: Handle multiple CO2 sources
