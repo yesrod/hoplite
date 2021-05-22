@@ -86,7 +86,9 @@ class Web(App):
         super(Web, self).close()
 
 
-    def build_keg_settings(self, index = None, channel = None, hx_conf = None, readonly = False, edit = False):
+    def build_keg_settings(self, index = None, channel = None, chan_conf = None, readonly = False, edit = False):
+        utils.debug_msg(self, "start build_keg_settings")
+
         keg_box_style = {'border': '2px solid lightgrey', 'border-radius': '5px'}
         keg_box = gui.Container(style=keg_box_style)
 
@@ -133,12 +135,12 @@ class Web(App):
         co2_box.append(co2_check, 1)
         keg_box.append(co2_box, 'co2_box')
 
-        if hx_conf != None and index != None and channel != None:
-            cap = hx_conf['channels'][channel]['volume']
-            tare = hx_conf['channels'][channel]['tare']
-            name = hx_conf['channels'][channel]['name']
-            size_name = hx_conf['channels'][channel]['size']
-            co2 = hx_conf['channels'][channel]['co2']
+        if chan_conf != None and index != None and channel != None:
+            cap = chan_conf['volume']
+            tare = chan_conf['tare']
+            name = chan_conf['name']
+            size_name = chan_conf['size']
+            co2 = chan_conf['co2']
 
             box_name.set_text('Sensor ' + str(index) + ' Channel ' + channel)
             keg_name_val.set_value(name)
@@ -163,15 +165,18 @@ class Web(App):
             custom_tare.set_enabled(False)
             co2_check.set_enabled(False)
 
+        utils.debug_msg(self, "end build_keg_settings")
         return keg_box
 
 
     def show_settings(self, widget):
         if self.settings_up == True:
+            utils.debug_msg(self, "show_settings already up")
             return
         else:
             self.settings_up = True
 
+        utils.debug_msg(self, "start show_settings")
         self.api_read(force=True)
 
         self.settings_dialog = gui.GenericDialog(title='Settings',
@@ -190,8 +195,10 @@ class Web(App):
         for index, hx_conf in enumerate(self.api_data['hx_list']):
             for channel in ('A', 'B'):
                 try:
-                    keg_box = self.build_keg_settings(index, channel, hx_conf, readonly=True, edit=True)
+                    chan_conf = hx_conf['channels'][channel]
+                    keg_box = self.build_keg_settings(index, channel, chan_conf, readonly=True, edit=True)
                     self.settings_dialog.add_field(str(index) + channel + '_box', keg_box)
+                    utils.debug_msg(self, "index %s channel %s" % (index, channel))
                 except (KeyError, IndexError):
                     pass
 
@@ -202,13 +209,17 @@ class Web(App):
         self.settings_dialog.set_on_cancel_dialog_listener(self.cancel_settings)
         self.settings_dialog.set_on_confirm_dialog_listener(self.apply_settings)
         self.settings_dialog.show(self)
+        utils.debug_msg(self, "end show_settings")
 
 
     def show_edit_keg(self, widget, index = None, channel = None):
         if self.edit_keg_up == True:
+            utils.debug_msg(self, "edit_keg already up")
             return
         else:
             self.edit_keg_up = True
+
+        utils.debug_msg(self, "start edit_keg")
 
         hx_list = self.api_data['hx_list']
 
@@ -260,6 +271,8 @@ class Web(App):
         self.edit_keg_dialog.set_on_cancel_dialog_listener(self.cancel_edit_keg)
         self.edit_keg_dialog.set_on_confirm_dialog_listener(self.apply_edit_keg)
         self.edit_keg_dialog.show(self)
+
+        utils.debug_msg(self, "end edit_keg")
 
 
     def edit_keg_port_handler(self, widget, port):
@@ -327,7 +340,7 @@ class Web(App):
         else:
             self.delete_keg_up = True
 
-        self.delete_keg_dialog = gui.GenericDialog(title='DELETE Keg?', width=100)
+        self.delete_keg_dialog = gui.GenericDialog(title='DELETE Keg?', width=240)
         warning_label = gui.Label("Are you sure you want to delete keg at index %s channel %s?" % (index, channel))
         self.delete_keg_dialog.append(warning_label)
         self.delete_keg_dialog.set_on_cancel_dialog_listener(self.cancel_delete_keg)
@@ -338,8 +351,12 @@ class Web(App):
     def delete_keg(self, widget, index, channel):
         self.delete_keg_up = False
         self.delete_keg_dialog.hide()
-        endpoint = 'hx/%s/%s/' % (str(index), channel)
-        self.api_delete(endpoint)
+        if len(self.api_data['hx_list'][index]['channels'].keys()) <= 1:
+            endpoint = 'hx/%s/' % str(index)
+            self.api_delete(endpoint)
+        else:
+            endpoint = 'hx/%s/%s/' % (str(index), channel)
+            self.api_delete(endpoint)
 
 
     def cancel_settings(self, widget):
@@ -455,10 +472,6 @@ class Web(App):
             self.api_write('POST', endpoint, hx)
 
         self.api_read(force=True)
-
-
-    def confirm_delete_keg(self, widget):
-        pass
 
 
     def build_keg_table(self):
