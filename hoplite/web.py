@@ -16,7 +16,6 @@ import hoplite.utils as utils
 class Web(App):
 
     def __init__(self, *args):
-        utils.debug_msg(self, "start init")
         self.h = Hoplite()
 
         resource_package = __name__
