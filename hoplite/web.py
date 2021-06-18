@@ -28,7 +28,6 @@ class Web(App):
         }
 
         super(Web, self).__init__(*args, static_file_path=static_file_path)
-        utils.debug_msg(self, "end init")
 
 
     def api_read(self, force = False):
