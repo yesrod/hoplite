@@ -200,6 +200,7 @@ class Web(App):
 
         self.settings_dialog = gui.GenericDialog(title='Settings',
                                         width='500px')
+        utils.debug_msg(self, "settings_dialog")
 
         # weight display options
         weight_options_list = ['as_kg_gross', 'as_kg_net', 'as_pint', 'as_pct']
@@ -210,6 +211,7 @@ class Web(App):
             pass
         self.settings_dialog.add_field_with_label(
             'weight_options', 'Display Keg Weight', weight_options)
+        utils.debug_msg(self, "weight_options")
 
         for index, hx_conf in enumerate(self.api_data['hx_list']):
             for channel in ('A', 'B'):
@@ -224,6 +226,7 @@ class Web(App):
         add_keg_button = gui.Button('Add/Edit Keg', width=100, height=30, style={'margin': '3px'} )
         add_keg_button.set_on_click_listener(self.show_edit_keg)
         self.settings_dialog.children['buttons_container'].add_child('add_keg', add_keg_button)
+        utils.debug_msg(self, "add_keg_button")
 
         self.settings_dialog.set_on_cancel_dialog_listener(self.cancel_settings)
         self.settings_dialog.set_on_confirm_dialog_listener(self.apply_settings)
