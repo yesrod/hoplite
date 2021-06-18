@@ -5,8 +5,6 @@ import RPi.GPIO as GPIO
 import sys
 import time
 import json
-import posix_ipc
-import mmap
 import glob
 import traceback
 from hx711 import HX711
@@ -42,14 +40,6 @@ class Hoplite():
         # can pe imported into other things for stuff like loading configs
         # without breaking GPIO access, etc.
         utils.debug_msg(self, "runtime init start")
-        # shared memory segment for communicating with web interface
-        mem = posix_ipc.SharedMemory('/hoplite', flags=posix_ipc.O_CREAT, size=65536)
-        self.ShMem = mmap.mmap(mem.fd, mem.size)
-        mem.close_fd()
-
-        # semaphore lock for shared memory
-        self.ShLock = posix_ipc.Semaphore('/hoplite', flags=posix_ipc.O_CREAT)
-        self.ShLock.release()
 
         # dictionary containing current shared memory data
         self.ShData = dict()
@@ -74,35 +64,6 @@ class Hoplite():
             self.display = Display(self, 'st7735')
 
         utils.debug_msg(self, "runtime init end")
-
-
-    def shmem_read(self, timeout=None):
-        map_data = b''
-        self.ShLock.acquire(timeout)
-        self.ShMem.seek(0, 0)
-        while True:
-            line = self.ShMem.readline()
-            if line == b'': break
-            map_data += line.rstrip(b'\0')
-        self.ShMem.seek(0, 0)
-        self.ShLock.release()
-        self.ShData = json.loads(map_data.decode())
-
-
-    def shmem_write(self, timeout=None):
-        self.ShLock.acquire(timeout)
-        self.shmem_clear()
-        self.ShMem.write(json.dumps(self.ShData, indent=2).encode())
-        self.ShMem.flush()
-        self.ShLock.release()
-
-
-    def shmem_clear(self):
-        zero_fill = b'\0' * (self.ShMem.size())
-        self.ShMem.seek(0, 0)
-        self.ShMem.write(zero_fill)
-        self.ShMem.seek(0, 0)
-        self.ShMem.flush()
 
 
     def init_hx711(self, hx_conf):
@@ -236,16 +197,6 @@ class Hoplite():
                 pass
         utils.debug_msg(self, "gpio cleanup")
         GPIO.cleanup()
-        utils.debug_msg(self, "shmem cleanup")
-        try:
-            self.ShMem.close()
-            posix_ipc.unlink_shared_memory('/hoplite')
-            self.ShLock.release()
-            self.ShLock.unlink()
-        except posix_ipc.ExistentialError:
-            # shmem already cleaned up
-            utils.debug_msg(self, "shmem already cleaned up")
-            pass
         utils.debug_msg(self, "cleanup complete")
 
 
@@ -283,7 +234,6 @@ class Hoplite():
                         utils.debug_msg(self, traceback.format_exc())
                         utils.debug_msg(self, "index %s not present or removed during access" % index)
 
-                self.shmem_read()
                 try:
                     self.ShData['data']['weight'][index] = weight
                 except IndexError:
@@ -297,7 +247,6 @@ class Hoplite():
                     self.config.config = self.ShData['config']
                     self.config.save_config()
                     self.setup_all_kegs()
-                self.shmem_write()
             time.sleep(0.1)
 
         utils.debug_msg(self, "updates stopped")
@@ -315,7 +264,6 @@ class Hoplite():
         self.ShData['data'] = dict()
         self.ShData['data']['weight'] = list()
         self.ShData['config'] = self.config.config
-        self.shmem_write()
 
         self.setup_all_kegs()
 
