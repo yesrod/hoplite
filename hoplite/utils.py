@@ -1,4 +1,5 @@
 import sys
+from datetime import datetime
 
 # Shared data
 
@@ -24,7 +25,7 @@ breakout_ports = {
 # Helper functions
 def debug_msg(c, message):
     if c.debug:
-        print("%s::%s: %s" % (c.__class__.__name__, sys._getframe(1).f_code.co_name, message))
+        print("%s %s::%s: %s" % (datetime.now().isoformat(' '), c.__class__.__name__, sys._getframe(1).f_code.co_name, message))
 
 
 def as_degC(temp):
