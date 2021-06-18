@@ -91,9 +91,11 @@ class Web(App):
 
         keg_box_style = {'border': '2px solid lightgrey', 'border-radius': '5px'}
         keg_box = gui.Container(style=keg_box_style)
+        utils.debug_msg(self, "keg_box")
 
         box_name = gui.Label('Channel')
         keg_box.append(box_name)
+        utils.debug_msg(self, "box_name")
 
         keg_name = gui.HBox()
         keg_name_lbl = gui.Label('Keg Name', width='20%')
@@ -101,10 +103,12 @@ class Web(App):
         keg_name_val = gui.TextInput(single_line=True, height='1.5em')
         keg_name.append(keg_name_val, 'val')
         keg_box.append(keg_name, 'name')
+        utils.debug_msg(self, "keg_name")
 
         keg_size_list = list(utils.keg_data)
         keg_size_list.append('custom')
         keg_size_list.insert(0, '')
+        utils.debug_msg(self, "keg_size_list")
 
         keg_size = gui.HBox()
         keg_size_lbl = gui.Label('Keg Size', width='20%')
@@ -113,6 +117,7 @@ class Web(App):
         keg_size_val.set_value('')
         keg_size.append(keg_size_val, 'val')
         keg_box.append(keg_size, 'size')
+        utils.debug_msg(self, "keg_size")
 
         custom = gui.HBox()
         vol_lbl = gui.Label('Volume (l)', width='20%')
@@ -125,8 +130,8 @@ class Web(App):
         custom_tare = gui.TextInput(
             single_line=True, height='1.5em', width='20%')
         custom.append(custom_tare, 3)
-
         keg_box.append(custom, 'custom')
+        utils.debug_msg(self, "custom_size")
 
         co2_box = gui.HBox(width='20%')
         co2_label = gui.Label('CO2')
@@ -134,8 +139,10 @@ class Web(App):
         co2_check = gui.CheckBox('CO2', False)
         co2_box.append(co2_check, 1)
         keg_box.append(co2_box, 'co2_box')
+        utils.debug_msg(self, "co2_box")
 
         if chan_conf != None and index != None and channel != None:
+            utils.debug_msg(self, "populating keg info")
             cap = chan_conf['volume']
             tare = chan_conf['tare']
             name = chan_conf['name']
@@ -148,17 +155,22 @@ class Web(App):
             custom_vol.set_value(str(cap))
             custom_tare.set_value(str(tare))
             co2_check.set_value(co2)
+            utils.debug_msg(self, "end populating keg info")
 
         if edit != False:
+            utils.debug_msg(self, "edit and delete buttons")
             edit_keg_button = gui.Button('Edit', width=100, height=30, style={'margin': '3px'} )
             edit_keg_button.onclick.do(self.show_edit_keg, index, channel)
             keg_box.append(edit_keg_button, 'edit_keg')
+            utils.debug_msg(self, "edit button")
 
             del_keg_button = gui.Button('Delete', width=100, height=30, style={'margin': '3px'} )
             del_keg_button.onclick.do(self.show_delete_keg_confirm, index, channel)
             keg_box.append(del_keg_button, 'del_keg')
+            utils.debug_msg(self, "delete button")
 
         if readonly == True:
+            utils.debug_msg(self, "settings are readonly")
             keg_name_val.set_enabled(False)
             keg_size_val.set_enabled(False)
             custom_vol.set_enabled(False)
