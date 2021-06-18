@@ -16,6 +16,7 @@ import hoplite.utils as utils
 class Web(App):
 
     def __init__(self, *args):
+        utils.debug_msg(self, "start init")
         self.h = Hoplite()
 
         resource_package = __name__
@@ -28,9 +29,11 @@ class Web(App):
         }
 
         super(Web, self).__init__(*args, static_file_path=static_file_path)
+        utils.debug_msg(self, "end init")
 
 
     def api_read(self, force = False):
+        utils.debug_msg(self, "start")
         since_last_update = int(time.time()) - self.api_last_updated
         if since_last_update > self.api_update_interval or force:
             response = requests.get(self.api_url)
@@ -39,9 +42,11 @@ class Web(App):
             utils.debug_msg(self, "api_data: %s" % self.api_data)
         else:
             utils.debug_msg(self, "not updating, last update %is ago" % since_last_update)
+        utils.debug_msg(self, "end")
 
 
     def api_write(self, mode, endpoint, data):
+        utils.debug_msg(self, "start")
         headers = {'Content-Type': 'application/json'}
         dest_url = self.api_url + endpoint
         if mode == 'POST':
@@ -55,19 +60,22 @@ class Web(App):
             utils.debug_msg(self, "response: %s" % response.json())
             utils.debug_msg(self, dest_url)
             utils.debug_msg(self, json.dumps(data))
+        utils.debug_msg(self, "end")
 
 
     def api_delete(self, endpoint):
+        utils.debug_msg(self, "start")
         headers = {'Content-Type': 'application/json'}
         dest_url = self.api_url + endpoint
         response = requests.delete(dest_url, headers = headers)
         if response.status_code != "200":
             utils.debug_msg(self, "response: %s" % response.json())
             utils.debug_msg(self, dest_url)
+        utils.debug_msg(self, "end")
 
 
     def idle(self):
-        utils.debug_msg(self, "idle start")
+        utils.debug_msg(self, "start")
 
         self.api_read()
         self.co2_list = []
@@ -79,15 +87,16 @@ class Web(App):
             co2 = "???"
         self.temp.set_text("%s\nCO2:%s%%" % (t, co2))
 
-        utils.debug_msg(self, "idle end")
+        utils.debug_msg(self, "end")
 
 
     def close(self):
+        utils.debug_msg(self, "closing")
         super(Web, self).close()
 
 
     def build_keg_settings(self, index = None, channel = None, chan_conf = None, readonly = False, edit = False):
-        utils.debug_msg(self, "start build_keg_settings")
+        utils.debug_msg(self, "start")
 
         keg_box_style = {'border': '2px solid lightgrey', 'border-radius': '5px'}
         keg_box = gui.Container(style=keg_box_style)
@@ -177,18 +186,18 @@ class Web(App):
             custom_tare.set_enabled(False)
             co2_check.set_enabled(False)
 
-        utils.debug_msg(self, "end build_keg_settings")
+        utils.debug_msg(self, "end")
         return keg_box
 
 
     def show_settings(self, widget):
+        utils.debug_msg(self, "start")
         if self.settings_up == True:
             utils.debug_msg(self, "show_settings already up")
             return
         else:
             self.settings_up = True
 
-        utils.debug_msg(self, "start show_settings")
         self.api_read(force=True)
 
         self.settings_dialog = gui.GenericDialog(title='Settings',
@@ -221,17 +230,16 @@ class Web(App):
         self.settings_dialog.set_on_cancel_dialog_listener(self.cancel_settings)
         self.settings_dialog.set_on_confirm_dialog_listener(self.apply_settings)
         self.settings_dialog.show(self)
-        utils.debug_msg(self, "end show_settings")
+        utils.debug_msg(self, "end")
 
 
     def show_edit_keg(self, widget, index = None, channel = None):
+        utils.debug_msg(self, "start")
         if self.edit_keg_up == True:
             utils.debug_msg(self, "edit_keg already up")
             return
         else:
             self.edit_keg_up = True
-
-        utils.debug_msg(self, "start edit_keg")
 
         hx_list = self.api_data['hx_list']
 
@@ -284,10 +292,11 @@ class Web(App):
         self.edit_keg_dialog.set_on_confirm_dialog_listener(self.apply_edit_keg)
         self.edit_keg_dialog.show(self)
 
-        utils.debug_msg(self, "end edit_keg")
+        utils.debug_msg(self, "end")
 
 
     def edit_keg_port_handler(self, widget, port):
+        utils.debug_msg(self, "start")
         hx_list = self.api_data['hx_list']
         pd_sck = self.edit_keg_dialog.get_field('hx_pins').children['1']
         dout = self.edit_keg_dialog.get_field('hx_pins').children['3']
@@ -305,17 +314,21 @@ class Web(App):
 
         self.fill_edit_keg(index, channel)
         self.fill_port_info(index, port)
+        utils.debug_msg(self, "end")
 
 
     def edit_keg_channel_handler(self, widget, channel):
+        utils.debug_msg(self, "start")
         port = self.edit_keg_dialog.get_field('port_box').children['1'].get_value()
         hx_list = self.api_data['hx_list']
         index = utils.get_index_from_port(port, hx_list)
 
         self.fill_edit_keg(index, channel)
+        utils.debug_msg(self, "end")
 
 
     def fill_edit_keg(self, index, channel, empty=False):
+        utils.debug_msg(self, "start")
         new_conf = {}
         try:
             hx_conf = self.api_data['hx_list'][index]['channels'][channel]
@@ -332,9 +345,11 @@ class Web(App):
             new_conf['co2'] = False
         self.set_keg_gui_data(self.edit_keg_dialog, 'keg_box', new_conf)
         self.edit_keg_dialog.set_on_confirm_dialog_listener(self.apply_edit_keg)
+        utils.debug_msg(self, "end")
 
 
     def fill_port_info(self, index, port):
+        utils.debug_msg(self, "start")
         try:
             hx_conf = self.api_data['hx_list'][index]
             self.edit_keg_dialog.get_field('hx_pins').children['1'].set_value(str(hx_conf.get('pd_sck', '')))
@@ -344,9 +359,11 @@ class Web(App):
             if port != "custom":
                 self.edit_keg_dialog.get_field('hx_pins').children['1'].set_value(str(utils.breakout_ports[port][0]))
                 self.edit_keg_dialog.get_field('hx_pins').children['3'].set_value(str(utils.breakout_ports[port][1]))
+        utils.debug_msg(self, "end")
 
 
     def show_delete_keg_confirm(self, widget, index, channel):
+        utils.debug_msg(self, "start")
         if self.delete_keg_up == True:
             return
         else:
@@ -358,9 +375,11 @@ class Web(App):
         self.delete_keg_dialog.set_on_cancel_dialog_listener(self.cancel_delete_keg)
         self.delete_keg_dialog.children['buttons_container'].children['confirm_button'].onclick.do(self.delete_keg, index, channel)
         self.delete_keg_dialog.show(self)
+        utils.debug_msg(self, "end")
 
 
     def delete_keg(self, widget, index, channel):
+        utils.debug_msg(self, "start")
         self.delete_keg_up = False
         self.delete_keg_dialog.hide()
         if len(self.api_data['hx_list'][index]['channels'].keys()) <= 1:
@@ -369,6 +388,7 @@ class Web(App):
         else:
             endpoint = 'hx/%s/%s/' % (str(index), channel)
             self.api_delete(endpoint)
+        utils.debug_msg(self, "end")
 
 
     def cancel_settings(self, widget):
@@ -384,6 +404,7 @@ class Web(App):
 
 
     def get_keg_gui_data(self, dialog, keg_box_id):
+        utils.debug_msg(self, "start")
         keg_box = dialog.get_field(keg_box_id)
         utils.debug_msg(self, "keg_box: %s" % keg_box) 
 
@@ -403,19 +424,23 @@ class Web(App):
         new_conf['volume'] = vol
         new_conf['tare'] = tare
         utils.debug_msg(self, "new_conf: %s" % new_conf)
+        utils.debug_msg(self, "end")
         return new_conf
 
 
     def get_port_data(self, dialog):
+        utils.debug_msg(self, "start")
         new_conf = dict()
         new_conf['port'] = dialog.get_field('port_box').children['1'].get_value()
         new_conf['pd_sck'] = dialog.get_field('hx_pins').children['1'].get_value()
         new_conf['dout'] = dialog.get_field('hx_pins').children['3'].get_value()
         new_conf['channel'] = dialog.get_field('channel_box').children['1'].get_value()
+        utils.debug_msg(self, "end")
         return new_conf
 
 
     def set_keg_gui_data(self, dialog, keg_box_id, new_conf):
+        utils.debug_msg(self, "start")
         utils.debug_msg(self, "new_conf: %s" % new_conf)
         utils.debug_msg(self, "keg_box_id: %s" % keg_box_id)
         keg_box = dialog.get_field(keg_box_id)
@@ -436,16 +461,20 @@ class Web(App):
                 dout = ''
             keg_box.children['custom'].children['1'].set_value(str(pd_sck))
             keg_box.children['custom'].children['3'].set_value(str(dout))
+        utils.debug_msg(self, "end")
 
 
     def apply_settings(self, widget):
+        utils.debug_msg(self, "start")
         self.settings_up = False
 
         weight_mode = self.settings_dialog.get_field('weight_options').get_value()
         self.api_write('PUT', 'weight_mode', {'weight_mode': weight_mode})
+        utils.debug_msg(self, "end")
 
 
     def apply_edit_keg(self, widget):
+        utils.debug_msg(self, "start")
         self.edit_keg_up = False
         
         self.api_read(force=True)
@@ -484,9 +513,11 @@ class Web(App):
             self.api_write('POST', endpoint, hx)
 
         self.api_read(force=True)
+        utils.debug_msg(self, "end")
 
 
     def build_keg_table(self):
+        utils.debug_msg(self, "start")
         new_table = gui.Table(width=480)
         new_table.style['margin'] = 'auto'
         new_table.style['text-align'] = 'center'
@@ -546,11 +577,13 @@ class Web(App):
 
                     new_table.append(table_row)
 
+        utils.debug_msg(self, "end")
         return new_table
 
 
     def main(self, args):
         self.debug = args["debug"]
+        utils.debug_msg(self, "start main")
 
         self.api_url = "http://127.0.0.1:5000/v1/"
         self.api_data = {}
@@ -621,6 +654,8 @@ class Web(App):
             co2 = "???"
         self.temp.set_text("%s\nCO2:%s%%" % (t, co2))
 
+        utils.debug_msg(self, "end main")
+
         # return of the root widget
         return self.container
 
@@ -635,6 +670,9 @@ if __name__ == '__main__':
     userdata_dict = {}
     userdata_dict["debug"] = parsed_args.debug
 
+    if parsed_args.debug:
+        print("Starting web interface server")
+    
     start(Web, address="0.0.0.0", port=80,
           standalone=False, update_interval=0.5,
           title='HOPLITE', userdata=(userdata_dict,))
