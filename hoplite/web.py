@@ -576,7 +576,7 @@ class Web(App):
         self.temp = gui.Label("%s<br />CO2:%s%%" % (t, '???'))
         self.temp.style['padding-bottom'] = '1em'
         self.temp.style['white-space'] = 'pre'
-        table_item = gui.TableItem()
+        table_item = gui.TableItem(width=100, height=30)
         table_item.append(self.temp)
         first_row.append(table_item)
 
@@ -584,7 +584,7 @@ class Web(App):
         self.title = gui.Label("HOPLITE")
         self.title.style['font-size'] = '2em'
         self.title.style['padding-bottom'] = '0.5em'
-        table_item = gui.TableItem()
+        table_item = gui.TableItem(width=240, height=30)
         table_item.append(self.title)
         first_row.append(table_item)
 
@@ -592,7 +592,7 @@ class Web(App):
         self.settings_button = gui.Image('/static:settings_16.png', width=16)
         self.settings_button.set_on_click_listener(self.show_settings)
         self.settings_button.style['padding-bottom'] = '1.6em'
-        table_item = gui.TableItem()
+        table_item = gui.TableItem(width=100, height=30)
         table_item.append(self.settings_button)
         first_row.append(table_item)
 
