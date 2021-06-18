@@ -1,10 +1,8 @@
 import remi.gui as gui
 from remi import start, App
 
-import sys
 import time
 import json
-import mmap
 import pkg_resources
 import requests
 import argparse
@@ -671,9 +669,6 @@ if __name__ == '__main__':
     userdata_dict = {}
     userdata_dict["debug"] = parsed_args.debug
 
-    if parsed_args.debug:
-        print("Starting web interface server")
-    
     start(Web, address="0.0.0.0", port=80,
           standalone=False, update_interval=0.5,
           title='HOPLITE', userdata=(userdata_dict,))
