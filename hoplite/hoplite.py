@@ -156,11 +156,14 @@ class Hoplite():
         base_dir = '/sys/bus/w1/devices/'
         try:
             device_folder = glob.glob(base_dir + '28*')[0]
-            device_file = device_folder + '/hwmon/hwmon0/temp1_input'
+            device_file = device_folder + '/temperature'
+            utils.debug_msg(self, "Opening %s" % device_file)
             f = open(device_file, 'r')
             temp = f.read()
             f.close()
+            utils.debug_msg(self, "Raw temp value is %s" % temp)
         except (IOError, ValueError, IndexError):
+            utils.debug_msg(self, "ERROR reading temp sensor")
             temp = 0
         return int(temp)
 
