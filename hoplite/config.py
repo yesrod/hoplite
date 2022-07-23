@@ -12,18 +12,12 @@ class Config():
             save.close()
         except IOError:
             print("No config found at %s, using defaults" % self.config_file)
-            config = self.build_config()
+            config = None
         except ValueError:
             print("Config at %s has syntax issues, cannot load" % self.config_file)
             config = None
-        utils.debug_msg(self, config)
-        self.config = config
-        utils.debug_msg(self, "checking for required values")
-        required = {'display': 'st7735', 'weight_mode': 'as_kg_gross'}
-        for r in required.keys():
-            if not r in self.config.keys():
-                utils.debug_msg(self, "adding default: %s %s" % (r, required[r]))
-                self.config[r] = required[r]
+        self.config = self.build_config(config)
+        utils.debug_msg(self, self.config)
         utils.debug_msg(self, "load config end")
 
 
@@ -36,11 +30,19 @@ class Config():
             print("Could not save config: %s" % e.strerror)
 
 
-    def build_config(self):
-        config = dict()
-        config['weight_mode'] = 'as_kg_gross'
-        config['display'] = 'st7735'
-        config['hx'] = list()
+    def build_config(self, current_config=None):
+        required = {
+            'display': 'st7735', 
+            'weight_mode': 'as_kg_gross',
+            'hx': []
+        }
+        if current_config:
+            for r in required.keys():
+                if r not in current_config.keys():
+                    current_config[r] = required[r]
+            config = current_config
+        else:
+            config = required
         return config
 
 
@@ -49,3 +51,4 @@ class Config():
             return self.config[key]
         except KeyError:
             return None
+
