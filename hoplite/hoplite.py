@@ -1,6 +1,3 @@
-from luma.core.interface.serial import spi
-from luma.core.render import canvas
-from luma.lcd.device import st7735
 import RPi.GPIO as GPIO
 import sys
 import time
@@ -9,7 +6,7 @@ import glob
 import traceback
 from hx711 import HX711
 
-import threading
+import multiprocessing
 from .restapi import RestApi
 from .display import Display
 from .config import Config
@@ -41,7 +38,7 @@ class Hoplite():
         # without breaking GPIO access, etc.
         utils.debug_msg(self, "runtime init start")
 
-        # dictionary containing current shared memory data
+        # dictionary containing current shared data
         self.ShData = dict()
 
         # dict containing current config
@@ -288,13 +285,13 @@ class Hoplite():
             api_port = '5000'
 
         print('Starting API at %s:%s' % (api_host, api_port))
-        self.api_process = threading.Thread(None, self.api.worker, 'hoplite REST api', kwargs={'host': api_host, 'port': api_port})
+        self.api_process = multiprocessing.Process(None, self.api.worker, 'hoplite REST api', kwargs={'host': api_host, 'port': api_port})
         self.api_process.daemon=True
         self.api_process.start()
 
         try:
             self.updating = True
-            self.update_process = threading.Thread(None, self.update, 'hoplite data collection')
+            self.update_process = multiprocessing.Process(None, self.update, 'hoplite data collection')
             self.update_process.daemon = True
             self.update_process.start()
             while self.updating:
