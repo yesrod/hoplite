@@ -27,7 +27,7 @@ class Hoplite():
 
         # temperature sensor output
         # TODO: evaluate if this can be replaced by read_temp()
-        self.temp = None
+        self.temp = 0.0
 
         utils.debug_msg(self, "init end")
 
