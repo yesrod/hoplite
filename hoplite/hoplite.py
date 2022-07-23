@@ -6,7 +6,7 @@ import glob
 import traceback
 from hx711 import HX711
 
-import multiprocessing
+import threading
 from .restapi import RestApi
 from .display import Display
 from .config import Config
@@ -285,13 +285,13 @@ class Hoplite():
             api_port = '5000'
 
         print('Starting API at %s:%s' % (api_host, api_port))
-        self.api_process = multiprocessing.Process(None, self.api.worker, 'hoplite REST api', kwargs={'host': api_host, 'port': api_port})
+        self.api_process = threading.Thread(None, self.api.worker, 'hoplite REST api', kwargs={'host': api_host, 'port': api_port})
         self.api_process.daemon=True
         self.api_process.start()
 
         try:
             self.updating = True
-            self.update_process = multiprocessing.Process(None, self.update, 'hoplite data collection')
+            self.update_process = threading.Thread(None, self.update, 'hoplite data collection')
             self.update_process.daemon = True
             self.update_process.start()
             while self.updating:
