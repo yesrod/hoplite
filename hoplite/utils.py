@@ -13,6 +13,28 @@ keg_data = {
     'corny': (18.9, 4),
 }
 
+# CO2 tank data dictionary
+# data from https://www.cryofx.com/media-NEW/co2-tanks/20-Lb-Co2-Tank-Dimensions.jpg.jpg
+# value is list( contents net weight in kg, tare weight in kg )
+co2_data = {
+    "two_and_a_half_pound_aluminum": (1.133, 2.268),
+    "two_and_a_half_pound_steel": (1.133, 3.629),
+    "five_pound_aluminum": (2.268, 3.629),
+    "five_pound_steel": (2.268, 4.536),
+    "ten_pound_aluminum": (4.536, 6.804),
+    "ten_pound_steel": (4.536, 10.433),
+    "fifteen_pound_aluminum": (6.804, 8.165),
+    "fifteen_pound_steel": (6.804, 13.608),
+    "twenty_pound_aluminum": (9.072, 11.340),
+    "twenty_pound_steel": (9.072, 14.288),
+    "thirty_five_pound_aluminum": (15.876, 16.783),
+    "thirty_five_pound_steel": (15.876, 24.948),
+    "fifty_pound_aluminum": (22.680, 22.226),
+    "fifty_pound_steel": (22.680, 40.823),
+    "seventy_five_pound_steel": (34.019, 62.596),
+    "one_hundred_pound_steel": (45.359, 86.183),
+}
+
 # Breakout board port data
 # Value is list( pd_sck, dout )
 breakout_ports = {
