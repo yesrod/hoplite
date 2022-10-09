@@ -37,6 +37,7 @@ co2_data = {
 
 # Breakout board port data
 # Value is list( pd_sck, dout )
+# DEPRECATED: do not use
 breakout_ports = {
     '1': (6, 5),
     '2': (13, 12),
@@ -46,6 +47,8 @@ breakout_ports = {
 
 # Helper functions
 def debug_msg(c, message):
+    # TODO: drop this entirely, and use logging.Logger() instead
+    # replace this function with a logging handle helper like get_logger()
     if c.debug:
         print("%s %s::%s: %s" % (datetime.now().isoformat(' '), c.__class__.__name__, sys._getframe(1).f_code.co_name, message))
 
@@ -58,6 +61,7 @@ def as_degF(temp):
     real_c = float(temp) / 1000.0
     deg_f = real_c * (9.0/5.0) + 32.0
     return u'%s\u00b0F' % '{0:.1f}'.format(deg_f)
+
 
 def as_kg(val):
     return "%s kg" % "{0:.2f}".format(val / 1000.0)

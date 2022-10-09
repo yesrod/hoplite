@@ -34,7 +34,7 @@ class Hoplite():
 
     def runtime_init(self):
         # All the stuff needed for runtime lives here so the Hoplite class
-        # can pe imported into other things for stuff like loading configs
+        # can be imported into other things for stuff like loading configs
         # without breaking GPIO access, etc.
         utils.debug_msg(self, "runtime init start")
 

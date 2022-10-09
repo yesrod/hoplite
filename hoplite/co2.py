@@ -13,7 +13,8 @@ from .weighable import Weighable
 import hoplite.utils as utils
 
 
-class Keg(Weighable):
+class CO2(Weighable):
+
     def __init__(
         self, 
         name,
@@ -27,4 +28,4 @@ class Keg(Weighable):
         net_wt = None
     ):
         super().__init__(port, channel)
-        self.weight_data = utils.keg_data
+        self.weight_data = utils.co2_data
