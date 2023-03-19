@@ -39,7 +39,7 @@ INSTALLATION
 You'll save time and skip having to install ```gfortran``` if you install the repo version of ```python-numpy```.
 ```
 sudo apt-get update
-sudo apt-get install python-numpy
+sudo apt-get install python3-numpy
 ```
 
 I also recommend disabling CPU frequency scaling.  On my system, this helped with weight updates occasionally failing, causing keg weights to fluctuate randomly.

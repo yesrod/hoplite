@@ -1,15 +1,7 @@
-import sys
-import time
-import json
-import glob
-import traceback
-from hx711 import HX711
 
-from .restapi import RestApi
-from .display import Display
 from .config import Config
-from .keg import Keg
-import hoplite.utils as utils
+from .sensor import Sensor
+
 
 class SharedData():
 
@@ -19,5 +11,45 @@ class SharedData():
         else:
             self.config = Config()
 
-        self.keg_list = []
+        self.kegs = []
+
+        self.sensors = []
+
+    def get_sensor(self, port):
+        """
+        Get a specific Sensor() instance, by port
+
+        Returns: Sensor() instance, or None if instance is not found
+        """
+
+        s = [ x for x in self.sensors if x.get_port() == port ]
+        if len(s) > 1:
+            raise ValueError("found %s instances of Sensor() with port %s, this should never happen" % (len(s), port))
+        elif len(s) == 1:
+            return s[0]
+        else:
+            return None
+
+
+    def add_sensor(
+        self,
+        port,
+        offset_A = None,
+        refunit_A = None,
+        offset_B = None,
+        refunit_B = None
+    ):
+        """Create a new sensor and add to the __sensors__ dict"""
+        if not self.get_sensor(port):
+            self.sensors.append(
+                Sensor(
+                    port, 
+                    offset_A,
+                    refunit_A,
+                    offset_B,
+                    refunit_B
+                )
+            )
+        else:
+            raise ValueError("Sensor at port %s already defined" % port)
         

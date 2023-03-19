@@ -1,15 +1,3 @@
-import sys
-import time
-import json
-import glob
-import traceback
-from hx711 import HX711
-
-from .restapi import RestApi
-from .display import Display
-from .config import Config
-#from .sensor import Sensor
-import hoplite.utils as utils
 
 
 class Weighable():
@@ -19,6 +7,7 @@ class Weighable():
         sensor,
         channel,
         name,
+        weight_data,
         location = None,
         size = None,
         tare_wt = None,
@@ -28,6 +17,7 @@ class Weighable():
         self.set_channel(channel)
         self.set_name(name)
         self.set_location(location)
+        self.weight_data = weight_data
         self.set_size(size, tare_wt=tare_wt, net_wt=net_wt)
 
         # weight_data must be set for subclasses
@@ -76,7 +66,15 @@ class Weighable():
         # if size is set, pick size, tare_wt, net_wt from size dict
         # else, set size to "custom", set tare_wt and net_wt from parameters
         # then update Sensor() instance as necessary
-        pass
+        try:
+            self.size = size
+            self.tare_wt, self.net_wt = self.weight_data[size]
+        except KeyError:    # size key not found in weight_data
+            self.size = 'custom'
+            if not tare_wt or not net_wt:
+                raise ValueError(f"non-standard size {size} requires tare_wt and net_wt, found instead {tare_wt} and {net_wt}")
+            self.tare_wt = tare_wt
+            self.net_wt = net_wt
 
 
     def get_channel(self):

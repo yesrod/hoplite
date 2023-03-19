@@ -1,14 +1,5 @@
-import sys
 import time
-import json
-import glob
-import traceback
 from hx711 import HX711
-
-from .restapi import RestApi
-from .display import Display
-from .config import Config
-import hoplite.utils as utils
 
 
 class Sensor():
@@ -23,16 +14,16 @@ class Sensor():
     }
 
     def __init__(
-        self, 
-        port, 
-        pd_sck = None, 
-        dout = None,
+        self,
+        port,
         offset_A = None,
         refunit_A = None,
         offset_B = None,
         refunit_B = None
     ):
-        self.set_port(port)
+
+        self.port = port
+        self.set_port(self.port)
 
         self.offset_A = offset_A
         self.refunit_A = refunit_A
@@ -50,7 +41,7 @@ class Sensor():
 
 
     def poll(self):
-        self.weight_A, self.weight_B = self.__read_weight(hx)
+        self.weight_A, self.weight_B = self.__read_weight()
         self.last_updated = time.time()
 
 
@@ -74,10 +65,9 @@ class Sensor():
 
 
     def set_port(self, port):
-        self.port = port
         if port in self.breakout_ports.keys():
-            self.pd_sck = breakout_ports[port][0]
-            self.dout = breakout_ports[port][1]
+            self.pd_sck = self.breakout_ports[port][0]
+            self.dout = self.breakout_ports[port][1]
         else:
             raise ValueError("bad port %s" % port)
 
